@@ -142,6 +142,33 @@ render();
 <div id="km-auth"><h1>💜 KostetMich</h1><p>Willkommen! Melde dich an oder erstelle ein kostenloses Konto.</p>
 <form id="km-auth-form"><label for="km-email">E-Mail-Adresse</label><input id="km-email" type="email" autocomplete="email" required placeholder="name@beispiel.de"><label for="km-password">Passwort (mindestens 8 Zeichen)</label><input id="km-password" type="password" minlength="8" autocomplete="current-password" required><button type="submit" id="km-login">Anmelden</button><button type="button" class="secondary" id="km-signup">Registrieren</button></form>
 <p id="km-auth-message" class="km-message" role="status"></p><p class="km-note">Deine Finanzdaten bleiben in dieser Testversion auf diesem Gerät. Ein Konto bedeutet noch keine Cloud-Synchronisierung. Nutze die Datensicherung regelmäßig.</p></div>
+<style>
+#km-push-setup{margin-top:14px}#km-push-setup button{margin-top:10px}#km-push-status{font-size:13px;line-height:1.5}
+</style>
+<script>
+(function(){
+ const originalNotifications=window.notifications;
+ if(typeof originalNotifications!=='function')return;
+ window.notifications=function(){
+  const content=originalNotifications();
+  const labels={de:['Handy-Benachrichtigungen','Handy-Benachrichtigungen aktivieren','Berechtigung prüfen'],el:['Ειδοποιήσεις κινητού','Ενεργοποίηση ειδοποιήσεων','Έλεγχος άδειας'],en:['Phone notifications','Enable phone notifications','Check permission'],tr:['Telefon bildirimleri','Bildirimleri etkinleştir','İzni kontrol et']};
+  const l=labels[(typeof lang!=='undefined'?lang:'de')]||labels.de;
+  return content+shell('📱 '+l[0],`<p class="muted">${({de:'Hier kannst du die Erlaubnis für spätere Push-Benachrichtigungen erteilen. Der automatische Versand bei geschlossener App ist noch nicht eingerichtet.',el:'Εδώ μπορείς να επιτρέψεις μελλοντικές ειδοποιήσεις push. Η αυτόματη αποστολή όταν η εφαρμογή είναι κλειστή δεν έχει ρυθμιστεί ακόμη.',en:'You can grant permission for future push notifications here. Automatic delivery while the app is closed is not configured yet.',tr:'Buradan gelecekteki anlık bildirimlere izin verebilirsin. Uygulama kapalıyken otomatik gönderim henüz ayarlanmadı.'})[(typeof lang!=='undefined'?lang:'de')]||'Hier kannst du die Erlaubnis für spätere Push-Benachrichtigungen erteilen. Der automatische Versand bei geschlossener App ist noch nicht eingerichtet.'}</p><button type="button" onclick="kmAskPushPermission()">🔔 ${l[1]}</button><p id="km-push-status" class="muted" role="status"></p>`);
+ };
+ window.kmAskPushPermission=async function(){
+  const target=document.getElementById('km-push-status');
+  const set=t=>{if(target)target.textContent=t};
+  if(!('Notification' in window)||!('serviceWorker' in navigator)||!('PushManager' in window)){set('Dieses Gerät oder dieser Browser unterstützt die benötigten Web-Push-Funktionen nicht.');return}
+  const standalone=window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+  if(/iPhone|iPad|iPod/.test(navigator.userAgent)&&!standalone){set('Auf dem iPhone: Öffne KostetMich über das App-Symbol auf deinem Home-Bildschirm.');return}
+  if(Notification.permission==='denied'){set('Benachrichtigungen sind blockiert. Bitte erlaube sie in den iPhone-Einstellungen für KostetMich.');return}
+  try{
+   const result=await Notification.requestPermission();
+   set(result==='granted'?'Erlaubnis erteilt! Der automatische Push-Versand muss noch separat eingerichtet werden.':result==='denied'?'Benachrichtigungen wurden nicht erlaubt. Du kannst dies später in den Geräteeinstellungen ändern.':'Noch keine Erlaubnis erteilt. Du kannst es später erneut versuchen.');
+  }catch(e){set('Die Berechtigungsanfrage konnte nicht gestartet werden: '+(e.message||e))}
+ };
+})();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 (function(){
