@@ -1,0 +1,20 @@
+KOSTETMICH – INSTALLIERBARE WEB-APP (PWA)
+
+INHALT: index.html, manifest.webmanifest, service-worker.js, icon-192.png, icon-512.png
+
+KOSTENLOS ONLINE STELLEN MIT GITHUB PAGES
+1. Auf github.com ein kostenloses Konto erstellen oder anmelden.
+2. Neues PUBLIC Repository anlegen, z.B. kostetmich-test.
+3. Alle fünf Dateien aus diesem ZIP in das Hauptverzeichnis hochladen (nicht nur die ZIP-Datei).
+4. Unter Settings > Pages bei Build and deployment: Deploy from a branch auswählen, Branch main und / (root), speichern.
+5. Auf die veröffentlichte HTTPS-Adresse warten: https://BENUTZERNAME.github.io/kostetmich-test/
+6. Erst mit erfundenen Zahlen testen. Öffentlicher Quellcode ist bei GitHub Pages Free sichtbar.
+
+INSTALLATION IPHONE
+Website in Safari öffnen > Teilen > Zum Home-Bildschirm > Als Web-App öffnen > Hinzufügen.
+
+INSTALLATION ANDROID
+Website in Chrome öffnen > Menü (drei Punkte) > App installieren oder Zum Startbildschirm hinzufügen.
+
+WICHTIG
+Dies ist eine Beta, keine öffentlich geprüfte Finanzanwendung. Keine Bankverbindung. Daten werden im jeweiligen Browser lokal gespeichert; bei Löschen der Browserdaten können sie verloren gehen. Kein Abgleich zwischen Geräten. Vor öffentlicher Verbreitung Datenschutzhinweise, Impressum, korrekte Übersetzungen und Finanzberechnungen prüfen. Bei GitHub Pages sind Projektdateien öffentlich. Nicht mit echten privaten Finanzdaten beginnen.
