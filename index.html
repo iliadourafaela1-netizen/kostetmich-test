@@ -141,7 +141,8 @@ function notifications(){const p=noticePrefs(),ns=upcomingNotices(),opts=[['bill
  return shell('🔔 '+nt('title'),`<p>${esc(nt('intro'))}</p>${rows||`<p class="muted">${esc(nt('empty'))}</p>`}<p class="muted">🔒 ${esc(nt('privacy'))}</p>`)
  +shell('⚙️ '+nt('settings'),`<form onsubmit="saveNoticePrefs(event)"><label>${esc(nt('advance'))}</label><select id="notice-advance">${[0,1,3,7].map(n=>`<option value="${n}" ${p.advance===n?'selected':''}>${n}</option>`).join('')}</select>${opts.map(([key,word])=>`<label style="display:flex;align-items:center;gap:10px"><input id="notice-${key}" type="checkbox" style="width:20px;height:20px" ${p[key]?'checked':''}>${esc(nt(word))}</label>`).join('')}<button type="submit">${esc(nt('save'))}</button></form><p class="muted">${esc(nt('push'))}</p>`);
 }
-function saveNoticePrefs(ev){ev.preventDefault();state.notificationPrefs={advance:+$('notice-advance').value,bills:$('notice-bills').checked,debts:$('notice-debts').checked,savings:$('notice-savings').checked,brake:$('notice-brake').checked};save();render()}
+function saveNoticePrefs(ev){ev.preventDefault();state.notificationPrefs={advance:+$('notice-advance').value,
+pushTime:state.notificationPrefs?.pushTime||'12:00',bills:$('notice-bills').checked,debts:$('notice-debts').checked,savings:$('notice-savings').checked,brake:$('notice-brake').checked};save();render()}
 
 render();
 </script><script>if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) { window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js').catch(() => {})); }</script>
