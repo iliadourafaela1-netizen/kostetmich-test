@@ -211,7 +211,13 @@ signup.addEventListener('click',async()=>{if(!form.reportValidity())return;setBu
 </script>
  
 <script>
-  
+ 
+const reminderSettings = {
+  enabled: true,
+  daysBefore: [3],
+  time: "12:00"
+};
+ 
 async function syncReminders() {
   const client = window.kostetMichClient;
   if (!client) return;
