@@ -327,9 +327,22 @@ document.getElementById("kostetmich-test-push")
         { body: {} }
       );
 
-      if (error) {
-        throw error;
-      }
+      
+if (error) {
+  let message = error.message;
+
+  if (error.context) {
+    try {
+      const details = await error.context.json();
+      message = details.error || JSON.stringify(details);
+    } catch {
+      // Falls keine JSON-Antwort vorhanden ist
+    }
+  }
+
+  throw new Error(message);
+}
+
 
       if (!data?.success) {
         throw new Error(data?.error || "Versand fehlgeschlagen");
