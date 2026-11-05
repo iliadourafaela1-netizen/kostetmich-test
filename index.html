@@ -191,7 +191,7 @@ function switchUser(user){
  bar.replaceChildren();const label=document.createElement('span');label.textContent='Angemeldet: '+(user.email||'Konto');const out=document.createElement('button');out.className='secondary';out.textContent='Abmelden';out.onclick=async()=>{const {error}=await client.auth.signOut();if(error)alert(error.message)};bar.append(label,out);render();
 }
 if(!window.supabase||!window.supabase.createClient){showMessage('Anmeldung konnte nicht geladen werden. Bitte prüfe deine Internetverbindung und lade die Seite neu.');return}
-const client=window.supabase.createClient(projectUrl,publishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+const client = window.kostetMichClient = window.supabase.createClient(projectUrl,publishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 client.auth.onAuthStateChange((_event,session)=>switchUser(session?.user||null));
 client.auth.getUser().then(({data,error})=>{if(error&&!data?.user)showMessage('Bitte melde dich an.');switchUser(data?.user||null)}).catch(()=>showMessage('Verbindung fehlgeschlagen. Bitte später erneut versuchen.'));
 form.addEventListener('submit',async ev=>{ev.preventDefault();setBusy(true);showMessage('Anmeldung läuft …');try{const {error}=await client.auth.signInWithPassword({email:email.value.trim(),password:password.value});if(error)throw error;showMessage('Erfolgreich angemeldet.')}catch(e){showMessage('Anmeldung fehlgeschlagen: '+e.message)}finally{setBusy(false)}});
@@ -234,9 +234,10 @@ async function registerKostetMichPush() {
       });
     }
 
-    console.log('Push-Anmeldung erfolgreich:', subscription.endpoint);
+    const { data: { user }, error: userError } =
+  await window.kostetMichClient.auth.getUser();
 
-const { data: { user }, error: userError } = await client.auth.getUser();
+
 
 if (userError || !user) {
   throw new Error('Bitte melde dich zuerst bei KostetMich an.');
@@ -244,7 +245,7 @@ if (userError || !user) {
 
 const subscriptionData = subscription.toJSON();
 
-const { error: saveError } = await client
+const { error: saveError } = await window.kostetMichClient
   .from('push_subscriptions')
   .upsert({
     user_id: user.id,
