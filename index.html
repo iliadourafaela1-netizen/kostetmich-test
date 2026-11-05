@@ -249,7 +249,7 @@ async function syncReminders() {
 
   const { error } = await client
     .from("reminders")
-    .insert(reminders);
+    .upsert(reminders, { onConflict: "user_id,type,title,due_date" });
 
   if (error) throw error;
 }
