@@ -31,7 +31,10 @@ self.addEventListener('fetch', event => {
 self.addEventListener('push', event => {
   let kind = 'general';
   try {
-    if (event.data) {
+    if (event.data) {const payload = event.data.json();
+if (payload && typeof payload.type === 'string') {
+  kind = payload.type;
+}
       const payload = event.data.json();
       if (payload && typeof payload.type === 'string') kind = payload.type;
     }
