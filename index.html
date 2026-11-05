@@ -235,6 +235,13 @@ async function registerKostetMichPush() {
     }
 
     console.log('Push-Anmeldung erfolgreich:', subscription.endpoint);
+   
+const pushStatus = document.createElement('div');
+pushStatus.id = 'km-push-test';
+pushStatus.textContent = '✅ Push-Anmeldung auf diesem Gerät erfolgreich!';
+pushStatus.style.cssText = 'padding:12px;margin:12px;background:#e8f7ee;color:#176b38;border-radius:10px;font-weight:bold;';
+document.body.appendChild(pushStatus);
+
   } catch (error) {
     console.error('Push-Anmeldung fehlgeschlagen:', error);
   }
