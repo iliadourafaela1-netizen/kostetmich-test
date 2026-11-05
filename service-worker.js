@@ -1,5 +1,5 @@
 
-// KostetMich: Offline-Cache und Push-Benachrichtigungen
+ // KostetMich: Offline-Cache und Push-Benachrichtigungen
 
 const CACHE = 'kostetmich-pwa-v4';
 
@@ -136,3 +136,4 @@ self.addEventListener('notificationclick', event => {
     })()
   );
 });
+
