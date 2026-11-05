@@ -198,17 +198,50 @@ form.addEventListener('submit',async ev=>{ev.preventDefault();setBusy(true);show
 signup.addEventListener('click',async()=>{if(!form.reportValidity())return;setBusy(true);showMessage('Registrierung läuft …');try{const {data,error}=await client.auth.signUp({email:email.value.trim(),password:password.value,options:{emailRedirectTo:location.origin+location.pathname}});if(error)throw error;showMessage(data.session?'Konto erstellt und angemeldet.':'Bitte öffne die Bestätigungs-E-Mail und bestätige deine Adresse. Danach kannst du dich anmelden.')}catch(e){showMessage('Registrierung fehlgeschlagen: '+e.message)}finally{setBusy(false)}});
 })();
 </script>
- <script>
+ 
+<script>
+BNv7gdOCi6e8Dhd5rTXUWsjhOANH8AUGgL_P09_8aBl6kVB4ygMkWctb2wFXw8VOmVE1dIuoctCT2mmxTKfS4TI
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding)
+    .replace(/-/g, '+')
+    .replace(/_/g, '/');
+  const rawData = atob(base64);
+  return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
+}
+
 async function registerKostetMichPush() {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
     console.log('Push wird nicht unterstützt.');
     return;
   }
 
-  const registration = await navigator.serviceWorker.ready;
-  console.log('Service Worker bereit:', registration.scope);
+  try {
+    const registration = await navigator.serviceWorker.ready;
+
+    if (Notification.permission !== 'granted') {
+      console.log('Benachrichtigungen sind noch nicht erlaubt.');
+      return;
+    }
+
+    let subscription = await registration.pushManager.getSubscription();
+
+    if (!subscription) {
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+      });
+    }
+
+    console.log('Push-Anmeldung erfolgreich:', subscription.endpoint);
+  } catch (error) {
+    console.error('Push-Anmeldung fehlgeschlagen:', error);
+  }
 }
+
 registerKostetMichPush();
 </script>
+
 </body>
 </html>
