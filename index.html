@@ -242,8 +242,18 @@ pushStatus.textContent = '✅ Push-Anmeldung auf diesem Gerät erfolgreich!';
 pushStatus.style.cssText = 'padding:12px;margin:12px;background:#e8f7ee;color:#176b38;border-radius:10px;font-weight:bold;';
 document.body.appendChild(pushStatus);
 
-  } catch (error) {
-    console.error('Push-Anmeldung fehlgeschlagen:', error);
+  
+} catch (error) {
+  console.error('Push-Anmeldung fehlgeschlagen:', error);
+
+  const fehlerAnzeige = document.createElement('div');
+  fehlerAnzeige.textContent =
+    '❌ Push-Fehler: ' + error.message;
+  fehlerAnzeige.style.cssText =
+    'padding:12px;margin:12px;background:#ffe5e5;color:#9b111e;border-radius:10px;';
+  document.body.appendChild(fehlerAnzeige);
+}
+
   }
 }
 
