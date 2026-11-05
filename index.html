@@ -200,7 +200,7 @@ signup.addEventListener('click',async()=>{if(!form.reportValidity())return;setBu
 </script>
  
 <script>
-BNv7gdOCi6e8Dhd5rTXUWsjhOANH8AUGgL_P09_8aBl6kVB4ygMkWctb2wFXw8VOmVE1dIuoctCT2mmxTKfS4TI
+const VAPID_PUBLIC_KEY = 'BNv7gdOCi6e8Dhd5rTXUWsjhOANH8AUGgL_P09_8aBl6kVB4ygMkWctb2wFXw8VOmVE1dIuoctCT2mmxTKfS4TI';
 
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
