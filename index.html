@@ -285,6 +285,71 @@ document.body.appendChild(pushStatus);
 
     registerKostetMichPush();
   </script>
+
+<button
+  id="kostetmich-test-push"
+  type="button"
+  style="position:fixed;bottom:20px;right:20px;z-index:9999;padding:14px;border:0;border-radius:12px;background:#7c3aed;color:white;font-weight:bold;"
+>
+  🔔 Test-Push an alle senden
+</button>
+
+<script>
+document.getElementById("kostetmich-test-push")
+  .addEventListener("click", async () => {
+    const button = document.getElementById("kostetmich-test-push");
+
+    if (!confirm("Testnachricht an alle registrierten Geräte senden?")) {
+      return;
+    }
+
+    const client = window.kostetMichClient;
+
+    if (!client) {
+      alert("Supabase-Verbindung nicht gefunden.");
+      return;
+    }
+
+    const { data: { session }, error: sessionError } =
+      await client.auth.getSession();
+
+    if (sessionError || !session) {
+      alert("Bitte melde dich zuerst bei KostetMich an.");
+      return;
+    }
+
+    button.disabled = true;
+    button.textContent = "⏳ Wird gesendet...";
+
+    try {
+      const { data, error } = await client.functions.invoke(
+        "kostetmich-push",
+        { body: {} }
+      );
+
+      if (error) {
+        throw error;
+      }
+
+      if (!data?.success) {
+        throw new Error(data?.error || "Versand fehlgeschlagen");
+      }
+
+      alert(
+        "Push-Versand abgeschlossen!\n" +
+        "Erfolgreich: " + data.sent + "\n" +
+        "Fehlgeschlagen: " + data.failed
+      );
+    } catch (error) {
+      alert("Fehler beim Push-Versand: " + error.message);
+      console.error(error);
+    } finally {
+      button.disabled = false;
+      button.textContent = "🔔 Test-Push an alle senden";
+    }
+  });
+</script>
+
 </body>
 </html>
 
