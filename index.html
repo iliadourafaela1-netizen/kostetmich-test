@@ -235,6 +235,31 @@ async function registerKostetMichPush() {
     }
 
     console.log('Push-Anmeldung erfolgreich:', subscription.endpoint);
+
+const { data: { user }, error: userError } = await client.auth.getUser();
+
+if (userError || !user) {
+  throw new Error('Bitte melde dich zuerst bei KostetMich an.');
+}
+
+const subscriptionData = subscription.toJSON();
+
+const { error: saveError } = await client
+  .from('push_subscriptions')
+  .upsert({
+    user_id: user.id,
+    endpoint: subscription.endpoint,
+    p256dh: subscriptionData.keys.p256dh,
+    auth_key: subscriptionData.keys.auth
+  }, {
+    onConflict: 'endpoint'
+  });
+
+if (saveError) {
+  throw new Error('Supabase-Speicherung fehlgeschlagen: ' + saveError.message);
+}
+
+console.log('Push-Anmeldung in Supabase gespeichert.');
    
 const pushStatus = document.createElement('div');
 pushStatus.id = 'km-push-test';
