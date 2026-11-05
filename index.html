@@ -216,7 +216,7 @@ signup.addEventListener('click',async()=>{if(!form.reportValidity())return;setBu
 const reminderSettings = {
   enabled: true,
   daysBefore: [3],
-  time: "12:00"
+  time: state.notificationPrefs?.pushTime || "18:30"
 };
  
 async function syncReminders() {
