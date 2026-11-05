@@ -1,7 +1,7 @@
 
  // KostetMich: Offline-Cache und Push-Benachrichtigungen
 
-const CACHE = 'kostetmich-pwa-v4';
+const CACHE = 'kostetmich-pwa-v5';
 
 const ASSETS = [
   './',
