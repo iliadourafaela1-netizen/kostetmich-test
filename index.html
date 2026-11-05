@@ -198,4 +198,17 @@ form.addEventListener('submit',async ev=>{ev.preventDefault();setBusy(true);show
 signup.addEventListener('click',async()=>{if(!form.reportValidity())return;setBusy(true);showMessage('Registrierung läuft …');try{const {data,error}=await client.auth.signUp({email:email.value.trim(),password:password.value,options:{emailRedirectTo:location.origin+location.pathname}});if(error)throw error;showMessage(data.session?'Konto erstellt und angemeldet.':'Bitte öffne die Bestätigungs-E-Mail und bestätige deine Adresse. Danach kannst du dich anmelden.')}catch(e){showMessage('Registrierung fehlgeschlagen: '+e.message)}finally{setBusy(false)}});
 })();
 </script>
-</body></html>
+ <script>
+async function registerKostetMichPush() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    console.log('Push wird nicht unterstützt.');
+    return;
+  }
+
+  const registration = await navigator.serviceWorker.ready;
+  console.log('Service Worker bereit:', registration.scope);
+}
+registerKostetMichPush();
+</script>
+</body>
+</html>
