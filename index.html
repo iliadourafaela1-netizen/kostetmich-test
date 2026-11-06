@@ -237,7 +237,7 @@ async function syncReminders() {
       user_id: user.id,
       title: entry.name || "Rechnung",
       due_date: `${state.month}-${String(entry.day).padStart(2, "0")}`,
-      remind_at: new Date(`${state.month}-${String(entry.day).padStart(2, "0")}T18:30:00+01:00`).toISOString(),
+     remind_at: new Date(`${state.month}-${String(entry.day).padStart(2, "0")}T12:00:00${new Intl.DateTimeFormat("en-US", {timeZone:"Europe/Berlin", timeZoneName:"shortOffset"}).formatToParts(new Date(`${state.month}-${String(entry.day).padStart(2, "0")}T12:00:00Z`)).find(p=>p.type==="timeZoneName").value.replace("GMT","").replace(/^([+-]\d{1,2})$/, "$1:00").replace(/^([+-])(\d):/, "$10$2:")}`).toISOString(),
       type: "bill"
     });
   }
