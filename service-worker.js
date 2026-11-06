@@ -87,9 +87,9 @@ self.addEventListener('push', event => {
     general: 'In KostetMich gibt es eine neue Erinnerung.'
   };
 
-  const body = Object.prototype.hasOwnProperty.call(messages, kind)
-    ? messages[kind]
-    : messages.general;
+  const body = (typeof payload !== "undefined" && typeof payload.body === "string" && payload.body.trim())
+  ? payload.body
+  : (messages[kind] || messages.general);
 
   event.waitUntil(
     self.registration.showNotification(
