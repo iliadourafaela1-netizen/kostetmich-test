@@ -99,9 +99,10 @@ const rows = state.debts.length
       const q = debtEstimate(d);
       const rest = Math.max(0, num(d.balance));
       const rate = Math.max(0, num(d.payment));
-      const progress = rate > 0 && q?.months
-        ? Math.min(100, Math.round(100 / (q.months + 1)))
-        : 0;
+      const original = Math.max(0, num(d.originalBalance || d.balance));
+const progress = original > 0
+  ? Math.min(100, Math.max(0, Math.round(((original - rest) / original) * 100)))
+  : 0;
 
       return `
         <div class="card" style="margin:14px 0;padding:20px">
