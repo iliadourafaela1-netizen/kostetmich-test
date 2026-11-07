@@ -62,11 +62,16 @@ self.addEventListener('fetch', event => {
 // Keine sensiblen Finanzdaten in Benachrichtigungen anzeigen.
 
 self.addEventListener('push', event => {
-  let kind = 'general';
+  
+let kind = 'general';
+let payload = {};
+
 
   try {
     if (event.data) {
-      const payload = event.data.json();
+      
+payload = event.data.json();
+
 
       if (
         payload &&
@@ -87,9 +92,15 @@ self.addEventListener('push', event => {
     general: 'In KostetMich gibt es eine neue Erinnerung.'
   };
 
-  const body = (typeof payload !== "undefined" && typeof payload.body === "string" && payload.body.trim())
+  
+const body = (
+  typeof payload !== "undefined" &&
+  typeof payload.body === "string" &&
+  payload.body.trim()
+)
   ? payload.body
   : (messages[kind] || messages.general);
+
 
   event.waitUntil(
     self.registration.showNotification(
