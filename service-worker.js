@@ -93,7 +93,11 @@ self.addEventListener('push', event => {
 
   event.waitUntil(
     self.registration.showNotification(
-      'KostetMich – Erinnerung',
+      
+(typeof payload !== 'undefined' && typeof payload.title === 'string' && payload.title.trim())
+  ? payload.title
+  : 'KostetMich 💜 Erinnerung',
+
       {
         body: body,
         icon: './icon-192.png',
