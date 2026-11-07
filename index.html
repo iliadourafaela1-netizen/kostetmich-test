@@ -92,7 +92,48 @@ function addEntry(ev){ev.preventDefault();state.entries.push({id:id(),type:$('et
 function debtEstimate(d,extra=0){let b=num(d.balance),r=num(d.payment)+num(extra),annual=num(d.apr);if(!b)return {months:0,interest:0,paid:0};if(r<=0)return null;let m=0,interest=0;while(b>.005&&m<1200){let i=b*annual/1200; if(r<=i+.00001)return null;interest+=i;b=Math.max(0,b+i-r);m++}return m>=1200?null:{months:m,interest,paid:num(d.balance)+interest}}
 function debts(){
  const form=shell('Schulden und Inkasso-Raten',`<p class="muted">Erfasse die offenen Beträge und vereinbarten Monatsraten. Zinsen sind optional und werden nur näherungsweise berücksichtigt.</p><form onsubmit="addDebt(event)"><div class="two"><div><label>Gläubiger / Bezeichnung</label><input id="dname" required maxlength="70" placeholder="z. B. Inkasso A"></div><div><label>Offener Betrag (€)</label><input id="dbalance" type="number" min="0" step="0.01" required></div><div><label>Monatliche Rate (€)</label><input id="dpayment" type="number" min="0" step="0.01" required></div><div><label>Jahreszins in % (falls bekannt)</label><input id="dapr" type="number" min="0" max="100" step="0.01" value="0"></div><div><label>Zahlungstag im Monat (optional)</label><input id="dday" type="number" min="1" max="31" placeholder="z. B. 5"></div></div><div class="actions"><button type="submit">Schuld hinzufügen</button></div></form>`);
- const rows=state.debts.length?state.debts.map(d=>{const q=debtEstimate(d);return `<div class="row"><div><b>${esc(d.name)}</b><small>Offen: ${money(d.balance)} · Rate: ${money(d.payment)}/Mon.</small><small>${q?`Voraussichtlich ${q.months} Monate · ca. ${money(q.interest)} Zinsen`:'Keine verlässliche Laufzeit berechenbar'}</small></div><div class="right"><button class="secondary" onclick="payDebt('${d.id}')">Zahlung verbuchen</button><button class="danger" onclick="delDebt('${d.id}')">Löschen</button></div></div>`}).join(''):'<p class="muted">Noch keine Schulden eingetragen.</p>';
+ 
+const rows = state.debts.length
+  ? state.debts.map(d => {
+      const q = debtEstimate(d);
+      const rest = Math.max(0, num(d.balance));
+      const rate = Math.max(0, num(d.payment));
+      const progress = rate > 0 && q?.months
+        ? Math.min(100, Math.round(100 / (q.months + 1)))
+        : 0;
+
+      return `
+        <div class="card" style="margin:14px 0;padding:20px">
+          <h3 style="margin:0 0 16px">${esc(d.name)}</h3>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div>
+              <small>Offener Betrag</small>
+              <h3>${money(rest)}</h3>
+            </div>
+            <div>
+              <small>Monatliche Rate</small>
+              <h3>${money(rate)}</h3>
+            </div>
+          </div>
+
+          <div style="background:#eeeaf7;border-radius:20px;height:10px;margin:16px 0">
+            <div style="background:#7652d4;width:${progress}%;height:100%;border-radius:20px"></div>
+          </div>
+
+          <p class="muted">
+            ${q ? `Voraussichtlich noch ${q.months} Monate` : "Laufzeit nicht berechenbar"}
+          </p>
+
+          <div class="actions" style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="secondary" onclick="payDebt('${d.id}')">💶 Zahlung verbuchen</button>
+            <button class="danger" onclick="delDebt('${d.id}')">🗑️ Löschen</button>
+          </div>
+        </div>
+      `;
+    }).join("")
+  : '<p class="muted">Noch keine Schulden eingetragen.</p>';
+
  const outstanding=shell('Offene Forderungen',rows+`<p class="muted">Schätzungen setzen gleichbleibende Raten und Zinssätze voraus. Inkasso-Gebühren und besondere Vereinbarungen sind nicht automatisch berücksichtigt. Eine verbuchte Zahlung reduziert nur den eingegebenen offenen Betrag.</p>`);
  const sim=shell('Rückzahlung simulieren',`<p>Was passiert, wenn du monatlich etwas zusätzlich tilgst? Die Simulation verändert deine gespeicherten Schulden nicht.</p><label>Zusätzliche Rate insgesamt (€)</label><input id="extra" type="number" min="0" step="1" value="20"><div class="actions"><button onclick="simulate()">Berechnen</button></div><div id="simresult"></div>`);
  return form+outstanding+sim;
