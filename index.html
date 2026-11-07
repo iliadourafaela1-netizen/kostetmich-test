@@ -249,6 +249,7 @@ async function syncReminders() {
     reminders.push({
       user_id: user.id,
       title: debt.name || "Schuldenrate",
+      amount: debt.amount == null ? null : Number(debt.amount),
       due_date: `${state.month}-${String(debt.day).padStart(2, "0")}`,
       remind_at: new Date(`${state.month}-${String(debt.day).padStart(2, "0")}T18:30:00+01:00`).toISOString(),
       type: "debt"
