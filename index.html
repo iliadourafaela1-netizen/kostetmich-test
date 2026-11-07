@@ -104,40 +104,49 @@ const progress = original > 0
   ? Math.min(100, Math.max(0, Math.round(((original - rest) / original) * 100)))
   : 0;
 const paid = Math.max(0, original - rest);
-      return `
-        <div class="card" style="margin:16px 0;padding:24px;border-radius:24px;background:linear-gradient(145deg,#ffffff,#faf7ff);border:1px solid #e9e0f5;box-shadow:0 8px 28px rgba(93,65,155,.08)">
-          <h3 style="margin:0 0 16px">${esc(d.name)}</h3>
+     
+return `
+  <div class="card" style="margin:16px 0;padding:24px;border-radius:28px;background:#f8f5ff;border:1px solid #e9e0f5">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:18px">
+      <strong style="color:#302448;font-size:15px">MEINE SCHULDEN</strong>
+      <span style="background:#eae5f0;padding:6px 12px;border-radius:20px;font-size:13px">${esc(d.name)}</span>
+    </div>
 
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-            <div>
-              <small style="color:#82758f;font-size:13px;font-weight:500">💶 Noch zu bezahlen</small>
-              <h3 style="font-size:30px;font-weight:800;color:#302448;margin:8px 0 0;letter-spacing:-1px">${money(rest)}</h3>
-            </div>
-            <div>
-              <small style="color:#82758f;font-size:13px;font-weight:500">📅 Monatliche Rate</small>
-              <h3 style="font-size:24px;font-weight:700;color:#7950d4;margin:8px 0 0">${money(rate)}</h3>
-            </div>
-          </div>
+    <div style="background:white;border-radius:24px;padding:22px">
+      <small style="color:#82758f">Noch offener Betrag</small>
+      <h2 style="font-size:clamp(28px,7vw,38px);color:#302448;margin:12px 0 24px">${money(rest)}</h2>
 
-          <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:16px;font-size:14px">
-  <span>💜 Bereits zurückgezahlt: <b>${money(paid)}</b></span>
-  <span>💶 Noch offen: <b>${money(rest)}</b></span>
-</div><p style="font-size:14px;color:#7652d4;font-weight:600;margin:12px 0 4px">
-  ${progress}% zurückgezahlt
-</p>
-          <div style="background:#eeeaf7;border-radius:20px;height:10px;margin:16px 0">
-            <div style="background:linear-gradient(90deg,#9b6dff,#7652d4);width:${progress}%;height:100%;border-radius:20px;transition:width .5s ease"></div>
-          </div>
+      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <strong style="color:#7652d4">${progress}% zurückgezahlt</strong>
+        <span style="color:#82758f">${money(paid)} von ${money(original)}</span>
+      </div>
 
-          <p class="muted">
-            ${q ? `Voraussichtlich noch ${q.months} Monate` : "Laufzeit nicht berechenbar"}
-          </p>
+      <div style="background:#eeeaf7;height:12px;border-radius:20px;margin:14px 0 26px;overflow:hidden">
+        <div style="width:${progress}%;height:100%;border-radius:20px;background:linear-gradient(90deg,#9b6dff,#7652d4)"></div>
+      </div>
 
-          <div class="actions" style="display:flex;gap:10px;flex-wrap:wrap">
-            <button class="secondary" onclick="payDebt('${d.id}')">💶 Zahlung verbuchen</button>
-            <button class="danger" onclick="delDebt('${d.id}')">🗑️ Löschen</button>
-          </div>
+      <div style="border-top:1px solid #eee;padding-top:22px;display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div>
+          <small style="color:#82758f">Monatliche Rate</small>
+          <h3 style="color:#302448;margin:10px 0">${money(rate)}</h3>
         </div>
+        <div>
+          <small style="color:#82758f">Voraussichtlich</small>
+          <h3 style="color:#302448;margin:10px 0">${q ? q.months + " Monate" : "Nicht berechenbar"}</h3>
+        </div>
+      </div>
+
+      <button onclick="payDebt('${d.id}')" style="width:100%;background:#7652d4;color:white;border:0;border-radius:16px;padding:17px;margin-top:20px;font-size:16px;font-weight:700">
+        💶 Zahlung verbuchen
+      </button>
+
+      <button onclick="delDebt('${d.id}')" style="width:100%;background:transparent;color:#b84b65;border:0;padding:16px;margin-top:8px;font-size:15px">
+        🗑 Forderung löschen
+      </button>
+    </div>
+  </div>
+`;
+
       `;
     }).join("")
   : '<p class="muted">Noch keine Schulden eingetragen.</p>';
