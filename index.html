@@ -105,17 +105,17 @@ const progress = original > 0
   : 0;
 const paid = Math.max(0, original - rest);
       return `
-        <div class="card" style="margin:14px 0;padding:20px">
+        <div class="card" style="margin:16px 0;padding:24px;border-radius:24px;background:linear-gradient(145deg,#ffffff,#faf7ff);border:1px solid #e9e0f5;box-shadow:0 8px 28px rgba(93,65,155,.08)">
           <h3 style="margin:0 0 16px">${esc(d.name)}</h3>
 
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
             <div>
-              <small>Offener Betrag</small>
-              <h3>${money(rest)}</h3>
+              <small style="color:#82758f;font-size:13px;font-weight:500">💶 Noch zu bezahlen</small>
+              <h3 style="font-size:30px;font-weight:800;color:#302448;margin:8px 0 0;letter-spacing:-1px">${money(rest)}</h3>
             </div>
             <div>
-              <small>Monatliche Rate</small>
-              <h3>${money(rate)}</h3>
+              <small style="color:#82758f;font-size:13px;font-weight:500">📅 Monatliche Rate</small>
+              <h3 style="font-size:24px;font-weight:700;color:#7950d4;margin:8px 0 0">${money(rate)}</h3>
             </div>
           </div>
 
@@ -126,7 +126,7 @@ const paid = Math.max(0, original - rest);
   ${progress}% zurückgezahlt
 </p>
           <div style="background:#eeeaf7;border-radius:20px;height:10px;margin:16px 0">
-            <div style="background:#7652d4;width:${progress}%;height:100%;border-radius:20px"></div>
+            <div style="background:linear-gradient(90deg,#9b6dff,#7652d4);width:${progress}%;height:100%;border-radius:20px;transition:width .5s ease"></div>
           </div>
 
           <p class="muted">
