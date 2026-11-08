@@ -359,7 +359,7 @@ function tr(s){if(lang==='de')return s;return TRANSLATIONS[s]?.[lang]||s}
 function changeLanguage(next){lang=next;localStorage.setItem('kostetmich-language',lang);document.documentElement.lang=lang;render()}
 function translatePage(){
  document.documentElement.lang=lang;const picker=document.getElementById('language');if(picker)picker.value=lang;
- const noticeTab=document.querySelector('#nav button:last-child');if(noticeTab)noticeTab.textContent='🔔 '+nt('title');
+ // Benachrichtigungen werden ausschließlich im Menü angezeigt; keine Navigationsschaltfläche überschreiben.
  const tag=document.getElementById('beta-tag');if(tag)tag.textContent=tr('BETA · 100 % kostenlos');
  const lab=document.getElementById('language-label');if(lab)lab.textContent=({de:'Sprache / Language',el:'Γλώσσα / Language',en:'Language',tr:'Dil / Language'}[lang]);
  const root=document.querySelector('main');
