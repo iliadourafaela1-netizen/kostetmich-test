@@ -443,12 +443,16 @@ async function checkAdminPushButton() {
 }
 
 window.addEventListener("load", () => {
-  const warten = setInterval(() => {
-    if (window.kostetMichClient) {
-      clearInterval(warten);
-      checkAdminPushButton();
-    }
-  }, 300);
+  const check = setInterval(async () => {
+    const client = window.kostetMichClient;
+    if (!client) return;
+
+    const { data: { session } } = await client.auth.getSession();
+    if (!session?.user) return;
+
+    clearInterval(check);
+    await checkAdminPushButton();
+  }, 500);
 });
 </script><script>
 document.getElementById("kostetmich-test-push")
