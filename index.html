@@ -442,7 +442,14 @@ async function checkAdminPushButton() {
   }
 }
 
-window.addEventListener("load", checkAdminPushButton);
+window.addEventListener("load", () => {
+  const warten = setInterval(() => {
+    if (window.kostetMichClient) {
+      clearInterval(warten);
+      checkAdminPushButton();
+    }
+  }, 300);
+});
 </script><script>
 document.getElementById("kostetmich-test-push")
   .addEventListener("click", async () => {
