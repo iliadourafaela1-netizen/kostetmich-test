@@ -1,13 +1,13 @@
 {
   "id": "./",
-  "name": "KostetMich – Finanzüberblick",
-  "short_name": "KostetMich",
-  "description": "Kostenloser Finanzüberblick mit Einnahmen, Ausgaben, Schulden und Raten.",
+  "name": "VANT. – Dein Finanzüberblick",
+  "short_name": "VANT",
+  "description": "Take control of your money. Einnahmen, Ausgaben, Schulden und Sparziele im Blick.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f8f5fd",
-  "theme_color": "#2b174c",
+  "background_color": "#19152c",
+  "theme_color": "#19152c",
   "lang": "de",
   "icons": [
     {
