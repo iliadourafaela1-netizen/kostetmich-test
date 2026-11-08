@@ -415,12 +415,35 @@ document.body.appendChild(pushStatus);
 <button
   id="kostetmich-test-push"
   type="button"
-  style="position:fixed;bottom:20px;right:20px;z-index:9999;padding:14px;border:0;border-radius:12px;background:#7c3aed;color:white;font-weight:bold;"
+  style="display:none;position:fixed;bottom:20px;right:20px;z-index:9999;padding:14px;border:0;border-radius:12px;background:#7c3aed;color:white;font-weight:bold;"
 >
   🔔 Test-Push an alle senden
 </button>
 
 <script>
+async function checkAdminPushButton() {
+  const button = document.getElementById("kostetmich-test-push");
+  const client = window.kostetMichClient;
+
+  if (!button || !client) return;
+
+  const { data: { session }, error } = await client.auth.getSession();
+
+  if (error || !session?.user) return;
+
+  const { data: admin, error: adminError } = await client
+    .from("app_admins")
+    .select("user_id")
+    .eq("user_id", session.user.id)
+    .maybeSingle();
+
+  if (!adminError && admin) {
+    button.style.display = "block";
+  }
+}
+
+window.addEventListener("load", checkAdminPushButton);
+</script><script>
 document.getElementById("kostetmich-test-push")
   .addEventListener("click", async () => {
     const button = document.getElementById("kostetmich-test-push");
