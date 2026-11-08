@@ -29,6 +29,21 @@ body, button, input, select, textarea {
     font-size: clamp(17px, 5vw, 22px);
   }
 }
+
+/* Einnahmen und Ausgaben: farbige Beträge und Wischgeste zum Löschen */
+#app .km-entry-row { gap: 10px; touch-action: pan-y; }
+#app .km-entry-row > .km-entry-details { min-width: 0; flex: 1 1 auto; }
+#app .km-entry-row > .km-entry-right { flex: 0 0 auto; }
+#app .km-entry-amount { font-weight: 750; }
+#app .km-entry-amount.km-income { color: #087a55; }
+#app .km-entry-amount.km-expense { color: #bd3551; }
+#app .km-entry-minus { width: 38px; height: 38px; min-width: 38px; border-radius: 12px; padding: 0; margin-top: 6px; background: #fff0f1; color: #b42847; font-size: 25px; line-height: 1; font-weight: 600; }
+#app .km-entry-row.km-swipe-active { background: #fff0f1; border-radius: 12px; padding-left: 8px; padding-right: 8px; }
+@media (max-width: 680px) {
+  #app .km-entry-row { align-items: center; }
+  #app .km-entry-amount { font-size: clamp(14px, 4vw, 18px); }
+  #app .km-entry-row .km-entry-right small { font-size: 12px; }
+}
 </style><link rel="manifest" href="./manifest.webmanifest"><meta name="theme-color" content="#241d49"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="KostetMich"><link rel="apple-touch-icon" href="./icon-192.png"><link rel="icon" href="./icon-192.png"></head><body><main class="shell" id="km-main" style="display:none"><header><span class="tag" id="beta-tag">BETA · 100 % kostenlos</span><div class="language-picker no-print"><label for="language" id="language-label">Sprache / Language</label><select id="language" onchange="changeLanguage(this.value)"><option value="de">🇩🇪 Deutsch</option><option value="el">🇬🇷 Ελληνικά</option><option value="en">🇬🇧 English</option><option value="tr">🇹🇷 Türkçe</option></select></div><h1 style="margin-top:12px">💜 KostetMich</h1><p style="margin-bottom:0" class="light">Dein Geld im Blick. Weniger Überraschungen, bessere Entscheidungen.</p></header><div class="nav no-print" id="nav"></div><div id="app"></div><footer>🔒 Finanzangaben bleiben lokal in diesem Browser; E-Mail, Login und Sitzungsdaten werden über Supabase verarbeitet. Keine Bankverbindung und noch keine Cloud-Synchronisierung. Dies ist eine Test-App und keine Schuldner- oder Finanzberatung. Berechnungen sind Schätzungen. Sichere deine Daten regelmäßig per Export.</footer></main><script>
 'use strict';let KEY='kostetmich-beta-v1';const tabs=[['dashboard','🏠 Übersicht'],['entries','💶 Einnahmen & Ausgaben'],['debts','📉 Schulden'],['calendar','📅 Kalender'],['forecast','📈 12 Monate'],['check','🛍️ Kaufcheck'],['brake','🛑 Notbremse'],['savings','🎯 Sparziele'],['notifications','🔔 Erinnerungen'],['settings','⚙️ Daten & Feedback']];let state={entries:[],debts:[],checks:[],reserve:100,month:new Date().toISOString().slice(0,7),brake:{balance:0,essential:0,horizon:30,extras:[]}};try{const a=JSON.parse(localStorage.getItem(KEY));if(a&&Array.isArray(a.entries)&&Array.isArray(a.debts))state={...state,...a}}catch(e){}let tab='dashboard';let lang=localStorage.getItem('kostetmich-language')||'de';const $=id=>document.getElementById(id),money=n=>Number(n||0).toLocaleString(({de:'de-DE',el:'el-GR',en:'en-IE',tr:'tr-TR'}[lang]||'de-DE'),{style:'currency',currency:'EUR'}),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),num=x=>Math.max(0,Number(x)||0),id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7),today=()=>new Date().toISOString().slice(0,10);function save(){
   
@@ -189,8 +204,30 @@ shell('Wichtig', `
 `);
 }
 
-function entries(){return shell('Einnahmen und Ausgaben',`<p class="muted">Gehalt, Nebenjob, Miete, Lebensmittel, Verträge und sonstige regelmäßige Kosten.</p><form onsubmit="addEntry(event)"><div class="two"><div><label>Art</label><select id="etype"><option value="income">Einnahme</option><option value="expense">Ausgabe</option></select></div><div><label>Bezeichnung</label><input id="ename" required maxlength="70" placeholder="z. B. Nettogehalt"></div><div><label>Betrag (€)</label><input id="eamount" type="number" min="0.01" step="0.01" required></div><div><label>Häufigkeit</label><select id="ecycle"><option value="monthly">Monatlich</option><option value="weekly">Wöchentlich</option><option value="quarterly">Alle 3 Monate</option><option value="yearly">Jährlich</option></select></div><div><label>Fälligkeitstag im Monat (optional)</label><input id="eday" type="number" min="1" max="31" placeholder="z. B. 15"></div></div><div class="actions"><button type="submit">Eintrag hinzufügen</button></div></form>`)+shell('Deine Einträge',state.entries.length?state.entries.map(e=>`<div class="row"><div><b>${esc(e.name)}</b><small>${e.type==='income'?'Einnahme':'Ausgabe'} · ${esc(e.cycle)}${e.day?' · Tag '+e.day:''}</small></div><div class="right"><b>${money(monthly(e))}/Mon.</b><small>${money(e.amount)} je Zahlung</small><button class="danger" onclick="delEntry('${e.id}')">Entfernen</button></div></div>`).join(''):'<p class="muted">Noch keine Einträge vorhanden.</p>')}
+function entries(){return shell('Einnahmen und Ausgaben',`<p class="muted">Gehalt, Nebenjob, Miete, Lebensmittel, Verträge und sonstige regelmäßige Kosten.</p><form onsubmit="addEntry(event)"><div class="two"><div><label>Art</label><select id="etype"><option value="income">Einnahme</option><option value="expense">Ausgabe</option></select></div><div><label>Bezeichnung</label><input id="ename" required maxlength="70" placeholder="z. B. Nettogehalt"></div><div><label>Betrag (€)</label><input id="eamount" type="number" min="0.01" step="0.01" required></div><div><label>Häufigkeit</label><select id="ecycle"><option value="monthly">Monatlich</option><option value="weekly">Wöchentlich</option><option value="quarterly">Alle 3 Monate</option><option value="yearly">Jährlich</option></select></div><div><label>Fälligkeitstag im Monat (optional)</label><input id="eday" type="number" min="1" max="31" placeholder="z. B. 15"></div></div><div class="actions"><button type="submit">Eintrag hinzufügen</button></div></form>`)+shell('Deine Einträge',state.entries.length?state.entries.map(e=>`<div class="row km-entry-row" data-entry-id="${e.id}" ontouchstart="entryTouchStart(event)" ontouchend="entryTouchEnd(event)" ontouchcancel="entryTouchCancel(event)"><div class="km-entry-details"><b>${esc(e.name)}</b><small>${e.type==='income'?'Einnahme':'Ausgabe'} · ${esc(e.cycle)}${e.day?' · Tag '+e.day:''}</small></div><div class="right km-entry-right"><b class="km-entry-amount ${e.type==='income'?'km-income':'km-expense'}">${money(monthly(e))}/Mon.</b><small>${money(e.amount)} je Zahlung</small><button type="button" class="km-entry-minus" aria-label="${esc(e.name)} löschen" title="Eintrag löschen" onclick="delEntry('${e.id}')">−</button></div></div>`).join(''):'<p class="muted">Noch keine Einträge vorhanden.</p>')}
 function addEntry(ev){ev.preventDefault();state.entries.push({id:id(),type:$('etype').value,name:$('ename').value.trim(),amount:num($('eamount').value),cycle:$('ecycle').value,day:$('eday').value?Math.min(31,Math.max(1,+$('eday').value)):null});save();render()}function delEntry(x){if(confirm(tr('Diesen Eintrag löschen?'))){state.entries=state.entries.filter(e=>e.id!==x);save();render()}}
+// Wisch nach links: Löschbestätigung öffnen, ohne vertikales Scrollen zu blockieren.
+let entryTouch = null;
+function entryTouchStart(ev) {
+  if (ev.touches.length !== 1) { entryTouch = null; return; }
+  const touch = ev.touches[0];
+  entryTouch = { x: touch.clientX, y: touch.clientY, row: ev.currentTarget };
+}
+function entryTouchEnd(ev) {
+  if (!entryTouch || entryTouch.row !== ev.currentTarget || !ev.changedTouches.length) return;
+  const start = entryTouch;
+  entryTouch = null;
+  const touch = ev.changedTouches[0];
+  const dx = touch.clientX - start.x;
+  const dy = touch.clientY - start.y;
+  if (dx < -75 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+    start.row.classList.add('km-swipe-active');
+    const id = start.row.dataset.entryId;
+    if (id) delEntry(id);
+    start.row.classList.remove('km-swipe-active');
+  }
+}
+function entryTouchCancel() { entryTouch = null; }
 function debtEstimate(d,extra=0){let b=num(d.balance),r=num(d.payment)+num(extra),annual=num(d.apr);if(!b)return {months:0,interest:0,paid:0};if(r<=0)return null;let m=0,interest=0;while(b>.005&&m<1200){let i=b*annual/1200; if(r<=i+.00001)return null;interest+=i;b=Math.max(0,b+i-r);m++}return m>=1200?null:{months:m,interest,paid:num(d.balance)+interest}}
 function debts(){
  const form=shell('Schulden und Inkasso-Raten',`<p class="muted">Erfasse die offenen Beträge und vereinbarten Monatsraten. Zinsen sind optional und werden nur näherungsweise berücksichtigt.</p><form onsubmit="addDebt(event)"><div class="two"><div><label>Gläubiger / Bezeichnung</label><input id="dname" required maxlength="70" placeholder="z. B. Inkasso A"></div><div><label>Offener Betrag (€)</label><input id="dbalance" type="number" min="0" step="0.01" required></div><div><label>Monatliche Rate (€)</label><input id="dpayment" type="number" min="0" step="0.01" required></div><div><label>Jahreszins in % (falls bekannt)</label><input id="dapr" type="number" min="0" max="100" step="0.01" value="0"></div><div><label>Zahlungstag im Monat (optional)</label><input id="dday" type="number" min="1" max="31" placeholder="z. B. 5"></div></div><div class="actions"><button type="submit">Schuld hinzufügen</button></div></form>`);
