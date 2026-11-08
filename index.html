@@ -5,26 +5,30 @@ body, button, input, select, textarea {
   font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
 }
 }
-/* KostetMich – Finanzkacheln auf dem Handy */
 @media (max-width: 680px) {
-  .grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
+  #km-main .grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px !important;
   }
 
-  .grid > .stat:last-child {
+  #km-main .grid > .stat {
+    min-width: 0;
+  }
+
+  #km-main .grid > .stat:last-child {
     grid-column: 1 / -1;
   }
 
-  .grid > .stat:nth-child(1) {
+  #km-main .grid > .stat:nth-child(1) {
     background: #e8f7ee;
   }
 
-  .grid > .stat:nth-child(2) {
+  #km-main .grid > .stat:nth-child(2) {
     background: #fff0f1;
   }
 
-  .grid > .stat:nth-child(3) {
+  #km-main .grid > .stat:nth-child(3) {
     background: #f0e7fb;
   }
 }
