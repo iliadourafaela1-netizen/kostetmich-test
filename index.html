@@ -90,7 +90,78 @@ function addSaving(e,gid){e.preventDefault();const g=savingsData().find(x=>x.id=
 function deleteSaving(gid){if(!confirm(sw('confirm')))return;state.savings=savingsData().filter(x=>x.id!==gid);save();render()}
 function ackSaving(gid){const g=savingsData().find(x=>x.id===gid);if(g){g.ack=today().slice(0,7);save();render()}}
 
-function dashboard(){let t=totals(),sum=state.debts.reduce((s,d)=>s+num(d.balance),0);return `<div class="grid"><div class="stat"><span>Einnahmen / Monat</span><b>${money(t.inc)}</b></div><div class="stat"><span>Ausgaben + Raten</span><b>${money(t.out+t.debt)}</b></div><div class="stat"><span>Nach Kosten & Rücklage</span><b class="${t.left<0?'bad':'good'}">${money(t.left)}</b></div></div>${shell('Dein Finanzstatus',`<p class="${t.left<0?'bad':'good'}"><b>${t.left<0?'⚠️ Deine geplanten Ausgaben übersteigen dein Budget.':'✓ Dein rechnerisches Monatsbudget ist nicht negativ.'}</b></p><p>Offene Schulden: <b>${money(sum)}</b> · Monatliche Schuldenraten: <b>${money(t.debt)}</b></p><p class="muted">Der Betrag ist eine Planung auf Basis deiner Angaben. Einmalige Kosten, schwankende Einkommen und nicht erfasste Ausgaben können das Ergebnis verändern.</p><div class="actions"><button onclick="setTab('entries')">Einnahmen & Ausgaben eintragen</button><button class="secondary" onclick="setTab('debts')">Schulden verwalten</button></div>`)}${shell('Deine Rücklage',`<p>Wie viel möchtest du monatlich für unerwartete Ausgaben zurückhalten?</p><label>Rücklage pro Monat (€)</label><input id="reserve" type="number" min="0" step="0.01" value="${state.reserve}"><div class="actions"><button onclick="state.reserve=num($('reserve').value);save();render()">Speichern</button></div>`)}${shell('Wichtig',`<p class="notice">Bei Inkasso und Krediten können Zinsen, Gebühren und abweichende Zahlungsvereinbarungen entstehen. Trage den tatsächlich aktuellen offenen Betrag ein und prüfe deine Unterlagen. Wenn du Schwierigkeiten mit Zahlungen hast, kann eine anerkannte Schuldnerberatung helfen.</p>`)}`}
+function dashboard()
+let t = totals();
+let sum = state.debts.reduce((s,d) => s + num(d.balance), 0);
+
+let income = Math.max(0, t.inc);
+let expenses = Math.max(0, t.out + t.debt);
+let maximum = Math.max(income, expenses, 1);
+
+let incomeHeight = income === 0 ? 0 : income / maximum * 100;
+let expenseHeight = expenses === 0 ? 0 : expenses / maximum * 100;
+let difference = income - expenses;
+
+let chart = `
+<section class="card">
+  <h2>Deine Haushaltsplanung</h2>
+  <div class="km-chart">
+    <div class="km-chart-item">
+      <strong class="km-income-text">${money(income)}</strong>
+      <div class="km-chart-track">
+        <div class="km-chart-bar km-income-bar"
+             style="height:${incomeHeight}%"></div>
+      </div>
+      <span>Einnahmen</span>
+    </div>
+    <div class="km-chart-item">
+      <strong class="km-expense-text">${money(expenses)}</strong>
+      <div class="km-chart-track">
+        <div class="km-chart-bar km-expense-bar"
+             style="height:${expenseHeight}%"></div>
+      </div>
+      <span>Ausgaben + Raten</span>
+    </div>
+  </div>
+  <div class="km-chart-result">
+    <span>${difference < 0 ? 'Haushaltsdefizit' : 'Haushaltsüberschuss'}</span>
+    <strong class="${difference < 0 ? 'bad' : 'good'}">
+      ${money(difference)}
+    </strong>
+  </div>
+  <p class="muted">Die Rücklage wird bei deinem verfügbaren Budget zusätzlich berücksichtigt.</p>
+</section>`;
+
+return chart + `
+<div class="grid">
+  <div class="stat"><span>Einnahmen / Monat</span><b>${money(t.inc)}</b></div>
+  <div class="stat"><span>Ausgaben + Raten</span><b>${money(t.out+t.debt)}</b></div>
+  <div class="stat"><span>Nach Kosten & Rücklage</span><b class="${t.left<0?'bad':'good'}">${money(t.left)}</b></div>
+</div>
+` +
+shell('Dein Finanzstatus', `
+  <p class="${t.left<0?'bad':'good'}">
+    <b>${t.left<0?'⚠️ Deine geplanten Ausgaben übersteigen dein Budget.':'✓ Dein rechnerisches Monatsbudget ist nicht negativ.'}</b>
+  </p>
+  <p>Offene Schulden: <b>${money(sum)}</b> · Monatliche Schuldenraten: <b>${money(t.debt)}</b></p>
+  <p class="muted">Der Betrag ist eine Planung auf Basis deiner Angaben. Einmalige Kosten, schwankende Einkommen und nicht erfasste Ausgaben können das Ergebnis verändern.</p>
+  <div class="actions">
+    <button onclick="setTab('entries')">Einnahmen & Ausgaben eintragen</button>
+    <button class="secondary" onclick="setTab('debts')">Schulden verwalten</button>
+  </div>
+`) +
+shell('Deine Rücklage', `
+  <p>Wie viel möchtest du monatlich für unerwartete Ausgaben zurückhalten?</p>
+  <label>Rücklage pro Monat (€)</label>
+  <input id="reserve" type="number" min="0" step="0.01" value="${state.reserve}">
+  <div class="actions">
+    <button onclick="state.reserve=num($('reserve').value);save();render()">Speichern</button>
+  </div>
+`) +
+shell('Wichtig', `
+  <p class="notice">Bei Inkasso und Krediten können Zinsen, Gebühren und abweichende Zahlungsvereinbarungen entstehen. Trage den tatsächlich aktuellen offenen Betrag ein und prüfe deine Unterlagen. Wenn du Schwierigkeiten mit Zahlungen hast, kann eine anerkannte Schuldnerberatung helfen.</p>
+`);
+}</b></div><div class="stat"><span>Nach Kosten & Rücklage</span><b class="${t.left<0?'bad':'good'}">${money(t.left)}</b></div></div>${shell('Dein Finanzstatus',`<p class="${t.left<0?'bad':'good'}"><b>${t.left<0?'⚠️ Deine geplanten Ausgaben übersteigen dein Budget.':'✓ Dein rechnerisches Monatsbudget ist nicht negativ.'}</b></p><p>Offene Schulden: <b>${money(sum)}</b> · Monatliche Schuldenraten: <b>${money(t.debt)}</b></p><p class="muted">Der Betrag ist eine Planung auf Basis deiner Angaben. Einmalige Kosten, schwankende Einkommen und nicht erfasste Ausgaben können das Ergebnis verändern.</p><div class="actions"><button onclick="setTab('entries')">Einnahmen & Ausgaben eintragen</button><button class="secondary" onclick="setTab('debts')">Schulden verwalten</button></div>`)}${shell('Deine Rücklage',`<p>Wie viel möchtest du monatlich für unerwartete Ausgaben zurückhalten?</p><label>Rücklage pro Monat (€)</label><input id="reserve" type="number" min="0" step="0.01" value="${state.reserve}"><div class="actions"><button onclick="state.reserve=num($('reserve').value);save();render()">Speichern</button></div>`)}${shell('Wichtig',`<p class="notice">Bei Inkasso und Krediten können Zinsen, Gebühren und abweichende Zahlungsvereinbarungen entstehen. Trage den tatsächlich aktuellen offenen Betrag ein und prüfe deine Unterlagen. Wenn du Schwierigkeiten mit Zahlungen hast, kann eine anerkannte Schuldnerberatung helfen.</p>`)}`}
 function entries(){return shell('Einnahmen und Ausgaben',`<p class="muted">Gehalt, Nebenjob, Miete, Lebensmittel, Verträge und sonstige regelmäßige Kosten.</p><form onsubmit="addEntry(event)"><div class="two"><div><label>Art</label><select id="etype"><option value="income">Einnahme</option><option value="expense">Ausgabe</option></select></div><div><label>Bezeichnung</label><input id="ename" required maxlength="70" placeholder="z. B. Nettogehalt"></div><div><label>Betrag (€)</label><input id="eamount" type="number" min="0.01" step="0.01" required></div><div><label>Häufigkeit</label><select id="ecycle"><option value="monthly">Monatlich</option><option value="weekly">Wöchentlich</option><option value="quarterly">Alle 3 Monate</option><option value="yearly">Jährlich</option></select></div><div><label>Fälligkeitstag im Monat (optional)</label><input id="eday" type="number" min="1" max="31" placeholder="z. B. 15"></div></div><div class="actions"><button type="submit">Eintrag hinzufügen</button></div></form>`)+shell('Deine Einträge',state.entries.length?state.entries.map(e=>`<div class="row"><div><b>${esc(e.name)}</b><small>${e.type==='income'?'Einnahme':'Ausgabe'} · ${esc(e.cycle)}${e.day?' · Tag '+e.day:''}</small></div><div class="right"><b>${money(monthly(e))}/Mon.</b><small>${money(e.amount)} je Zahlung</small><button class="danger" onclick="delEntry('${e.id}')">Entfernen</button></div></div>`).join(''):'<p class="muted">Noch keine Einträge vorhanden.</p>')}
 function addEntry(ev){ev.preventDefault();state.entries.push({id:id(),type:$('etype').value,name:$('ename').value.trim(),amount:num($('eamount').value),cycle:$('ecycle').value,day:$('eday').value?Math.min(31,Math.max(1,+$('eday').value)):null});save();render()}function delEntry(x){if(confirm(tr('Diesen Eintrag löschen?'))){state.entries=state.entries.filter(e=>e.id!==x);save();render()}}
 function debtEstimate(d,extra=0){let b=num(d.balance),r=num(d.payment)+num(extra),annual=num(d.apr);if(!b)return {months:0,interest:0,paid:0};if(r<=0)return null;let m=0,interest=0;while(b>.005&&m<1200){let i=b*annual/1200; if(r<=i+.00001)return null;interest+=i;b=Math.max(0,b+i-r);m++}return m>=1200?null:{months:m,interest,paid:num(d.balance)+interest}}
@@ -211,6 +282,85 @@ render();
 #km-auth{max-width:450px;margin:8vh auto;padding:24px;background:#fff;border-radius:22px;box-shadow:0 12px 40px #29204d20;font-family:Inter,system-ui,Arial,sans-serif;color:#211c35}
 #km-auth h1{font-size:27px;color:#433084}#km-auth input{margin-bottom:10px}#km-auth button{margin-top:9px}#km-auth .km-message{font-size:14px;line-height:1.5;white-space:pre-wrap}#km-auth .km-note{font-size:13px;color:#6b6380;line-height:1.5}
 #km-account{padding:10px 0 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;flex-wrap:wrap}
+
+/* KostetMich – moderne Haushaltsbalken */
+.km-chart {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  padding: 24px 8px;
+}
+
+.km-chart-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  text-align: center;
+}
+
+.km-chart-item strong {
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.km-chart-item span {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.km-chart-track {
+  width: 100%;
+  max-width: 115px;
+  height: 190px;
+  border-radius: 18px;
+  background: #f3f1f8;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+
+.km-chart-bar {
+  width: 100%;
+  border-radius: 18px 18px 0 0;
+  animation: km-grow 0.9s ease-out both;
+}
+
+.km-income-bar {
+  background: linear-gradient(180deg, #78dfbe, #39b991);
+}
+
+.km-expense-bar {
+  background: linear-gradient(180deg, #ffaaa0, #ed706e);
+}
+
+.km-income-text {
+  color: #259b79;
+}
+
+.km-expense-text {
+  color: #db6264;
+}
+
+.km-chart-result {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px;
+  border-radius: 16px;
+  background: #f7f4fc;
+  font-weight: 700;
+}
+
+@keyframes km-grow {
+  from { transform: scaleY(0); transform-origin: bottom; }
+  to { transform: scaleY(1); transform-origin: bottom; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .km-chart-bar { animation: none; }
+}
 </style>
 <div id="km-auth"><h1>💜 KostetMich</h1><p>Willkommen! Melde dich an oder erstelle ein kostenloses Konto.</p>
 <form id="km-auth-form"><label for="km-email">E-Mail-Adresse</label><input id="km-email" type="email" autocomplete="email" required placeholder="name@beispiel.de"><label for="km-password">Passwort (mindestens 8 Zeichen)</label><input id="km-password" type="password" minlength="8" autocomplete="current-password" required><button type="submit" id="km-login">Anmelden</button><button type="button" class="secondary" id="km-signup">Registrieren</button></form>
