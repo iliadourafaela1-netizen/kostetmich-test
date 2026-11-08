@@ -278,63 +278,77 @@ function kmShowUndo(expenseId){const old=$('km-undo-toast');if(old)old.remove();
 function receiptScannerCard(){return shell(kqt('scan'),`<p class="muted">${esc(kqt('scanHint'))}</p><label>${esc(kqt('choose'))}</label><input type="file" id="km-receipt-file" accept="image/*" capture="environment" onchange="kmReceiptSelected(event)"><div id="km-receipt-preview"></div><p id="km-receipt-status" class="km-scan-status muted" role="status"></p><div class="actions"><button id="km-receipt-scan" type="button" onclick="kmScanReceipt()" disabled>${esc(kqt('scanStart'))}</button></div><div id="km-receipt-fields" hidden>${kmQuickFields('km-receipt')}</div><p class="muted" style="font-size:12px">${esc(kqt('privacy'))}</p>`)}
 function kmReceiptSelected(ev){kmReceiptFile=ev.target.files&&ev.target.files[0];const preview=$('km-receipt-preview'),button=$('km-receipt-scan'),status=$('km-receipt-status');if(kmReceiptImageUrl){URL.revokeObjectURL(kmReceiptImageUrl);kmReceiptImageUrl=null}if(!kmReceiptFile||!kmReceiptFile.type.startsWith('image/')){kmReceiptFile=null;button.disabled=true;preview.innerHTML='';return}kmReceiptImageUrl=URL.createObjectURL(kmReceiptFile);preview.innerHTML='';const img=document.createElement('img');img.className='km-receipt-preview';img.alt='Kassenbon-Vorschau';img.src=kmReceiptImageUrl;preview.appendChild(img);button.disabled=false;$('km-receipt-fields').hidden=false;$('km-receipt-date').value='';$('km-receipt-merchant').value='';$('km-receipt-amount').value='';status.textContent=kqt('scanHint')}
 function kmLoadTesseract(){if(window.Tesseract)return Promise.resolve();if(kmOcrLoading)return kmOcrLoading;kmOcrLoading=new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';sc.onload=()=>window.Tesseract?resolve():reject(new Error('OCR unavailable'));sc.onerror=()=>reject(new Error('OCR download failed'));document.head.appendChild(sc)}).catch(e=>{kmOcrLoading=null;throw e});return kmOcrLoading}
+function kmReceiptMoney(line){
+ const m=[...String(line).matchAll(/(?:€\s*)?(\d{1,4}(?:[. ]\d{3})*[,.]\d{2})(?!\d)/g)];
+ return m.map(x=>Number(x[1].replace(/[. ](?=\d{3}(?:\D|$))/g,'').replace(',','.'))).filter(v=>Number.isFinite(v)&&v>0&&v<100000);
+}
 function kmParseReceiptTotal(text){
  const lines=String(text||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
- const amountPattern=/(?:^|[^\d])((?:\d{1,3}(?:[.\s]\d{3})+|\d+)[,.]\d{2})(?!\d)/g;
- const parseAmount=raw=>{let v=raw.replace(/\s/g,'');if(v.includes(',')&&v.includes('.'))v=v.replace(/\./g,'').replace(',','.');else if(v.includes(','))v=v.replace(',','.');return Number(v)};
  const candidates=[];
- const finalLabel=/(?:zu\s*zahlen|zu\s*bezahlen|zahlbetrag|end\s*summe|end\s*betrag|gesamt\s*betrag|gesamt\s*summe|rechnungs\s*betrag|summe\s*eur|summe\s*€|gesamt\s*eur|gesamt\s*€|total\s*(?:eur|€)?|grand\s*total|brutto\s*(?:betrag|summe)?|betrag\s*inkl\.?\s*(?:mwst|ust))/i;
- const netLabel=/(?:netto|net\s*summe|net\s*betrag|vor\s*steuer|ohne\s*(?:mwst|ust|steuer)|exkl\.?\s*(?:mwst|ust)|zwischensumme|subtotal|steuer\s*bemessung|steuerpflichtig|mwst\s*pflichtig|warenwert)/i;
- const taxLabel=/(?:mehrwertsteuer|mwst\.?|umsatzsteuer|ust\.?|\bvat\b|\bsteuer\b|steuersatz|steueranteil|\b(?:7|19)\s*%)/i;
- const paymentLabel=/(?:ec.?karte|girocard|kartenzahlung|visa|mastercard|bezahlt|zahlung\s*(?:eur|€)?|bar\s*zahlung)/i;
- const excluded=/(?:rückgeld|wechselgeld|gegeben|erhalten|rabatt|discount|ersparnis|gespart|gutschein|pfand\s*bon)/i;
  for(let i=0;i<lines.length;i++){
-  const line=lines[i];let m;amountPattern.lastIndex=0;
-  while((m=amountPattern.exec(line))!==null){
-   const amount=parseAmount(m[1]);if(!Number.isFinite(amount)||amount<=0||amount>100000)continue;
-   const before=line.slice(0,m.index+m[0].length-m[1].length),after=line.slice(m.index+m[0].length);
-   const label=before+' '+after;
-   const previous=lines[i-1]||'';
-   let score=0;
-   if(finalLabel.test(label))score+=160;
-   else if(finalLabel.test(previous)&&!/(?:\d[,.]\d{2})/.test(previous))score+=105;
-   if(paymentLabel.test(label))score+=75;
-   if(/\b(?:summe|gesamt|betrag)\b/i.test(label))score+=45;
-   if(/\b(?:eur|€)\b/i.test(label))score+=5;
-   if(netLabel.test(label))score-=260;
-   if(taxLabel.test(label)&&!/(?:inkl\.?|einschl\.?)/i.test(label))score-=190;
-   if(excluded.test(label))score-=230;
-   if(netLabel.test(previous)&&!finalLabel.test(label))score-=100;
-   if(/(?:steuer|netto|brutto)/i.test(line)&&/\b(?:7|19)\s*%/.test(line))score-=100;
-   candidates.push({amount,score,index:i});
-  }
+  const line=lines[i], values=kmReceiptMoney(line),prev=lines[i-1]||'',next=lines[i+1]||'';
+  if(!values.length)continue;
+  const upper=line.toUpperCase(),near=(prev+' '+line).toUpperCase();
+  if(/ZWISCHEN\s*SUMME|NETTO|COUPON|ERSPARNIS|GESPART|RABATT|GUTSCHEIN|RÜCKGELD|WECHSELGELD|MWST|UST|STEUER|7\s*%|19\s*%|ARTIKEL|STÜCK|SPAREN/.test(upper))continue;
+  let score=0;
+  if(/(?:^|\W)(?:SUMME|ENDSUMME|GESAMTSUMME|ZU\s*ZAHLEN|ZAHLBETRAG|GESAMTBETRAG|TOTAL)(?:\W|$)/.test(upper))score+=200;
+  if(/(?:^|\W)(?:VISA|MASTERCARD|GIROCARD|EC[ -]?KARTE|KARTENZAHLUNG|BEZAHLT)(?:\W|$)/.test(upper))score+=130;
+  if(/(?:^|\W)BRUTTO(?:\W|$)/.test(upper)&&!/NETTO|MWST|STEUER/.test(upper))score+=75;
+  if(/(?:^|\W)(?:SUMME|ENDSUMME|ZU\s*ZAHLEN)(?:\W|$)/.test(prev.toUpperCase())&&!kmReceiptMoney(prev).length)score+=115;
+  if(/NETTO|MWST|STEUER|COUPON|ERSPARNIS|ZWISCHENSUMME/.test(prev.toUpperCase())&&!/(?:SUMME|VISA|ZAHLEN)/.test(upper))score-=120;
+  // Avoid amounts from the VAT table, even if the word 'Total' is present.
+  if(/NETTO|MWST|BRUTTO/.test((lines[i-2]||'').toUpperCase()+' '+prev.toUpperCase())&&/TOTAL|GESAMT/.test(upper))score-=170;
+  if(values.length>1)score-=100;
+  if(score>0)candidates.push({value:values[values.length-1],score,index:i});
  }
  candidates.sort((a,b)=>b.score-a.score||b.index-a.index);
- // Ohne klaren Hinweis auf Endsumme oder tatsächliche Zahlung nichts automatisch übernehmen.
- return candidates.length&&candidates[0].score>=70?candidates[0].amount:null;
+ // If a sum and a card payment agree, confidence is higher; if conflicting, do not guess.
+ const strong=candidates.filter(c=>c.score>=115);
+ if(!strong.length)return null;
+ const best=strong[0];
+ const conflicting=strong.some(c=>c.score>=130&&c.value!==best.value&&Math.abs(c.value-best.value)>0.009);
+ return conflicting?null:best.value;
 }
 function kmParseReceiptDate(text){
  const lines=String(text||'').split(/\r?\n/), candidates=[];
+ const add=(year,month,day,i,score)=>{const d=new Date(year,month-1,day),now=new Date();if(year<2010||year>now.getFullYear()||d.getFullYear()!==year||d.getMonth()!==month-1||d.getDate()!==day||d>now)return;candidates.push({iso:year+'-'+String(month).padStart(2,'0')+'-'+String(day).padStart(2,'0'),score,index:i})};
  for(let i=0;i<lines.length;i++){
-  const line=lines[i], regex=/(?:^|[^\d])([0-3]?\d)[.\/-]([01]?\d)[.\/-](20\d{2}|\d{2})(?!\d)/g;let m;
-  while((m=regex.exec(line))!==null){const day=+m[1],month=+m[2],year=m[3].length===2?2000+Number(m[3]):+m[3],d=new Date(year,month-1,day);if(d.getFullYear()!==year||d.getMonth()!==month-1||d.getDate()!==day||year<2010||d>new Date())continue;
-   const context=lines.slice(Math.max(0,i-1),Math.min(lines.length,i+2)).join(' ').toLowerCase();let score=10;
-   if(/(?:datum|kaufdatum|belegdatum|bon[- ]?datum|date|uhrzeit)/i.test(context))score+=40;
-   if(/(?:gültig bis|gueltig bis|ablauf|verfall|coupon|gutschein|aktion|rabatt)/i.test(context))score-=50;
-   candidates.push({iso:year+'-'+String(month).padStart(2,'0')+'-'+String(day).padStart(2,'0'),score,index:i});
-  }
+  const line=lines[i],context=lines.slice(Math.max(0,i-1),i+2).join(' ');
+  for(const m of line.matchAll(/(20\d{2})[-./]([01]?\d)[-./]([0-3]?\d)(?=[T\s]|$)/g))add(+m[1],+m[2],+m[3],i,/START|ENDE|DATUM|BON|BELEG/i.test(context)?120:70);
+  for(const m of line.matchAll(/(?:^|\D)([0-3]?\d)[.\/-]([01]?\d)[.\/-](20\d{2}|\d{2})(?!\d)/g))add(m[3].length===2?2000+Number(m[3]):+m[3],+m[2],+m[1],i,/DATUM|BELEG|KAUF|UHRZEIT/i.test(context)?100:50);
  }
- candidates.sort((a,b)=>b.score-a.score||b.index-a.index);return candidates.length&&candidates[0].score>=10?candidates[0].iso:null;
+ candidates.sort((a,b)=>b.score-a.score||b.index-a.index);return candidates.length?candidates[0].iso:null;
 }
 function kmParseReceiptMerchant(text){
- const lines=String(text||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean),joined=lines.join(' ').toLowerCase();
- const stores=[['Rossmann',/rossmann|rossman\b|rossrnann|dirk\s+rossmann/i],['dm',/(?:^|\W)dm(?:\W|$)|dm-drogerie/i],['REWE',/\brewe\b/i],['Lidl',/\blidl\b/i],['ALDI',/\baldi\b/i],['EDEKA',/\bedeka\b/i],['Kaufland',/\bkaufland\b/i],['PENNY',/\bpenny\b/i],['Netto',/netto\s+marken.discount/i],['Müller',/müller\s+drogerie|mueller\s+drogerie/i],['Budni',/\bbudni\b/i],['dm',/\bdm\.de\b/i]];
- for(const [name,re] of stores)if(re.test(joined))return name;
- const header=lines.slice(0,7).find(x=>/^[\p{L}][\p{L}\d &.'-]{2,48}$/u.test(x)&&!/^(?:kassenbon|beleg|rechnung|quittung|filiale|straße|strasse|datum|telefon|tel\b|ust|steuer)/i.test(x));
- return header||null;
+ const t=String(text||'').toUpperCase().replace(/[^A-ZÄÖÜ0-9]/g,'');
+ const stores=[['Rossmann',/ROSSMANN|ROSSMAN|ROSSRNANN|RO55MANN|R0SSMANN|ROSSMAMN/],['dm',/DMDROGERIE/],['REWE',/REWE/],['Lidl',/LIDL/],['ALDI',/ALDI/],['EDEKA',/EDEKA/],['Kaufland',/KAUFLAND/],['PENNY',/PENNY/],['Netto',/NETTOMARKEN/],['Müller',/MÜLLERDROGERIE|MUELLERDROGERIE/],['Budni',/BUDNI/]];
+ for(const [name,re] of stores)if(re.test(t))return name;
+ return null; // No unreliable guessed merchant names.
 }
-async function kmScanReceipt(){if(!kmReceiptFile)return;const status=$('km-receipt-status'),button=$('km-receipt-scan');button.disabled=true;status.textContent=kqt('scanning');try{await kmLoadTesseract();const worker=await Tesseract.createWorker('deu+eng',1);let result;try{result=await worker.recognize(kmReceiptFile)}finally{await worker.terminate()}const text=result.data.text,amount=kmParseReceiptTotal(text),date=kmParseReceiptDate(text),merchant=kmParseReceiptMerchant(text);$('km-receipt-amount').value=amount!==null?amount.toFixed(2):'';$('km-receipt-date').value=date||'';$('km-receipt-merchant').value=merchant||'';status.textContent=kqt('scanDoneAll')+(date?'':' '+kqt('scanNoDate'));}catch(e){console.warn('Kassenbon-Erkennung:',e);status.textContent=kqt('scanError')}finally{button.disabled=false;$('km-receipt-fields').hidden=false}}
-
+async function kmReceiptPrepareImage(file){
+ const img=await createImageBitmap(file);try{
+  const scale=Math.min(2.5,2600/Math.max(img.width,img.height));
+  const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));
+  const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(img,0,0,canvas.width,canvas.height);
+  const data=ctx.getImageData(0,0,canvas.width,canvas.height);
+  for(let i=0;i<data.data.length;i+=4){const v=.299*data.data[i]+.587*data.data[i+1]+.114*data.data[i+2];const c=Math.max(0,Math.min(255,(v-128)*1.6+128));data.data[i]=data.data[i+1]=data.data[i+2]=c;}
+  ctx.putImageData(data,0,0);return canvas;
+ }finally{img.close()}
+}
+async function kmScanReceipt(){
+ if(!kmReceiptFile)return;
+ const status=$('km-receipt-status'),button=$('km-receipt-scan');button.disabled=true;status.textContent=kqt('scanning');
+ try{
+  await kmLoadTesseract();const worker=await Tesseract.createWorker('deu+eng',1);let result;
+  try{let input=kmReceiptFile;try{input=await kmReceiptPrepareImage(kmReceiptFile)}catch(e){console.warn('Bildvorbereitung:',e)}result=await worker.recognize(input)}finally{await worker.terminate()}
+  const text=result.data.text||'',amount=kmParseReceiptTotal(text),date=kmParseReceiptDate(text),merchant=kmParseReceiptMerchant(text);
+  $('km-receipt-amount').value=amount!==null?amount.toFixed(2):'';
+  $('km-receipt-date').value=date||'';
+  $('km-receipt-merchant').value=merchant||'';
+  status.textContent=kqt('scanDoneAll')+(!amount?' '+kqt('scanFail'):'')+(!date?' '+kqt('scanNoDate'):'');
+ }catch(e){console.warn('Kassenbon-Erkennung:',e);status.textContent=kqt('scanError')}
+ finally{button.disabled=false;$('km-receipt-fields').hidden=false}
+}
 
 let dailyViewMonth=null;
 function dailyExpensesPage(){
