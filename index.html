@@ -90,7 +90,7 @@ function addSaving(e,gid){e.preventDefault();const g=savingsData().find(x=>x.id=
 function deleteSaving(gid){if(!confirm(sw('confirm')))return;state.savings=savingsData().filter(x=>x.id!==gid);save();render()}
 function ackSaving(gid){const g=savingsData().find(x=>x.id===gid);if(g){g.ack=today().slice(0,7);save();render()}}
 
-function dashboard()
+function dashboard(){
 let t = totals();
 let sum = state.debts.reduce((s,d) => s + num(d.balance), 0);
 
