@@ -6,29 +6,29 @@ body, button, input, select, textarea {
 }
 }
 @media (max-width: 680px) {
-  #km-main .grid {
+  .grid {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 12px !important;
   }
 
-  #km-main .grid > .stat {
+  .grid > .stat {
     min-width: 0;
   }
 
-  #km-main .grid > .stat:last-child {
+  .grid > .stat:last-child {
     grid-column: 1 / -1;
   }
 
-  #km-main .grid > .stat:nth-child(1) {
+  .grid > .stat:nth-child(1) {
     background: #e8f7ee;
   }
 
-  #km-main .grid > .stat:nth-child(2) {
+  .grid > .stat:nth-child(2) {
     background: #fff0f1;
   }
 
-  #km-main .grid > .stat:nth-child(3) {
+  .grid > .stat:nth-child(3) {
     background: #f0e7fb;
   }
 }
