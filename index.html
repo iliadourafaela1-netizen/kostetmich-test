@@ -220,7 +220,6 @@ function render(){
  document.getElementById('nav').style.display=inMenu?'none':'';
  const tabIcons={
   dashboard:'M3 10l9-7 9 7v10h-6v-6H9v6H3z',
-  entries:'M18 5a7 7 0 1 0 0 14M4 10h10M4 14h9',
   daily:'M4 6h16v13H4z M4 6l12-3v3 M16 12h4v4h-4z',
   debts:'M3 5l7 7 4-4 7 8m-5 0h5v-5',
   forecast:'M4 6h16v14H4z M4 10h16 M8 3v5m8-5v5',
@@ -237,7 +236,7 @@ function render(){
    analysis:{de:'Finanzanalyse',en:'Financial analysis',el:'Οικονομική ανάλυση',tr:'Finans analizi'}
   };
   const shortLabel=tabLabels[key]?.[lang]||tr(label);
-  return `<button type="button" class="${key===tab?'active':'secondary'}" ${key===tab?'aria-current="page"':''} aria-label="${esc(tr(label))}" onclick="setTab('${key}')"><span class="vant-tab-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="${tabIcons[key]}"/></svg></span><span>${key==='entries'&&lang==='de'?'Einnahmen<br>&amp; Fixkosten':esc(shortLabel)}</span></button>`;
+  return `<button type="button" class="${key===tab?'active':'secondary'}" ${key===tab?'aria-current="page"':''} aria-label="${esc(tr(label))}" onclick="setTab('${key}')"><span class="vant-tab-icon" aria-hidden="true">${key==='entries'?'<span class="vant-tab-euro">€</span>':`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="${tabIcons[key]}"/></svg>`}</span><span>${key==='entries'&&lang==='de'?'Einnahmen<br>&amp; Fixkosten':esc(shortLabel)}</span></button>`;
  }).join('');
  const activeTab=nav.querySelector('.active');
  if(activeTab&&nav.clientWidth&&activeTab.offsetLeft+activeTab.offsetWidth>nav.scrollLeft+nav.clientWidth){
@@ -1799,6 +1798,7 @@ html[data-km-dark="true"] #km-auth h1{color:#f5efff}
 
 #nav{position:relative;gap:4px;padding:6px;margin-bottom:13px;border:1px solid #b9a6dd;border-radius:18px;background:#f2ebff}
 #nav button{flex:1 0 86px;white-space:normal;overflow-wrap:anywhere;line-height:1.2;display:grid;justify-items:center;align-content:center;gap:4px;min-height:60px;margin:0;padding:3px 4px;border:0;background:transparent;color:#55436d;font-size:11px}
+#nav .vant-tab-euro{font:600 23px/1 system-ui,sans-serif}
 #nav .vant-tab-icon{display:grid;place-items:center;width:36px;height:32px;border-radius:9px}
 #nav button.active{color:#6331b8}
 #nav button.active .vant-tab-icon{background:linear-gradient(145deg,#8c49e7,#6024c8);color:white}
