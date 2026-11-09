@@ -493,7 +493,7 @@ const KM_MENU_TEXT={
  tr:{menu:'Menü',profile:'Profilim',pref:'Ayarlar',notice:'Bildirimler',privacy:'Gizlilik ve yedekleme',legal:'Yasal bilgiler',logout:'Çıkış yap',back:'Geri',account:'Hesabın',email:'E-posta adresi',login:'Giriş yapıldı',appearance:'Görünüm ve dil',language:'Dil',legalInfo:'Yasal bilgiler',legalHint:'Yayınlanmadan önce sağlayıcı bilgileri ve yasal metinler eklenip incelenmelidir.',imprint:'Künye',imprintHint:'Henüz eklenmedi.',policy:'Gizlilik politikası',policyHint:'Tam gizlilik politikası gereklidir.',terms:'Kullanım koşulları',termsHint:'Henüz eklenmedi.',backup:'Veriler ve geri bildirim',pushInfo:'Bildirimleri yönet'}
 };
 function kmT(k){return (KM_MENU_TEXT[lang]||KM_MENU_TEXT.de)[k]}
-function kmOpenMenu(){setTab(tab==='km-menu'?'dashboard':'km-menu')}
+function kmOpenMenu(){if(tab==='km-menu')return;setTab('km-menu')}
 function kmMenuBack(){setTab('dashboard')}
 function kmMenuItem(icon,title,subtitle,target){return `<button type="button" class="km-menu-item" onclick="setTab('${target}')"><span class="km-menu-icon">${icon}</span><span class="km-menu-label"><strong>${title}</strong><small>${subtitle||''}</small></span><span aria-hidden="true">›</span></button>`}
 function kmMenuPage(){return shell('☰ '+kmT('menu'),`<div class="km-menu-list">${kmMenuItem('👤',kmT('profile'),kmT('account'),'km-profile')}${kmMenuItem('⚙️',kmT('pref'),kmT('appearance'),'km-preferences')}${kmMenuItem('🔔',kmT('notice'),kmT('pushInfo'),'notifications')}${kmMenuItem('🔒',kmT('privacy'),kmT('backup'),'settings')}${kmMenuItem('⚖️',kmT('legal'),kmT('legalInfo'),'km-legal')}</div><button class="km-logout" type="button" onclick="kmLogout()">↪ ${kmT('logout')}</button>`)}
