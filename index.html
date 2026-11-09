@@ -1166,6 +1166,8 @@ async function checkAdminPushButton() {
 
   if (!adminError && admin) {
     button.style.display = "block";
+    const adminButton = document.getElementById("vant-admin-users-button");
+    if (adminButton) adminButton.style.display = "block";
   }
 }
 
@@ -1441,6 +1443,52 @@ html[data-km-dark="true"] #km-auth h1{color:#f5efff}
 @media(max-width:680px){header{border-radius:21px;padding-left:22px;padding-bottom:25px}header:after{right:-15px;font-size:190px;bottom:-55px}}
 </style>
 
+
+
+<!-- VANT admin user overview: access enforced by Supabase RPC -->
+<button id="vant-admin-users-button" type="button" style="display:none;position:fixed;bottom:84px;right:20px;z-index:9999;padding:13px 17px;border:0;border-radius:12px;background:#241b45;color:white;font-weight:700;box-shadow:0 8px 25px #0003">👥 Benutzerverwaltung</button>
+<div id="vant-admin-overlay" role="dialog" aria-modal="true" aria-label="VANT Benutzerverwaltung" hidden style="position:fixed;inset:0;z-index:10000;background:#12101bc9;padding:18px;overflow:auto">
+ <section style="max-width:880px;margin:25px auto;background:#fff;color:#211a3c;border-radius:20px;padding:22px;box-shadow:0 20px 60px #0005">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><h2 style="margin:0">👥 VANT. Benutzerverwaltung</h2><button type="button" id="vant-admin-close" style="padding:10px 14px">Schließen ✕</button></div>
+  <p style="color:#625b72">Nur für freigeschaltete Administratoren. Registrierte Konten sind nicht dasselbe wie Push-Geräte.</p>
+  <div id="vant-admin-status" role="status" style="margin:15px 0">Lade Daten …</div>
+  <div id="vant-admin-summary" style="font-weight:750;font-size:18px;margin:14px 0"></div>
+  <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;text-align:left"><thead><tr><th style="padding:10px;border-bottom:1px solid #ddd">E-Mail</th><th style="padding:10px;border-bottom:1px solid #ddd">Registriert</th><th style="padding:10px;border-bottom:1px solid #ddd">Letzte Anmeldung</th><th style="padding:10px;border-bottom:1px solid #ddd">Push-Geräte</th></tr></thead><tbody id="vant-admin-rows"></tbody></table></div>
+  <p style="font-size:12px;color:#6c6579">Push-Geräte zählen gespeicherte Abonnements, nicht bestätigte Zustellungen. Es werden maximal 500 Konten angezeigt.</p>
+ </section>
+</div>
+<script>
+(function(){
+ const openButton=document.getElementById('vant-admin-users-button');
+ const overlay=document.getElementById('vant-admin-overlay');
+ const closeButton=document.getElementById('vant-admin-close');
+ const status=document.getElementById('vant-admin-status');
+ const summary=document.getElementById('vant-admin-summary');
+ const tbody=document.getElementById('vant-admin-rows');
+ const dateText=(v)=>v?new Date(v).toLocaleString('de-DE'):'–';
+ closeButton.addEventListener('click',()=>{overlay.hidden=true;});
+ overlay.addEventListener('click',(e)=>{if(e.target===overlay)overlay.hidden=true;});
+ openButton.addEventListener('click',async()=>{
+   overlay.hidden=false;status.textContent='Lade Benutzerkonten …';summary.textContent='';tbody.replaceChildren();
+   try {
+     const client=window.kostetMichClient;
+     if(!client)throw new Error('Supabase-Verbindung fehlt.');
+     const {data,error}=await client.rpc('vant_admin_user_overview');
+     if(error)throw error;
+     const users=Array.isArray(data?.users)?data.users:[];
+     summary.textContent=`${Number(data?.total_users||0)} registrierte Konten · ${Number(data?.total_push_subscriptions||0)} Push-Abonnements`;
+     for(const user of users){
+       const tr=document.createElement('tr');
+       for(const value of [user.email||'(keine E-Mail)',dateText(user.created_at),dateText(user.last_sign_in_at),String(user.push_subscriptions||0)]){
+         const td=document.createElement('td');td.textContent=value;td.style.cssText='padding:10px;border-bottom:1px solid #eee;font-size:14px;white-space:nowrap';tr.appendChild(td);
+       }
+       tbody.appendChild(tr);
+     }
+     status.textContent=users.length?`Anzeige: ${users.length} Konten`:'Noch keine Konten vorhanden.';
+   }catch(err){status.textContent='Benutzerübersicht konnte nicht geladen werden: '+(err?.message||String(err))+' — Bitte zuerst die SQL-Datei in Supabase ausführen.';}
+ });
+})();
+</script>
 
 </body>
 </html>
