@@ -93,11 +93,11 @@ html[data-km-dark="true"] .vant-back-button{background:#49365f;color:#f4edff}
 #vant-avatar-file{font-size:13px}
 #vant-profile-message{min-height:1.4em;font-size:13px}
 </style><style>.vant-profile-display-name{text-align:center;font-weight:750;font-size:20px;margin-bottom:20px}</style><style id="vant-auth-refresh">
-#vant-splash{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 35%,#4d3378 0%,#211830 55%,#110f1d 100%);color:#f7f1ff;text-align:center}
+#vant-splash{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,#422052 0%,#241032 33%,#100718 72%);color:#f7f1ff;text-align:center}
 #vant-splash[hidden]{display:none!important}
 .vant-splash-mark{font-weight:850;font-size:clamp(58px,15vw,96px);letter-spacing:-.06em}
 .vant-splash-mark span{color:#b08aff}
-#vant-splash p{color:#c7b7dc;letter-spacing:.035em}
+#vant-splash p{margin:8px 16px 0;color:#f0e6fa;letter-spacing:.015em}
 #km-auth{background:linear-gradient(155deg,#29213c,#1a1629)!important;border:1px solid #55446d;color:#f5efff!important;box-shadow:0 18px 55px #0005!important}
 #km-auth h1,#km-auth h2{color:#f7f2ff!important}
 #km-auth h1 .vant-dot{color:#b38cff}
@@ -1185,7 +1185,7 @@ render();
   .km-chart-bar { animation: none; }
 }
 </style>
-<div id="vant-splash" aria-label="VANT wird gestartet"><div class="vant-splash-mark">VANT<span>.</span></div><p>Take control of your money.</p></div><div id="km-auth" style="display:none"><h1>VANT<span class="vant-dot">.</span></h1><p>Willkommen! Melde dich an oder erstelle ein kostenloses Konto.</p>
+<div id="vant-splash" aria-label="VANT wird gestartet"><div class="vant-splash-mark">VANT<span>.</span></div><p>That’s the ad<strong class="vant-dot">VANT</strong>age.</p></div><div id="km-auth" style="display:none"><h1>VANT<span class="vant-dot">.</span></h1><p>Willkommen! Melde dich an oder erstelle ein kostenloses Konto.</p>
 <form id="km-auth-form"><label for="km-email">E-Mail-Adresse</label><input id="km-email" type="email" autocomplete="email" required placeholder="name@beispiel.de"><label for="km-password">Passwort (mindestens 8 Zeichen)</label><input id="km-password" type="password" minlength="8" autocomplete="current-password" required><button type="submit" id="km-login">Anmelden</button><button type="button" class="secondary" id="km-signup">Registrieren</button><button type="button" class="vant-forgot" id="vant-forgot">Passwort vergessen?</button></form><form id="vant-recovery-form" hidden><h2>Passwort zurücksetzen</h2><p>Wir senden dir einen Link an deine E-Mail-Adresse.</p><label for="vant-recovery-email">E-Mail-Adresse</label><input type="email" id="vant-recovery-email" autocomplete="email" required><button type="submit">Link senden</button><button type="button" class="secondary" id="vant-recovery-back">Zur Anmeldung</button></form><form id="vant-new-password-form" hidden><h2>Neues Passwort festlegen</h2><label for="vant-new-password">Neues Passwort (mindestens 8 Zeichen)</label><input id="vant-new-password" type="password" minlength="8" autocomplete="new-password" required><button type="submit">Passwort speichern</button></form>
 <p id="km-auth-message" class="km-message" role="status"></p><p class="km-note">Deine Finanzdaten bleiben in dieser Testversion auf diesem Gerät. Ein Konto bedeutet noch keine Cloud-Synchronisierung. Nutze die Datensicherung regelmäßig.</p></div>
 <style>
