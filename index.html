@@ -86,6 +86,12 @@ html[data-km-dark="true"] .vant-subheader{background:#28233b;color:#f4edff;borde
 html[data-km-dark="true"] .vant-back-button{background:#49365f;color:#f4edff}
 @media(max-width:400px){.vant-subheader{gap:5px;padding:8px}.vant-subheader button{padding:9px 8px;font-size:12px}.vant-subheader strong{font-size:14px}}
 @media print{.vant-subheader{display:none!important}}
+</style><style id="vant-profile-styles">
+.vant-profile-editor{padding:8px 0 18px}
+.vant-avatar-preview{width:110px;height:110px;border-radius:50%;margin:8px auto 18px;background:linear-gradient(145deg,#a87ce9,#6132a4);color:#fff;display:flex;align-items:center;justify-content:center;font-size:52px;overflow:hidden;border:4px solid #e9dcfa;box-shadow:0 5px 20px #44236d35}
+.vant-avatar-preview img{width:100%;height:100%;object-fit:cover}
+#vant-avatar-file{font-size:13px}
+#vant-profile-message{min-height:1.4em;font-size:13px}
 </style></head><body><main class="shell" id="km-main" style="display:none"><header><button id="km-header-back" type="button" class="km-header-back no-print" onclick="kmMenuBack()" aria-label="Zur Startseite" hidden>← <span>Zur Startseite</span></button><span class="tag" id="beta-tag">BETA · 100 % kostenlos</span><button type="button" class="km-menu-toggle no-print" aria-label="Menü öffnen" onclick="kmOpenMenu()">☰</button><h1 style="margin-top:12px">VANT<span class="vant-dot">.</span></h1><p style="margin-bottom:0" class="light">Take control of your money.</p></header><div id="vant-subheader" class="vant-subheader no-print" hidden><button type="button" class="vant-back-button" onclick="setTab('dashboard')">← Übersicht</button><strong id="vant-page-title"></strong><button type="button" class="vant-submenu-button" onclick="kmOpenMenu()" aria-label="Menü öffnen">☰</button></div><div class="nav no-print" id="nav"></div><div id="app"></div><footer>🔒 Finanzangaben werden lokal gespeichert und nach erfolgreicher Cloud-Einrichtung mit deinem Supabase-Konto synchronisiert. Keine Bankverbindung. Dies ist eine Test-App und keine Schuldner- oder Finanzberatung. Berechnungen sind Schätzungen. Sichere deine Daten regelmäßig per Export.</footer></main><button id="km-fab" class="km-fab no-print" type="button" aria-label="Schnell Ausgabe eintragen" onclick="kmOpenQuick()">+</button><div id="km-quick-modal" class="km-modal no-print" hidden role="dialog" aria-modal="true" aria-labelledby="km-quick-title"><div class="km-modal-panel"><div class="km-modal-header"><h2 id="km-quick-title">⚡ Blitz-Eintragung</h2><button type="button" class="secondary" onclick="kmCloseQuick()" aria-label="Schließen">✕</button></div><div id="km-quick-content"></div></div></div><script>
 'use strict';let KEY='kostetmich-beta-v1';const tabs=[['dashboard','🏠 Übersicht'],['entries','💶 Einnahmen & feste Ausgaben'],['daily','💸 Meine Ausgaben'],['debts','📉 Schulden'],['forecast','📈 12 Monate'],['check','🛍️ Kaufcheck']];let state={dailyExpenses:[],entries:[],debts:[],checks:[],reserve:100,month:new Date().toISOString().slice(0,7),brake:{balance:0,essential:0,horizon:30,extras:[]}};try{const a=JSON.parse(localStorage.getItem(KEY));if(a&&Array.isArray(a.entries)&&Array.isArray(a.debts))state={...state,...a}}catch(e){}let tab='dashboard';let lang=localStorage.getItem('kostetmich-language')||'de';const $=id=>document.getElementById(id),money=n=>Number(n||0).toLocaleString(({de:'de-DE',el:'el-GR',en:'en-IE',tr:'tr-TR'}[lang]||'de-DE'),{style:'currency',currency:'EUR'}),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),num=x=>Math.max(0,Number(x)||0),id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7),today=()=>new Date().toISOString().slice(0,10);function save(){
   
@@ -576,7 +582,60 @@ function kmOpenMenu(){if(tab==='km-menu')return;setTab('km-menu')}
 function kmMenuBack(){setTab('dashboard')}
 function kmMenuItem(icon,title,subtitle,target){return `<button type="button" class="km-menu-item" onclick="setTab('${target}')"><span class="km-menu-icon">${icon}</span><span class="km-menu-label"><strong>${title}</strong><small>${subtitle||''}</small></span><span aria-hidden="true">›</span></button>`}
 function kmMenuPage(){return shell('☰ '+kmT('menu'),`<div class="km-menu-list">${kmMenuItem('👤',kmT('profile'),kmT('account'),'km-profile')}${kmMenuItem('⚙️',kmT('pref'),kmT('appearance'),'km-preferences')}${kmMenuItem('🔔',kmT('notice'),kmT('pushInfo'),'notifications')}${kmMenuItem('🔒',kmT('privacy'),kmT('backup'),'settings')}${kmMenuItem('⚖️',kmT('legal'),kmT('legalInfo'),'km-legal')}</div><button class="km-logout" type="button" onclick="kmLogout()">↪ ${kmT('logout')}</button>`)}
-function kmProfilePage(){return shell('👤 '+kmT('profile'),`<div class="km-profile-avatar">👤</div><p class="muted">${kmT('login')}</p><label>${kmT('email')}</label><div class="km-profile-email">${esc(window.kmAccountEmail||'–')}</div><p class="muted">${kmT('account')} · VANT Beta</p><button type="button" class="secondary" onclick="setTab('km-menu')">← ${kmT('back')}</button>`)}
+function kmProfilePage(){
+ const u=window.vantProfileUser||{},meta=u.user_metadata||{},name=typeof meta.vant_username==='string'?meta.vant_username:'',photo=typeof meta.vant_avatar==='string'&&meta.vant_avatar.startsWith('data:image/jpeg;base64,')?meta.vant_avatar:'';
+ return shell('👤 '+kmT('profile'),`<div class="vant-profile-editor">
+ <div class="vant-avatar-preview" id="vant-avatar-preview">${photo?`<img src="${photo}" alt="Profilbild">`:'👤'}</div>
+ <label for="vant-avatar-file">Profilbild auswählen</label><input type="file" id="vant-avatar-file" accept="image/*" onchange="vantPreviewAvatar(event)">
+ <p class="muted">Dein Bild wird verkleinert und privat in deinem Benutzerprofil gespeichert. Bitte verwende ein eigenes Bild.</p>
+ <label for="vant-username">Benutzername</label><input id="vant-username" maxlength="30" autocomplete="nickname" placeholder="Dein Benutzername" value="${esc(name)}">
+ <div class="actions"><button type="button" id="vant-profile-save" onclick="vantSaveProfile()">Profil speichern</button><button type="button" class="secondary" onclick="vantRemoveAvatar()">Profilbild entfernen</button></div>
+ <p id="vant-profile-message" role="status" aria-live="polite"></p>
+ </div><label>${kmT('email')}</label><div class="km-profile-email">${esc(window.kmAccountEmail||'–')}</div><p class="muted">Benutzername und Profilbild gehören zu deinem persönlichen VANT-Konto.</p>`);
+}
+let vantPendingAvatar=null;
+async function vantPreviewAvatar(ev){
+ const f=ev.target.files?.[0];if(!f)return;
+ const msg=$('vant-profile-message');
+ if(!f.type.startsWith('image/')){msg.textContent='Bitte wähle ein Bild aus.';return}
+ if(f.size>12*1024*1024){msg.textContent='Das Bild ist zu groß (maximal 12 MB).';return}
+ try{
+  const url=URL.createObjectURL(f);
+  const img=new Image();
+  try{await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=reject;img.src=url})}finally{URL.revokeObjectURL(url)}
+  const c=document.createElement('canvas'),size=160;c.width=size;c.height=size;
+  const ctx=c.getContext('2d');const scale=Math.max(size/img.naturalWidth,size/img.naturalHeight);
+  const w=img.naturalWidth*scale,h=img.naturalHeight*scale;
+  ctx.drawImage(img,(size-w)/2,(size-h)/2,w,h);
+  vantPendingAvatar=c.toDataURL('image/jpeg',.66);
+  if(vantPendingAvatar.length>45000)throw Error('Bild konnte nicht ausreichend verkleinert werden.');
+  $('vant-avatar-preview').innerHTML='<img alt="Profilbild-Vorschau">';
+  $('vant-avatar-preview').querySelector('img').src=vantPendingAvatar;
+  msg.textContent='Bild ausgewählt. Bitte auf „Profil speichern“ tippen.';
+ }catch(e){vantPendingAvatar=null;msg.textContent='Das Bild konnte nicht verarbeitet werden. Bitte wähle ein anderes.'}
+}
+function vantRemoveAvatar(){
+ vantPendingAvatar='';
+ const el=$('vant-avatar-preview');if(el)el.textContent='👤';
+ const msg=$('vant-profile-message');if(msg)msg.textContent='Zum Entfernen bitte „Profil speichern“ tippen.';
+}
+async function vantSaveProfile(){
+ const client=window.kostetMichClient,msg=$('vant-profile-message'),btn=$('vant-profile-save');
+ if(!client){msg.textContent='Bitte melde dich erneut an.';return}
+ const username=$('vant-username').value.trim();
+ if(username.length>30){msg.textContent='Der Benutzername darf höchstens 30 Zeichen lang sein.';return}
+ btn.disabled=true;msg.textContent='Profil wird gespeichert …';
+ try{
+  const meta={vant_username:username};
+  if(vantPendingAvatar!==null)meta.vant_avatar=vantPendingAvatar;
+  const {data,error}=await client.auth.updateUser({data:meta});
+  if(error)throw error;
+  window.vantProfileUser=data.user;
+  vantPendingAvatar=null;
+  msg.textContent='Dein Profil wurde gespeichert.';
+ }catch(e){msg.textContent='Speichern fehlgeschlagen: '+(e.message||'Unbekannter Fehler')}
+ finally{btn.disabled=false}
+}
 function kmPreferencesPage(){return budgetSettings()+shell('⚙️ '+kmT('pref'),`<h3>${kmT('language')}</h3><select id="language" aria-label="${kmT('language')}" onchange="changeLanguage(this.value)"><option value="de" ${lang==='de'?'selected':''}>🇩🇪 Deutsch</option><option value="el" ${lang==='el'?'selected':''}>🇬🇷 Ελληνικά</option><option value="en" ${lang==='en'?'selected':''}>🇬🇧 English</option><option value="tr" ${lang==='tr'?'selected':''}>🇹🇷 Türkçe</option></select>`)+kmThemeSettings()+shell('🔔 '+kmT('notice'),`<p class="muted">${kmT('pushInfo')}</p><button type="button" onclick="setTab('notifications')">${kmT('notice')} →</button>`)}
 function kmLegalPage(){return shell('⚖️ '+kmT('legal'),`<p class="notice">${kmT('legalHint')}</p><h3>${kmT('imprint')}</h3><p class="muted">${kmT('imprintHint')}</p><h3>${kmT('policy')}</h3><p class="muted">${kmT('policyHint')}</p><h3>${kmT('terms')}</h3><p class="muted">${kmT('termsHint')}</p>`)}
 async function kmLogout(){if(!window.kostetMichClient)return;const {error}=await window.kostetMichClient.auth.signOut();if(error)alert(error.message)}
@@ -762,8 +821,9 @@ async function cloudLoad(generation,first){
 window.addEventListener('online',()=>{if(cloudDirty&&cloudReady)window.vantCloud.queueSave();else window.vantCloud.refresh()});
 window.addEventListener('focus',()=>{if(cloudReady)window.vantCloud.refresh()});
 function switchUser(user){
+ window.vantProfileUser=user||null;
  if(!user){cloudGeneration++;cloudReady=false;clearTimeout(cloudTimer);currentId=null;KEY='kostetmich-beta-v1';state=fresh();main.style.display='none';box.style.display='block';return}
- if(currentId===user.id)return;
+ if(currentId===user.id){if(tab==='km-profile'&&vantPendingAvatar===null)render();return;}
  cloudGeneration++;cloudReady=false;clearTimeout(cloudTimer);currentId=user.id;KEY='kostetmich-user-'+user.id+'-v1';state=fresh();
  try{const stored=JSON.parse(localStorage.getItem(KEY));if(stored&&Array.isArray(stored.entries)&&Array.isArray(stored.debts))state={...state,...stored}}catch(e){}
  main.style.display='block';box.style.display='none';if(!cloudStatus.isConnected)main.insertBefore(cloudStatus,main.firstChild);cloudMessage('Cloud wird verbunden …');
