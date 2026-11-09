@@ -624,13 +624,37 @@ function kmMenuItem(icon,title,subtitle,target){return `<button type="button" cl
 function kmMenuPage(){return shell('☰ '+kmT('menu'),`<div class="km-menu-list">${kmMenuItem('👤',kmT('profile'),kmT('account'),'km-profile')}${kmMenuItem('⚙️',kmT('pref'),kmT('appearance'),'km-preferences')}${kmMenuItem('🔔',kmT('notice'),kmT('pushInfo'),'notifications')}${kmMenuItem('🔒',kmT('privacy'),kmT('backup'),'settings')}${kmMenuItem('⚖️',kmT('legal'),kmT('legalInfo'),'km-legal')}</div><button class="km-logout" type="button" onclick="kmLogout()">↪ ${kmT('logout')}</button>`)}
 let vantProfileEditing=false;
 let vantPendingAvatar=null;
+// Profilbilder werden in einem privaten Supabase-Storage-Bucket abgelegt.
+const VANT_AVATAR_BUCKET='vant-avatars';
+let vantAvatarMigrationBusy=false;
+async function vantAvatarSignedUrl(path){
+ const client=window.kostetMichClient;
+ if(!client||!path)return '';
+ const {data,error}=await client.storage.from(VANT_AVATAR_BUCKET).createSignedUrl(path,3600);
+ if(error)throw error;
+ return data.signedUrl;
+}
+async function vantLoadProfileAvatar(){
+ const el=document.getElementById('vant-avatar-preview');
+ const user=window.vantProfileUser;
+ const path=user?.user_metadata?.vant_avatar_path;
+ if(!el||!path)return;
+ try{
+  const url=await vantAvatarSignedUrl(path);
+  if(!el.isConnected||window.vantProfileUser?.id!==user.id)return;
+  const img=document.createElement('img');img.alt='Profilbild';img.src=url;
+  el.replaceChildren(img);
+ }catch(e){console.warn('Profilbild konnte nicht geladen werden:',e)}
+}
 function kmProfilePage(){
- const u=window.vantProfileUser||{},meta=u.user_metadata||{},name=typeof meta.vant_username==='string'?meta.vant_username:'',photo=typeof meta.vant_avatar==='string'&&meta.vant_avatar.startsWith('data:image/jpeg;base64,')?meta.vant_avatar:'';
+ const u=window.vantProfileUser||{},meta=u.user_metadata||{},name=typeof meta.vant_username==='string'?meta.vant_username:'',photo=typeof meta.vant_avatar==='string'&&meta.vant_avatar.startsWith('data:image/')?meta.vant_avatar:'';
  const avatar=`<div class="vant-avatar-preview" id="vant-avatar-preview">${photo?`<img src="${photo}" alt="Profilbild">`:'👤'}</div>`;
+ // Signed URLs werden nach dem Rendern für private Bilder geladen.
+ setTimeout(vantLoadProfileAvatar,0);
  if(!vantProfileEditing)return shell('👤 '+kmT('profile'),`<div class="vant-profile-editor">${avatar}<div class="vant-profile-display-name">${name?esc(name):'Noch kein Benutzername'}</div><label>${kmT('email')}</label><div class="km-profile-email">${esc(window.kmAccountEmail||'–')}</div><div class="actions"><button type="button" onclick="vantOpenProfileEditor()">✏️ Profil bearbeiten</button></div></div>`);
  return shell('✏️ Profil bearbeiten',`<div class="vant-profile-editor">${avatar}
  <label for="vant-avatar-file">Profilbild auswählen</label><input type="file" id="vant-avatar-file" accept="image/*" onchange="vantPreviewAvatar(event)">
- <p class="muted">Dein Bild wird verkleinert und in deinem Benutzerprofil gespeichert.</p>
+ <p class="muted">Dein Bild wird verkleinert und sicher in Supabase Storage gespeichert.</p>
  <label for="vant-username">Benutzername</label><input id="vant-username" maxlength="30" autocomplete="nickname" placeholder="Dein Benutzername" value="${esc(name)}">
  <div class="actions"><button type="button" id="vant-profile-save" onclick="vantSaveProfile()">Änderungen speichern</button><button type="button" class="secondary" onclick="vantCancelProfileEditor()">Abbrechen</button><button type="button" class="secondary" onclick="vantRemoveAvatar()">Profilbild entfernen</button></div>
  <p id="vant-profile-message" role="status" aria-live="polite"></p></div>`);
@@ -654,13 +678,43 @@ async function vantPreviewAvatar(ev){
   if(vantPendingAvatar.length>45000)throw Error('Bild konnte nicht ausreichend verkleinert werden.');
   $('vant-avatar-preview').innerHTML='<img alt="Profilbild-Vorschau">';
   $('vant-avatar-preview').querySelector('img').src=vantPendingAvatar;
-  msg.textContent='Bild ausgewählt. Bitte auf „Profil speichern“ tippen.';
+  msg.textContent='Bild ausgewählt. Bitte auf „Änderungen speichern“ tippen.';
  }catch(e){vantPendingAvatar=null;msg.textContent='Das Bild konnte nicht verarbeitet werden. Bitte wähle ein anderes.'}
 }
 function vantRemoveAvatar(){
  vantPendingAvatar='';
  const el=$('vant-avatar-preview');if(el)el.textContent='👤';
- const msg=$('vant-profile-message');if(msg)msg.textContent='Zum Entfernen bitte „Profil speichern“ tippen.';
+ const msg=$('vant-profile-message');if(msg)msg.textContent='Zum Entfernen bitte „Änderungen speichern“ tippen.';
+}
+async function vantUploadAvatarData(dataUrl,userId){
+ const client=window.kostetMichClient;
+ if(!client||!userId||!/^data:image\/jpeg;base64,/.test(dataUrl))throw Error('Ungültiges Profilbild.');
+ const raw=atob(dataUrl.split(',')[1]);
+ const bytes=new Uint8Array(raw.length);
+ for(let i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);
+ const path=`${userId}/avatar-${Date.now()}-${Math.random().toString(36).slice(2,8)}.jpg`;
+ const {error}=await client.storage.from(VANT_AVATAR_BUCKET).upload(path,new Blob([bytes],{type:'image/jpeg'}),{contentType:'image/jpeg',upsert:false});
+ if(error)throw error;
+ return path;
+}
+async function vantMigrateExistingAvatar(){
+ if(vantAvatarMigrationBusy)return;
+ const client=window.kostetMichClient;
+ const user=window.vantProfileUser;
+ const dataUrl=user?.user_metadata?.vant_avatar;
+ if(!client||!user||typeof dataUrl!=='string'||!dataUrl.startsWith('data:image/jpeg;base64,'))return;
+ vantAvatarMigrationBusy=true;
+ try{
+  // Lokale Kopie bleibt als zusätzliche Sicherung bis zur erfolgreichen Migration.
+  try{localStorage.setItem('vant-avatar-backup-'+user.id,dataUrl)}catch(e){console.warn('Lokale Avatar-Sicherung nicht möglich',e)}
+  const path=await vantUploadAvatarData(dataUrl,user.id);
+  const {data,error}=await client.auth.updateUser({data:{vant_avatar:null,vant_avatar_path:path}});
+  if(error)throw error;
+  window.vantProfileUser=data.user;
+  if(tab==='km-profile'&&!vantProfileEditing)render();
+  console.info('VANT Profilbild sicher in Storage übertragen.');
+ }catch(e){console.error('Profilbild-Migration nicht abgeschlossen. Das alte Bild bleibt erhalten:',e)}
+ finally{vantAvatarMigrationBusy=false}
 }
 async function vantSaveProfile(){
  const client=window.kostetMichClient,msg=$('vant-profile-message'),btn=$('vant-profile-save');
@@ -669,8 +723,19 @@ async function vantSaveProfile(){
  if(username.length>30){msg.textContent='Der Benutzername darf höchstens 30 Zeichen lang sein.';return}
  btn.disabled=true;msg.textContent='Profil wird gespeichert …';
  try{
+  const user=window.vantProfileUser;
+  if(!user?.id)throw Error('Bitte melde dich erneut an.');
   const meta={vant_username:username};
-  if(vantPendingAvatar!==null)meta.vant_avatar=vantPendingAvatar;
+  if(vantPendingAvatar===''){
+   meta.vant_avatar=null;meta.vant_avatar_path=null;
+  }else if(typeof vantPendingAvatar==='string'){
+   const path=await vantUploadAvatarData(vantPendingAvatar,user.id);
+   meta.vant_avatar_path=path;meta.vant_avatar=null;
+  }else if(typeof user.user_metadata?.vant_avatar==='string'&&user.user_metadata.vant_avatar.startsWith('data:image/jpeg;base64,')){
+   // Auch beim reinen Umbenennen zuerst das bestehende Bild sichern.
+   const path=await vantUploadAvatarData(user.user_metadata.vant_avatar,user.id);
+   meta.vant_avatar_path=path;meta.vant_avatar=null;
+  }
   const {data,error}=await client.auth.updateUser({data:meta});
   if(error)throw error;
   window.vantProfileUser=data.user;
@@ -873,6 +938,7 @@ window.addEventListener('online',()=>{if(cloudDirty&&cloudReady)window.vantCloud
 window.addEventListener('focus',()=>{if(cloudReady)window.vantCloud.refresh()});
 function switchUser(user){
  window.vantProfileUser=user||null;
+ if(user?.user_metadata?.vant_avatar) setTimeout(vantMigrateExistingAvatar,1500);
  if(!user){cloudGeneration++;cloudReady=false;clearTimeout(cloudTimer);currentId=null;KEY='kostetmich-beta-v1';state=fresh();main.style.display='none';box.style.display=splashReady?'block':'none';return}
  if(currentId===user.id){if(tab==='km-profile'&&!vantProfileEditing)render();return;}
  cloudGeneration++;cloudReady=false;clearTimeout(cloudTimer);currentId=user.id;vantProfileEditing=false;vantPendingAvatar=null;KEY='kostetmich-user-'+user.id+'-v1';state=fresh();
