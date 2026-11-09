@@ -253,7 +253,7 @@ function dashboard(){
  return `<div class="vant-dashboard">
  <div class="vant-welcome"><div><span class="vant-eyebrow">DEIN FINANZÜBERBLICK</span><h2>Dein Geld. Dein Überblick. 💜</h2><p>Alles Wichtige auf einen Blick.</p></div><span class="vant-welcome-mark">V<span>.</span></span></div>
  <section class="vant-hero"><div class="vant-hero-top"><span>Nach Kosten & Rücklage</span><span aria-hidden="true">✦</span></div><div class="vant-hero-amount">${money(t.left)}</div><p>${t.left<0?'⚠️ Deine geplanten Ausgaben übersteigen dein Budget.':'Dein rechnerisch verfügbares Monatsbudget'}</p><div class="vant-hero-wave" aria-hidden="true"></div></section>
- <div class="vant-quick-actions"><button type="button" onclick="vantOpenIncome()"><span>＋</span>Einnahmen</button><button type="button" onclick="kmOpenQuick()"><span>−</span>Ausgaben</button><button type="button" onclick="vantOpenReceipt()"><span>▤</span>Kassenbon</button><button type="button" onclick="setTab('calendar')"><span>▦</span>Kalender</button><button type="button" onclick="setTab('savings')"><span>◎</span>Sparziele</button></div>
+ <div class="vant-quick-actions"><button type="button" onclick="vantOpenIncome()"><span>＋</span>Einnahmen</button><button type="button" onclick="vantOpenFixedExpense()"><span>−</span>Feste Ausgaben</button><button type="button" onclick="kmOpenQuick()"><span>🛒</span>Einkäufe & Alltag</button><button type="button" onclick="vantOpenReceipt()"><span>▤</span>Kassenbon</button><button type="button" onclick="setTab('calendar')"><span>▦</span>Kalender</button><button type="button" onclick="setTab('savings')"><span>◎</span>Sparziele</button></div>
  <div class="vant-summary"><div class="vant-summary-tile"><span>↗ Einnahmen / Monat</span><strong class="good">${money(t.inc)}</strong></div><div class="vant-summary-tile"><span>↘ Ausgaben + Raten</span><strong class="bad">${money(t.out+t.debt)}</strong></div></div>
  <section class="card vant-panel"><div class="vant-section-heading"><h2>Ausgaben im ${new Date().toLocaleDateString('de-DE',{month:'long'})}</h2><button class="vant-text-link" type="button" onclick="setTab('daily')">Alle ansehen ›</button></div><div class="vant-spending-layout"><div class="vant-donut" style="background:${donut}"><div><strong>${money(totalDaily)}</strong><small>Einzelausgaben</small></div></div><div class="vant-category-list">${categoryRows}</div></div><p class="muted vant-small-note">Aufteilung der einzeln erfassten Ausgaben im aktuellen Monat; feste Kosten und Raten sind hier nicht enthalten.</p></section>
  ${budgetBanner()}
@@ -300,6 +300,28 @@ function vantSaveIncome(ev){
  const name=$('vant-income-name').value.trim(),amount=Number($('vant-income-amount').value),cycle=$('vant-income-cycle').value,rawDay=$('vant-income-day').value;
  if(!name||!Number.isFinite(amount)||amount<=0)return;
  state.entries.push({id:id(),type:'income',name,amount,cycle,day:rawDay?Math.min(31,Math.max(1,Number(rawDay))):null});
+ save();kmCloseQuick();render();
+}
+function vantOpenFixedExpense(){
+ const modal=$('km-quick-modal');if(!modal)return;
+ $('km-quick-title').textContent='− Feste Ausgabe eintragen';
+ $('km-quick-content').innerHTML=`<p class="muted">Für Miete, Strom, Versicherungen, Handyverträge und andere regelmäßige Kosten. Einkäufe und spontane Ausgaben bitte unter „Einkäufe & Alltag“ eintragen.</p>
+ <form onsubmit="vantSaveFixedExpense(event)"><div class="two">
+ <div><label>Bezeichnung</label><input id="vant-fixed-name" maxlength="70" placeholder="z. B. Miete" required></div>
+ <div><label>Betrag (€)</label><input id="vant-fixed-amount" type="number" min="0.01" step="0.01" inputmode="decimal" required></div>
+ <div><label>Häufigkeit</label><select id="vant-fixed-cycle"><option value="monthly">Monatlich</option><option value="weekly">Wöchentlich</option><option value="quarterly">Alle 3 Monate</option><option value="yearly">Jährlich</option></select></div>
+ <div><label>Fälligkeitstag im Monat (optional)</label><input id="vant-fixed-day" type="number" min="1" max="31" placeholder="z. B. 1"></div>
+ </div><div class="actions"><button type="submit">Feste Ausgabe speichern</button><button type="button" class="secondary" onclick="kmCloseQuick()">Abbrechen</button></div></form>`;
+ modal.hidden=false;
+ setTimeout(()=>{const el=$('vant-fixed-name');if(el)el.focus()},80);
+}
+function vantSaveFixedExpense(ev){
+ ev.preventDefault();
+ const name=$('vant-fixed-name').value.trim(),amount=Number($('vant-fixed-amount').value),cycle=$('vant-fixed-cycle').value,rawDay=$('vant-fixed-day').value;
+ if(!name||!Number.isFinite(amount)||amount<=0||!['monthly','weekly','quarterly','yearly'].includes(cycle))return;
+ const day=rawDay?Number(rawDay):null;
+ if(day!==null&&(!Number.isInteger(day)||day<1||day>31))return;
+ state.entries.push({id:id(),type:'expense',name,amount,cycle,day});
  save();kmCloseQuick();render();
 }
 function kmCloseQuick(){const m=$('km-quick-modal');if(m)m.hidden=true}
@@ -399,7 +421,7 @@ function dailyExpensesPage(){
 function addDailyExpense(ev){ev.preventDefault();const amount=Number($('daily-amount').value),date=$('daily-date').value;if(!Number.isFinite(amount)||amount<=0||!/^\d{4}-\d{2}-\d{2}$/.test(date))return; if(!Array.isArray(state.dailyExpenses))state.dailyExpenses=[];state.dailyExpenses.push({id:id(),amount,category:Number($('daily-category').value),date,note:$('daily-note').value.trim()});dailyViewMonth=date.slice(0,7);save();render()}
 function deleteDailyExpense(x){if(!confirm((DAILY_I18N[lang]||DAILY_I18N.de).delete))return;state.dailyExpenses=(state.dailyExpenses||[]).filter(e=>e.id!==x);save();render()}
 function dailyTouchEnd(ev){if(!entryTouch||entryTouch.row!==ev.currentTarget||!ev.changedTouches.length)return;const start=entryTouch;entryTouch=null;const touch=ev.changedTouches[0],dx=touch.clientX-start.x,dy=touch.clientY-start.y;if(dx< -75&&Math.abs(dx)>Math.abs(dy)*1.5)deleteDailyExpense(start.row.dataset.entryId)}
-function entries(){return shell('Deine Einträge',state.entries.length?state.entries.map(e=>`<div class="row km-entry-row" data-entry-id="${e.id}" ontouchstart="entryTouchStart(event)" ontouchend="entryTouchEnd(event)" ontouchcancel="entryTouchCancel(event)"><div class="km-entry-details"><b>${esc(e.name)}</b><small>${e.type==='income'?'Einnahme':'Ausgabe'} · ${esc(e.cycle)}${e.day?' · Tag '+e.day:''}</small></div><div class="right km-entry-right"><b class="km-entry-amount ${e.type==='income'?'km-income':'km-expense'}">${money(monthly(e))}/Mon.</b><small>${money(e.amount)} je Zahlung</small><button type="button" class="km-entry-minus" aria-label="${esc(e.name)} löschen" title="Eintrag löschen" onclick="delEntry('${e.id}')">−</button></div></div>`).join(''):'<p class="muted">Noch keine Einträge vorhanden.</p>')+shell('Einnahmen und feste Ausgaben',`<p class="muted">Gehalt, Nebenjob, Miete, Verträge und andere regelmäßige Kosten. Einzelne Einkäufe bitte unter „Meine Ausgaben“ eintragen.</p><form onsubmit="addEntry(event)"><div class="two"><div><label>Art</label><select id="etype"><option value="income">Einnahme</option><option value="expense">Ausgabe</option></select></div><div><label>Bezeichnung</label><input id="ename" required maxlength="70" placeholder="z. B. Nettogehalt"></div><div><label>Betrag (€)</label><input id="eamount" type="number" min="0.01" step="0.01" required></div><div><label>Häufigkeit</label><select id="ecycle"><option value="monthly">Monatlich</option><option value="weekly">Wöchentlich</option><option value="quarterly">Alle 3 Monate</option><option value="yearly">Jährlich</option></select></div><div><label>Fälligkeitstag im Monat (optional)</label><input id="eday" type="number" min="1" max="31" placeholder="z. B. 15"></div></div><div class="actions"><button type="submit">Eintrag hinzufügen</button></div></form>`)}
+function entries(){return shell('Deine Einträge',state.entries.length?state.entries.map(e=>`<div class="row km-entry-row" data-entry-id="${e.id}" ontouchstart="entryTouchStart(event)" ontouchend="entryTouchEnd(event)" ontouchcancel="entryTouchCancel(event)"><div class="km-entry-details"><b>${esc(e.name)}</b><small>${e.type==='income'?'Einnahme':'Ausgabe'} · ${esc(e.cycle)}${e.day?' · Tag '+e.day:''}</small></div><div class="right km-entry-right"><b class="km-entry-amount ${e.type==='income'?'km-income':'km-expense'}">${money(monthly(e))}/Mon.</b><small>${money(e.amount)} je Zahlung</small><button type="button" class="km-entry-minus" aria-label="${esc(e.name)} löschen" title="Eintrag löschen" onclick="delEntry('${e.id}')">−</button></div></div>`).join(''):'<p class="muted">Noch keine Einträge vorhanden.</p>')}
 function addEntry(ev){ev.preventDefault();state.entries.push({id:id(),type:$('etype').value,name:$('ename').value.trim(),amount:num($('eamount').value),cycle:$('ecycle').value,day:$('eday').value?Math.min(31,Math.max(1,+$('eday').value)):null});save();render()}function delEntry(x){if(confirm(tr('Diesen Eintrag löschen?'))){state.entries=state.entries.filter(e=>e.id!==x);save();render()}}
 // Wisch nach links: Löschbestätigung öffnen, ohne vertikales Scrollen zu blockieren.
 let entryTouch = null;
