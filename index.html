@@ -218,7 +218,27 @@ function render(){
   const titles={calendar:'Kalender',savings:'Sparziele',entries:'Einnahmen & feste Ausgaben',daily:'Meine Ausgaben',debts:'Schulden',forecast:'12 Monate',analysis:analysisT('title'),check:'Kaufcheck',brake:'Finanzielle Notbremse',notifications:'Benachrichtigungen',settings:'Einstellungen','km-menu':'Menü','km-profile':'Profil','km-preferences':'Einstellungen','km-legal':'Rechtliches'};
   if(subTitle)subTitle.textContent=titles[tab]||'VANT';
  document.getElementById('nav').style.display=inMenu?'none':'';
- document.getElementById('nav').innerHTML=tabs.map(([k,v])=>`<button class="${k===tab?'active':'secondary'}" onclick="setTab('${k}')">${v}</button>`).join('');
+ const tabIcons={
+  dashboard:'M3 10l9-7 9 7v10h-6v-6H9v6H3z',
+  entries:'M12 3v18m-4-14h7a3 3 0 010 6H9a3 3 0 000 6h7',
+  daily:'M4 6h16v13H4z M4 6l12-3v3 M16 12h4v4h-4z',
+  debts:'M3 5l7 7 4-4 7 8m-5 0h5v-5',
+  forecast:'M4 6h16v14H4z M4 10h16 M8 3v5m8-5v5',
+  analysis:'M5 20v-6m7 6V9m7 11V4',
+  check:'M4 8h16l1 12H3z M8 9V7a4 4 0 018 0v2'
+ };
+ const nav=document.getElementById('nav');
+ nav.innerHTML=tabs.map(([key,title])=>{
+  const label=title.slice(title.indexOf(' ')+1);
+  const shortLabel=({entries:'Einnahmen',daily:'Ausgaben',analysis:'Analyse'})[key]||label;
+  return `<button type="button" class="${key===tab?'active':'secondary'}" ${key===tab?'aria-current="page"':''} aria-label="${esc(tr(label))}" onclick="setTab('${key}')"><span class="vant-tab-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="${tabIcons[key]}"/></svg></span><span>${esc(tr(shortLabel))}</span></button>`;
+ }).join('');
+ const activeTab=nav.querySelector('.active');
+ if(activeTab&&nav.clientWidth&&activeTab.offsetLeft+activeTab.offsetWidth>nav.scrollLeft+nav.clientWidth){
+  nav.scrollLeft=activeTab.offsetLeft+activeTab.offsetWidth-nav.clientWidth+6;
+ }else if(activeTab&&activeTab.offsetLeft<nav.scrollLeft){
+  nav.scrollLeft=Math.max(0,activeTab.offsetLeft-6);
+ }
  let pages={dashboard:dashboard,entries:entries,daily:dailyExpensesPage,debts:debts,calendar:calendar,forecast:forecast,analysis:vantAnalysis,check:check,brake:brake,savings:savings,notifications:notifications,settings:settings,'km-menu':kmMenuPage,'km-profile':kmProfilePage,'km-preferences':kmPreferencesPage,'km-legal':kmLegalPage};
  $('app').innerHTML=pages[tab]();
  const back=document.getElementById('km-menu-back');if(back){back.style.display='none';} const headerBack=document.getElementById('km-header-back');if(headerBack){headerBack.hidden=!inMenu;headerBack.style.display=inMenu?'inline-flex':'none';}
@@ -1770,6 +1790,15 @@ html[data-km-dark="true"] #km-auth h1{color:#f5efff}
   }
   html[data-km-dark="true"] .saving-ring::before {background:var(--vant-surface)}
 }
+
+#nav{position:relative;gap:4px;padding:6px;margin-bottom:13px;border:1px solid #b9a6dd;border-radius:18px;background:#f2ebff}
+#nav button{flex:1 0 66px;display:grid;justify-items:center;align-content:center;gap:4px;min-height:60px;margin:0;padding:3px 4px;border:0;background:transparent;color:#55436d;font-size:11px}
+#nav .vant-tab-icon{display:grid;place-items:center;width:36px;height:32px;border-radius:9px}
+#nav button.active{color:#6331b8}
+#nav button.active .vant-tab-icon{background:linear-gradient(145deg,#8c49e7,#6024c8);color:white}
+html[data-km-dark="true"] #nav{background:#1c1333;border-color:#594183}
+html[data-km-dark="true"] #nav button{color:#e3d6f4}
+html[data-km-dark="true"] #nav button.active{color:#d3a8ff}
 </style>
 
 
