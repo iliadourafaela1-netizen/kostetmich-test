@@ -1139,7 +1139,7 @@ const { error: saveError } = await window.kostetMichClient
     p256dh: subscriptionData.keys.p256dh,
     auth_key: subscriptionData.keys.auth
   }, {
-    onConflict: 'endpoint'
+    onConflict: 'user_id'
   });
 
 if (saveError) {
