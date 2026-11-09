@@ -144,7 +144,7 @@ body:has(#km-auth:not([style*="display: none"])) {background:#151120}
 body #vant-admin-users-button,body #kostetmich-test-push{display:none!important}
 body #vant-settings-admin-actions #vant-admin-users-button,body #vant-settings-admin-actions #kostetmich-test-push{display:block!important}
 @media(max-width:380px){#vant-settings-admin-actions{grid-template-columns:1fr}.vant-settings-hero{padding:23px 18px}}
-</style></head><body><main class="shell" id="km-main" style="display:none"><header><button id="km-header-back" type="button" class="km-header-back no-print" onclick="kmMenuBack()" aria-label="Zur Startseite" hidden>← <span>Zur Startseite</span></button><span class="tag" id="beta-tag">BETA · 100 % kostenlos</span><button type="button" class="km-menu-toggle no-print" aria-label="Menü öffnen" onclick="kmOpenMenu()">☰</button><h1 style="margin-top:12px">VANT<span class="vant-dot">.</span></h1><p style="margin-bottom:0" class="light">Take control of your money.</p></header><div id="vant-subheader" class="vant-subheader no-print" hidden><button type="button" class="vant-back-button" onclick="setTab('dashboard')">← Übersicht</button><strong id="vant-page-title"></strong><button type="button" class="vant-submenu-button" onclick="kmOpenMenu()" aria-label="Menü öffnen">☰</button></div><div class="nav no-print" id="nav"></div><div id="app"></div><footer>🔒 Finanzangaben werden lokal gespeichert und nach erfolgreicher Cloud-Einrichtung mit deinem Supabase-Konto synchronisiert. Keine Bankverbindung. Dies ist eine Test-App und keine Schuldner- oder Finanzberatung. Berechnungen sind Schätzungen. Sichere deine Daten regelmäßig per Export.</footer></main><div id="km-quick-modal" class="km-modal no-print" hidden role="dialog" aria-modal="true" aria-labelledby="km-quick-title"><div class="km-modal-panel"><div class="km-modal-header"><h2 id="km-quick-title">⚡ Blitz-Eintragung</h2><button type="button" class="secondary" onclick="kmCloseQuick()" aria-label="Schließen">✕</button></div><div id="km-quick-content"></div></div></div><script>
+</style></head><body><main class="shell" id="km-main" style="display:none"><header><button id="km-header-back" type="button" class="km-header-back no-print" onclick="kmMenuBack()" aria-label="Zur Startseite" hidden>← <span>Zur Startseite</span></button><span class="tag" id="beta-tag">BETA · 100 % kostenlos</span><button type="button" class="km-menu-toggle no-print" aria-label="Menü öffnen" onclick="kmOpenMenu()">☰</button><h1 style="margin-top:12px">VANT<span class="vant-dot">.</span></h1><p style="margin-bottom:0" class="light">Take control of your money.</p></header><div id="vant-subheader" class="vant-subheader no-print" hidden><button type="button" class="vant-back-button" onclick="vantGoBack()">← Zurück</button><strong id="vant-page-title"></strong><button type="button" class="vant-submenu-button" onclick="kmOpenMenu()" aria-label="Menü öffnen">☰</button></div><div class="nav no-print" id="nav"></div><div id="app"></div><footer>🔒 Finanzangaben werden lokal gespeichert und nach erfolgreicher Cloud-Einrichtung mit deinem Supabase-Konto synchronisiert. Keine Bankverbindung. Dies ist eine Test-App und keine Schuldner- oder Finanzberatung. Berechnungen sind Schätzungen. Sichere deine Daten regelmäßig per Export.</footer></main><div id="km-quick-modal" class="km-modal no-print" hidden role="dialog" aria-modal="true" aria-labelledby="km-quick-title"><div class="km-modal-panel"><div class="km-modal-header"><h2 id="km-quick-title">⚡ Blitz-Eintragung</h2><button type="button" class="secondary" onclick="kmCloseQuick()" aria-label="Schließen">✕</button></div><div id="km-quick-content"></div></div></div><script>
 'use strict';let KEY='kostetmich-beta-v1';const tabs=[['dashboard','🏠 Übersicht'],['entries','💶 Einnahmen & feste Ausgaben'],['daily','💸 Meine Ausgaben'],['debts','📉 Schulden'],['forecast','📈 12 Monate'],['analysis','📊 Finanzanalyse'],['check','🛍️ Kaufcheck']];let state={dailyExpenses:[],entries:[],debts:[],checks:[],reserve:0,month:new Date().toISOString().slice(0,7),brake:{balance:0,essential:0,horizon:30,extras:[]}};try{const a=JSON.parse(localStorage.getItem(KEY));if(a&&Array.isArray(a.entries)&&Array.isArray(a.debts))state={...state,...a}}catch(e){}let tab='dashboard';let lang=localStorage.getItem('kostetmich-language')||'de';const $=id=>document.getElementById(id),money=n=>Number(n||0).toLocaleString(({de:'de-DE',el:'el-GR',en:'en-IE',tr:'tr-TR'}[lang]||'de-DE'),{style:'currency',currency:'EUR'}),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),num=x=>Math.max(0,Number(x)||0),id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7),today=()=>new Date().toISOString().slice(0,10);function save(){
   
   localStorage.setItem(KEY, JSON.stringify(state));
@@ -159,7 +159,18 @@ body #vant-settings-admin-actions #vant-admin-users-button,body #vant-settings-a
   
   function monthly(e){return num(e.amount)*({monthly:1,weekly:52/12,quarterly:1/3,yearly:1/12,once:0}[e.cycle]??1)}function currentMonth(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
 function dailyTotal(month=currentMonth()){return (state.dailyExpenses||[]).filter(e=>e.date&&e.date.slice(0,7)===month).reduce((sum,e)=>sum+num(e.amount),0)}
-function totals(){const daily=dailyTotal();const inc=state.entries.filter(x=>x.type==='income').reduce((a,e)=>a+monthly(e),0),out=state.entries.filter(x=>x.type==='expense').reduce((a,e)=>a+monthly(e),0),debt=state.debts.reduce((a,d)=>a+num(d.payment),0);return {inc,out:out+daily,debt,left:inc-out-daily-debt-num(state.reserve)}}function shell(title,body){return `<section class="card"><h2>${title}</h2>${body}</section>`}function setTab(t){tab=t;render();window.scrollTo({top:0,behavior:'smooth'})}function render(){
+function totals(){const daily=dailyTotal();const inc=state.entries.filter(x=>x.type==='income').reduce((a,e)=>a+monthly(e),0),out=state.entries.filter(x=>x.type==='expense').reduce((a,e)=>a+monthly(e),0),debt=state.debts.reduce((a,d)=>a+num(d.payment),0);return {inc,out:out+daily,debt,left:inc-out-daily-debt-num(state.reserve)}}function shell(title,body){return `<section class="card"><h2>${title}</h2>${body}</section>`}const vantPageStack=[];
+function setTab(t){
+ if(t===tab)return;
+ if(t==='dashboard')vantPageStack.length=0;
+ else vantPageStack.push(tab);
+ tab=t;render();window.scrollTo({top:0,behavior:'smooth'});
+}
+function vantGoBack(){
+ tab=vantPageStack.length?vantPageStack.pop():'dashboard';
+ render();window.scrollTo({top:0,behavior:'smooth'});
+}
+function render(){
  const menuPages=['km-menu','km-profile','km-preferences','km-legal','settings','notifications'];
   const inMenu=menuPages.includes(tab);
   const isDashboard=tab==='dashboard';
@@ -167,6 +178,8 @@ function totals(){const daily=dailyTotal();const inc=state.entries.filter(x=>x.t
   if(mainHeader)mainHeader.hidden=!isDashboard;
   const subHeader=document.getElementById('vant-subheader');
   if(subHeader)subHeader.hidden=isDashboard;
+  const backButton=document.querySelector('#vant-subheader .vant-back-button');
+  if(backButton)backButton.textContent='← '+({de:'Zurück',el:'Πίσω',en:'Back',tr:'Geri'}[lang]||'Zurück');
   const subTitle=document.getElementById('vant-page-title');
   const titles={calendar:'Kalender',savings:'Sparziele',entries:'Einnahmen & feste Ausgaben',daily:'Meine Ausgaben',debts:'Schulden',forecast:'12 Monate',analysis:analysisT('title'),check:'Kaufcheck',brake:'Finanzielle Notbremse',notifications:'Benachrichtigungen',settings:'Einstellungen','km-menu':'Menü','km-profile':'Profil','km-preferences':'Einstellungen','km-legal':'Rechtliches'};
   if(subTitle)subTitle.textContent=titles[tab]||'VANT';
@@ -734,7 +747,7 @@ const KM_MENU_TEXT={
 };
 function kmT(k){return (KM_MENU_TEXT[lang]||KM_MENU_TEXT.de)[k]}
 function kmOpenMenu(){if(tab==='km-menu')return;setTab('km-menu')}
-function kmMenuBack(){setTab('dashboard')}
+function kmMenuBack(){vantGoBack()}
 function kmMenuItem(icon,title,subtitle,target){return `<button type="button" class="km-menu-item" onclick="setTab('${target}')"><span class="km-menu-icon">${icon}</span><span class="km-menu-label"><strong>${title}</strong><small>${subtitle||''}</small></span><span aria-hidden="true">›</span></button>`}
 const VANT_SETTINGS_I18N={
  de:{hero:'Einstellungen',sub:'Passe VANT. an deine Bedürfnisse an.',account:'Konto & App',app:'App-Einstellungen',security:'Sicherheit & Rechtliches',admin:'Administration',adminHint:'Nur für freigeschaltete Administratoren',profileHint:'Dein Konto verwalten',noticeHint:'Erinnerungen und Push-Nachrichten',prefHint:'Darstellung, Sprache und weitere Optionen',privacyHint:'Deine Daten und Sicherheit',legalHint:'Rechtliche Informationen'},
