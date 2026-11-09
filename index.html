@@ -1139,14 +1139,19 @@ document.getElementById("kostetmich-test-push")
       return;
     }
 
-    // Bei bald ablaufenden Sitzungen vor dem Aufruf einen neuen Token holen.
+    // Vor dem Test einen frischen Benutzer-Token verwenden (kein Publishable Key als Bearer).
+    // Bei fehlgeschlagener Erneuerung nicht mit einem möglicherweise ungültigen Token senden.
     if (!session.expires_at || session.expires_at * 1000 < Date.now() + 120000) {
       const refreshed = await client.auth.refreshSession();
-      if (refreshed.error || !refreshed.data.session) {
+      if (refreshed.error || !refreshed.data.session?.access_token) {
         alert("Deine Anmeldung muss erneuert werden. Bitte melde dich erneut an.");
         return;
       }
       session = refreshed.data.session;
+    }
+    if (session.access_token.split('.').length !== 3) {
+      alert("Der Anmeldetoken ist kein gültig aufgebauter JWT. Bitte melde dich ab und erneut an.");
+      return;
     }
 
     const checked = await client.auth.getUser(session.access_token);
@@ -1180,10 +1185,11 @@ document.getElementById("kostetmich-test-push")
           );
         } catch (networkError) {
           throw new Error(
-            "Netzwerk-/CORS-Fehler (" + (networkError?.message || "Anfrage blockiert") +
-            "). Prüfe in Supabase unter Edge Functions → kostetmich-push → Logs, " +
-            "ob die Anfrage ankommt. Wenn kein neuer POST erscheint, " +
-            "prüfe die OPTIONS-Antwort und die CORS-Header."
+            "Die Verbindung zur Push-Funktion wurde vom Browser blockiert (" +
+            (networkError?.message || "Load failed") + "). " +
+            "Prüfe in Supabase die Logs. Wichtig: Die Edge Function muss für OPTIONS " +
+            "und auch für Fehlerantworten Access-Control-Allow-Origin für die GitHub-Pages-Domain senden. " +
+            "Ein 401 kann im Browser sonst fälschlich als CORS-Fehler erscheinen."
           );
         }
         const responseText = await response.text();
@@ -1192,7 +1198,12 @@ document.getElementById("kostetmich-test-push")
         if (!response.ok) {
           const detail = result?.error || result?.message ||
             responseText.slice(0, 180) || "Keine Fehlerdetails";
-          throw new Error(`HTTP ${response.status} bei ${action}: ${detail}`);
+          const hint = response.status === 401
+            ? " Bitte erneut bei VANT anmelden. Falls es bleibt: Edge-Function-Authentifizierung und SUPABASE_URL prüfen."
+            : response.status === 403
+            ? " Das angemeldete Konto ist nicht in app_admins freigeschaltet."
+            : "";
+          throw new Error(`HTTP ${response.status} bei ${action}: ${detail}${hint}`);
         }
         if (!result?.success) {
           throw new Error(result?.error || `Unerwartete Antwort bei ${action}`);
