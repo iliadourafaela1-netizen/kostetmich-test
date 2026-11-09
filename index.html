@@ -92,7 +92,7 @@ html[data-km-dark="true"] .vant-back-button{background:#49365f;color:#f4edff}
 .vant-avatar-preview img{width:100%;height:100%;object-fit:cover}
 #vant-avatar-file{font-size:13px}
 #vant-profile-message{min-height:1.4em;font-size:13px}
-</style></head><body><main class="shell" id="km-main" style="display:none"><header><button id="km-header-back" type="button" class="km-header-back no-print" onclick="kmMenuBack()" aria-label="Zur Startseite" hidden>← <span>Zur Startseite</span></button><span class="tag" id="beta-tag">BETA · 100 % kostenlos</span><button type="button" class="km-menu-toggle no-print" aria-label="Menü öffnen" onclick="kmOpenMenu()">☰</button><h1 style="margin-top:12px">VANT<span class="vant-dot">.</span></h1><p style="margin-bottom:0" class="light">Take control of your money.</p></header><div id="vant-subheader" class="vant-subheader no-print" hidden><button type="button" class="vant-back-button" onclick="setTab('dashboard')">← Übersicht</button><strong id="vant-page-title"></strong><button type="button" class="vant-submenu-button" onclick="kmOpenMenu()" aria-label="Menü öffnen">☰</button></div><div class="nav no-print" id="nav"></div><div id="app"></div><footer>🔒 Finanzangaben werden lokal gespeichert und nach erfolgreicher Cloud-Einrichtung mit deinem Supabase-Konto synchronisiert. Keine Bankverbindung. Dies ist eine Test-App und keine Schuldner- oder Finanzberatung. Berechnungen sind Schätzungen. Sichere deine Daten regelmäßig per Export.</footer></main><button id="km-fab" class="km-fab no-print" type="button" aria-label="Schnell Ausgabe eintragen" onclick="kmOpenQuick()">+</button><div id="km-quick-modal" class="km-modal no-print" hidden role="dialog" aria-modal="true" aria-labelledby="km-quick-title"><div class="km-modal-panel"><div class="km-modal-header"><h2 id="km-quick-title">⚡ Blitz-Eintragung</h2><button type="button" class="secondary" onclick="kmCloseQuick()" aria-label="Schließen">✕</button></div><div id="km-quick-content"></div></div></div><script>
+</style><style>.vant-profile-display-name{text-align:center;font-weight:750;font-size:20px;margin-bottom:20px}</style></head><body><main class="shell" id="km-main" style="display:none"><header><button id="km-header-back" type="button" class="km-header-back no-print" onclick="kmMenuBack()" aria-label="Zur Startseite" hidden>← <span>Zur Startseite</span></button><span class="tag" id="beta-tag">BETA · 100 % kostenlos</span><button type="button" class="km-menu-toggle no-print" aria-label="Menü öffnen" onclick="kmOpenMenu()">☰</button><h1 style="margin-top:12px">VANT<span class="vant-dot">.</span></h1><p style="margin-bottom:0" class="light">Take control of your money.</p></header><div id="vant-subheader" class="vant-subheader no-print" hidden><button type="button" class="vant-back-button" onclick="setTab('dashboard')">← Übersicht</button><strong id="vant-page-title"></strong><button type="button" class="vant-submenu-button" onclick="kmOpenMenu()" aria-label="Menü öffnen">☰</button></div><div class="nav no-print" id="nav"></div><div id="app"></div><footer>🔒 Finanzangaben werden lokal gespeichert und nach erfolgreicher Cloud-Einrichtung mit deinem Supabase-Konto synchronisiert. Keine Bankverbindung. Dies ist eine Test-App und keine Schuldner- oder Finanzberatung. Berechnungen sind Schätzungen. Sichere deine Daten regelmäßig per Export.</footer></main><button id="km-fab" class="km-fab no-print" type="button" aria-label="Schnell Ausgabe eintragen" onclick="kmOpenQuick()">+</button><div id="km-quick-modal" class="km-modal no-print" hidden role="dialog" aria-modal="true" aria-labelledby="km-quick-title"><div class="km-modal-panel"><div class="km-modal-header"><h2 id="km-quick-title">⚡ Blitz-Eintragung</h2><button type="button" class="secondary" onclick="kmCloseQuick()" aria-label="Schließen">✕</button></div><div id="km-quick-content"></div></div></div><script>
 'use strict';let KEY='kostetmich-beta-v1';const tabs=[['dashboard','🏠 Übersicht'],['entries','💶 Einnahmen & feste Ausgaben'],['daily','💸 Meine Ausgaben'],['debts','📉 Schulden'],['forecast','📈 12 Monate'],['check','🛍️ Kaufcheck']];let state={dailyExpenses:[],entries:[],debts:[],checks:[],reserve:100,month:new Date().toISOString().slice(0,7),brake:{balance:0,essential:0,horizon:30,extras:[]}};try{const a=JSON.parse(localStorage.getItem(KEY));if(a&&Array.isArray(a.entries)&&Array.isArray(a.debts))state={...state,...a}}catch(e){}let tab='dashboard';let lang=localStorage.getItem('kostetmich-language')||'de';const $=id=>document.getElementById(id),money=n=>Number(n||0).toLocaleString(({de:'de-DE',el:'el-GR',en:'en-IE',tr:'tr-TR'}[lang]||'de-DE'),{style:'currency',currency:'EUR'}),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),num=x=>Math.max(0,Number(x)||0),id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7),today=()=>new Date().toISOString().slice(0,10);function save(){
   
   localStorage.setItem(KEY, JSON.stringify(state));
@@ -582,18 +582,21 @@ function kmOpenMenu(){if(tab==='km-menu')return;setTab('km-menu')}
 function kmMenuBack(){setTab('dashboard')}
 function kmMenuItem(icon,title,subtitle,target){return `<button type="button" class="km-menu-item" onclick="setTab('${target}')"><span class="km-menu-icon">${icon}</span><span class="km-menu-label"><strong>${title}</strong><small>${subtitle||''}</small></span><span aria-hidden="true">›</span></button>`}
 function kmMenuPage(){return shell('☰ '+kmT('menu'),`<div class="km-menu-list">${kmMenuItem('👤',kmT('profile'),kmT('account'),'km-profile')}${kmMenuItem('⚙️',kmT('pref'),kmT('appearance'),'km-preferences')}${kmMenuItem('🔔',kmT('notice'),kmT('pushInfo'),'notifications')}${kmMenuItem('🔒',kmT('privacy'),kmT('backup'),'settings')}${kmMenuItem('⚖️',kmT('legal'),kmT('legalInfo'),'km-legal')}</div><button class="km-logout" type="button" onclick="kmLogout()">↪ ${kmT('logout')}</button>`)}
+let vantProfileEditing=false;
+let vantPendingAvatar=null;
 function kmProfilePage(){
  const u=window.vantProfileUser||{},meta=u.user_metadata||{},name=typeof meta.vant_username==='string'?meta.vant_username:'',photo=typeof meta.vant_avatar==='string'&&meta.vant_avatar.startsWith('data:image/jpeg;base64,')?meta.vant_avatar:'';
- return shell('👤 '+kmT('profile'),`<div class="vant-profile-editor">
- <div class="vant-avatar-preview" id="vant-avatar-preview">${photo?`<img src="${photo}" alt="Profilbild">`:'👤'}</div>
+ const avatar=`<div class="vant-avatar-preview" id="vant-avatar-preview">${photo?`<img src="${photo}" alt="Profilbild">`:'👤'}</div>`;
+ if(!vantProfileEditing)return shell('👤 '+kmT('profile'),`<div class="vant-profile-editor">${avatar}<div class="vant-profile-display-name">${name?esc(name):'Noch kein Benutzername'}</div><label>${kmT('email')}</label><div class="km-profile-email">${esc(window.kmAccountEmail||'–')}</div><div class="actions"><button type="button" onclick="vantOpenProfileEditor()">✏️ Profil bearbeiten</button></div></div>`);
+ return shell('✏️ Profil bearbeiten',`<div class="vant-profile-editor">${avatar}
  <label for="vant-avatar-file">Profilbild auswählen</label><input type="file" id="vant-avatar-file" accept="image/*" onchange="vantPreviewAvatar(event)">
- <p class="muted">Dein Bild wird verkleinert und privat in deinem Benutzerprofil gespeichert. Bitte verwende ein eigenes Bild.</p>
+ <p class="muted">Dein Bild wird verkleinert und in deinem Benutzerprofil gespeichert.</p>
  <label for="vant-username">Benutzername</label><input id="vant-username" maxlength="30" autocomplete="nickname" placeholder="Dein Benutzername" value="${esc(name)}">
- <div class="actions"><button type="button" id="vant-profile-save" onclick="vantSaveProfile()">Profil speichern</button><button type="button" class="secondary" onclick="vantRemoveAvatar()">Profilbild entfernen</button></div>
- <p id="vant-profile-message" role="status" aria-live="polite"></p>
- </div><label>${kmT('email')}</label><div class="km-profile-email">${esc(window.kmAccountEmail||'–')}</div><p class="muted">Benutzername und Profilbild gehören zu deinem persönlichen VANT-Konto.</p>`);
+ <div class="actions"><button type="button" id="vant-profile-save" onclick="vantSaveProfile()">Änderungen speichern</button><button type="button" class="secondary" onclick="vantCancelProfileEditor()">Abbrechen</button><button type="button" class="secondary" onclick="vantRemoveAvatar()">Profilbild entfernen</button></div>
+ <p id="vant-profile-message" role="status" aria-live="polite"></p></div>`);
 }
-let vantPendingAvatar=null;
+function vantOpenProfileEditor(){vantPendingAvatar=null;vantProfileEditing=true;render()}
+function vantCancelProfileEditor(){vantPendingAvatar=null;vantProfileEditing=false;render()}
 async function vantPreviewAvatar(ev){
  const f=ev.target.files?.[0];if(!f)return;
  const msg=$('vant-profile-message');
@@ -632,7 +635,8 @@ async function vantSaveProfile(){
   if(error)throw error;
   window.vantProfileUser=data.user;
   vantPendingAvatar=null;
-  msg.textContent='Dein Profil wurde gespeichert.';
+  vantProfileEditing=false;
+  render();
  }catch(e){msg.textContent='Speichern fehlgeschlagen: '+(e.message||'Unbekannter Fehler')}
  finally{btn.disabled=false}
 }
@@ -823,8 +827,8 @@ window.addEventListener('focus',()=>{if(cloudReady)window.vantCloud.refresh()});
 function switchUser(user){
  window.vantProfileUser=user||null;
  if(!user){cloudGeneration++;cloudReady=false;clearTimeout(cloudTimer);currentId=null;KEY='kostetmich-beta-v1';state=fresh();main.style.display='none';box.style.display='block';return}
- if(currentId===user.id){if(tab==='km-profile'&&vantPendingAvatar===null)render();return;}
- cloudGeneration++;cloudReady=false;clearTimeout(cloudTimer);currentId=user.id;KEY='kostetmich-user-'+user.id+'-v1';state=fresh();
+ if(currentId===user.id){if(tab==='km-profile'&&!vantProfileEditing)render();return;}
+ cloudGeneration++;cloudReady=false;clearTimeout(cloudTimer);currentId=user.id;vantProfileEditing=false;vantPendingAvatar=null;KEY='kostetmich-user-'+user.id+'-v1';state=fresh();
  try{const stored=JSON.parse(localStorage.getItem(KEY));if(stored&&Array.isArray(stored.entries)&&Array.isArray(stored.debts))state={...state,...stored}}catch(e){}
  main.style.display='block';box.style.display='none';if(!cloudStatus.isConnected)main.insertBefore(cloudStatus,main.firstChild);cloudMessage('Cloud wird verbunden …');
  let bar=document.getElementById('km-account');if(!bar){bar=document.createElement('div');bar.id='km-account';main.insertBefore(bar,main.firstChild)}
