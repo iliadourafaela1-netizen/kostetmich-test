@@ -230,8 +230,14 @@ function render(){
  const nav=document.getElementById('nav');
  nav.innerHTML=tabs.map(([key,title])=>{
   const label=title.slice(title.indexOf(' ')+1);
-  const shortLabel=({entries:'Einnahmen',daily:'Ausgaben',analysis:'Analyse'})[key]||label;
-  return `<button type="button" class="${key===tab?'active':'secondary'}" ${key===tab?'aria-current="page"':''} aria-label="${esc(tr(label))}" onclick="setTab('${key}')"><span class="vant-tab-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="${tabIcons[key]}"/></svg></span><span>${esc(tr(shortLabel))}</span></button>`;
+  const tabLabels={
+   entries:{de:'Einnahmen & Fixkosten',en:'Income & fixed costs',el:'Έσοδα & πάγια',tr:'Gelir ve sabit giderler'},
+   daily:{de:'Alltagsausgaben',en:'Daily spending',el:'Καθημερινά έξοδα',tr:'Günlük harcamalar'},
+   forecast:{de:'Jahresvorschau',en:'12-month outlook',el:'Πρόβλεψη 12 μηνών',tr:'12 aylık tahmin'},
+   analysis:{de:'Finanzanalyse',en:'Financial analysis',el:'Οικονομική ανάλυση',tr:'Finans analizi'}
+  };
+  const shortLabel=tabLabels[key]?.[lang]||tr(label);
+  return `<button type="button" class="${key===tab?'active':'secondary'}" ${key===tab?'aria-current="page"':''} aria-label="${esc(tr(label))}" onclick="setTab('${key}')"><span class="vant-tab-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="${tabIcons[key]}"/></svg></span><span>${key==='entries'&&lang==='de'?'Einnahmen<br>&amp; Fixkosten':esc(shortLabel)}</span></button>`;
  }).join('');
  const activeTab=nav.querySelector('.active');
  if(activeTab&&nav.clientWidth&&activeTab.offsetLeft+activeTab.offsetWidth>nav.scrollLeft+nav.clientWidth){
@@ -1792,7 +1798,7 @@ html[data-km-dark="true"] #km-auth h1{color:#f5efff}
 }
 
 #nav{position:relative;gap:4px;padding:6px;margin-bottom:13px;border:1px solid #b9a6dd;border-radius:18px;background:#f2ebff}
-#nav button{flex:1 0 66px;display:grid;justify-items:center;align-content:center;gap:4px;min-height:60px;margin:0;padding:3px 4px;border:0;background:transparent;color:#55436d;font-size:11px}
+#nav button{flex:1 0 86px;white-space:normal;overflow-wrap:anywhere;line-height:1.2;display:grid;justify-items:center;align-content:center;gap:4px;min-height:60px;margin:0;padding:3px 4px;border:0;background:transparent;color:#55436d;font-size:11px}
 #nav .vant-tab-icon{display:grid;place-items:center;width:36px;height:32px;border-radius:9px}
 #nav button.active{color:#6331b8}
 #nav button.active .vant-tab-icon{background:linear-gradient(145deg,#8c49e7,#6024c8);color:white}
