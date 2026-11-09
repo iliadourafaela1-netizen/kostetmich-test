@@ -1058,7 +1058,19 @@ document.body.appendChild(pushStatus);
   }
 
 
-    registerVANTPush();
+    // Push-Abonnement erst nach einer erfolgreichen Anmeldung synchronisieren.
+    window.addEventListener('load', () => {
+      const pushClient = window.kostetMichClient;
+      if (!pushClient) return;
+      pushClient.auth.getSession().then(({data}) => {
+        if (data?.session?.user) registerVANTPush();
+      }).catch(error => console.warn('Push-Anmeldung wird später versucht:', error));
+      pushClient.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_IN' && session?.user) {
+          setTimeout(() => registerVANTPush(), 0);
+        }
+      });
+    });
   </script>
 
 <button
@@ -1122,8 +1134,8 @@ document.getElementById("kostetmich-test-push")
     const { data: { session }, error: sessionError } =
       await client.auth.getSession();
 
-    if (sessionError || !session) {
-      alert("Bitte melde dich zuerst bei VANT an.");
+    if (sessionError || !session?.access_token) {
+      alert("Deine Anmeldung ist abgelaufen. Bitte melde dich erneut bei VANT an.");
       return;
     }
 
@@ -1133,7 +1145,10 @@ document.getElementById("kostetmich-test-push")
     try {
       const { data, error } = await client.functions.invoke(
         "kostetmich-push",
-        { body: {} }
+        {
+          body: { action: "send_test" },
+          headers: { Authorization: `Bearer ${session.access_token}` }
+        }
       );
 
       
@@ -1163,7 +1178,7 @@ if (error) {
         "Fehlgeschlagen: " + data.failed
       );
     } catch (error) {
-      alert("Fehler beim Push-Versand: " + error.message);
+      alert("Fehler beim Push-Versand: " + error.message + (/(ungültige anmeldung|invalid jwt|401|unauthorized)/i.test(error.message) ? "\n\nSupabase lehnt die Anmeldung ab. In diesem Fall muss die Prüfung in der Edge Function kostетmich-push kontrolliert werden.".replace("kostетmich", "kostetmich") : ""));
       console.error(error);
     } finally {
       button.disabled = false;
