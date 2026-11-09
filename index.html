@@ -1155,7 +1155,7 @@ document.getElementById("kostetmich-test-push")
     }
 
     const checked = await client.auth.getUser(session.access_token);
-    if (checked.error || !checked.data.user) {
+    if (checked.error || !checked.data.user || checked.data.user.id !== session.user?.id) {
       alert("Supabase erkennt deine Anmeldung nicht mehr. Bitte melde dich erneut an.");
       return;
     }
@@ -1184,12 +1184,21 @@ document.getElementById("kostetmich-test-push")
             }
           );
         } catch (networkError) {
+          // Fetch exposes no HTTP status when the browser blocks a CORS response.
+          // Do not misreport this as an invalid user token.
+          console.error("VANT Push network/CORS failure", {
+            action,
+            endpoint: client.supabaseUrl + "/functions/v1/kostetmich-push",
+            origin: location.origin,
+            message: String(networkError?.message || "Load failed")
+          });
           throw new Error(
-            "Die Verbindung zur Push-Funktion wurde vom Browser blockiert (" +
-            (networkError?.message || "Load failed") + "). " +
-            "Prüfe in Supabase die Logs. Wichtig: Die Edge Function muss für OPTIONS " +
-            "und auch für Fehlerantworten Access-Control-Allow-Origin für die GitHub-Pages-Domain senden. " +
-            "Ein 401 kann im Browser sonst fälschlich als CORS-Fehler erscheinen."
+            "Netzwerk-/CORS-Fehler beim Schritt '" + action + "'. " +
+            "Der Browser konnte keine lesbare Antwort von der Edge Function erhalten. " +
+            "Prüfe in Supabase Edge Functions → kostetmich-push → Invocations " +
+            "die OPTIONS- und POST-Anfragen (auch Status 400). " +
+            "Falls OPTIONS mit 400 scheitert, entsteht der Fehler vor der eigentlichen Push-Funktion. " +
+            "Technischer Hinweis: " + String(networkError?.message || "Load failed")
           );
         }
         const responseText = await response.text();
