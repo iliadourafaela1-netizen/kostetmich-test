@@ -145,6 +145,17 @@ body #vant-admin-users-button,body #kostetmich-test-push{display:none!important}
 body #vant-settings-admin-actions #vant-admin-users-button,body #vant-settings-admin-actions #kostetmich-test-push{display:block!important}
 @media(max-width:380px){#vant-settings-admin-actions{grid-template-columns:1fr}.vant-settings-hero{padding:23px 18px}}
 </style><style>
+.saving-create{display:grid;gap:14px}
+.saving-create p{margin:0}
+.saving-create-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.saving-create-grid>*{min-width:0}
+.saving-create input{width:100%;min-width:0;max-width:100%;box-sizing:border-box}
+.saving-create input[type=date]{display:block;min-inline-size:0;min-height:44px}
+.saving-create .saving-details{margin:0;padding-top:8px}
+.saving-create .saving-details[open] summary{margin-bottom:8px}
+.saving-create .saving-create-submit{width:100%;margin:0;background:linear-gradient(115deg,#6339c1,#7042cb);color:white}
+.saving-summary .stat{overflow-wrap:anywhere}
+@media(max-width:360px){.saving-create-grid{grid-template-columns:minmax(0,1fr)}}
 .saving-card{--saving-accent:#a57af5}
 .saving-overview{display:flex;gap:16px;align-items:center;margin:12px 0 18px}
 .saving-ring{display:grid;place-items:center;flex:0 0 76px;aspect-ratio:1;border-radius:50%;background:conic-gradient(var(--saving-accent) var(--progress),rgba(142,103,209,.24) 0);position:relative;isolation:isolate;font-weight:800}
@@ -267,8 +278,27 @@ function monthsUntil(iso){const now=new Date(),end=new Date(iso+'T12:00:00');if(
 function savingsNeed(g){return Math.max(0,num(g.target)-num(g.saved)-savingConfirmed(g))/Math.max(1,monthsUntil(g.deadline))}
 function reminderDate(g){const now=new Date(),day=Math.min(28,Math.max(1,+g.day||1));let d=new Date(now.getFullYear(),now.getMonth(),day);if(d<new Date(now.getFullYear(),now.getMonth(),now.getDate())||g.ack===today().slice(0,7))d=new Date(now.getFullYear(),now.getMonth()+1,day);return d}
 function savings(){const t=sw,gs=savingsData(),budget=totals().left,needed=gs.filter(g=>num(g.saved)+savingConfirmed(g)<num(g.target)).reduce((a,g)=>a+savingsNeed(g),0),now=today(),locale=({de:'de-DE',el:'el-GR',en:'en-GB',tr:'tr-TR'}[lang]||'de-DE');const b=state.brake&&num(state.brake.balance)>0?brakePlan():null;
-let out=shell('🎯 '+t('title'),`<p>${t('intro')}</p><form onsubmit="createSaving(event)"><div class="two"><div><label>${t('name')}</label><input id="sg-name" maxlength="70" placeholder="📱 / ✈️ / 🏠" required></div><div><label>${t('target')}</label><input id="sg-target" type="number" min="1" step=".01" required></div><div><label>${t('saved')}</label><input id="sg-saved" type="number" min="0" step=".01" value="0" required></div><div><label>${t('deadline')}</label><input id="sg-date" type="date" min="${now}" required></div><div><label>${t('remind')}</label><input id="sg-day" type="number" min="1" max="28" value="1" required></div></div><button type="submit">${t('create')}</button></form>`);
-out+=shell(t('total'),`<div class="grid"><div class="stat"><span>${t('total')}</span><b>${money(needed)}</b></div><div class="stat"><span>${t('budget')}</span><b>${money(budget)}</b></div></div><p class="${needed>Math.max(0,budget)?'bad':'good'}"><b>${needed>Math.max(0,budget)?'⚠️ '+t('sumwarn'):'✓ '+t('sumok')}</b></p>${b&&b.available<0?`<p class="bad">⚠️ ${t('warning')}</p>`:''}`);
+const labels=({
+ de:['Neues Sparziel','Monatsübersicht','Für deine Ziele nötig','Freies Monatsbudget','Startbetrag & Erinnerung','z. B. Urlaub','Plane, wie viel du bis zu deinem Wunschdatum sparen möchtest.'],
+ en:['New savings goal','Monthly overview','Needed for your goals','Available monthly budget','Starting amount & reminder','e.g. Holiday','Plan how much to save by your target date.'],
+ el:['Νέος στόχος','Μηνιαία επισκόπηση','Ποσό για τους στόχους σου','Διαθέσιμο μηνιαίο ποσό','Αρχικό ποσό και υπενθύμιση','π.χ. Διακοπές','Προγραμμάτισε πόσα θα αποταμιεύσεις μέχρι την ημερομηνία του στόχου σου.'],
+ tr:['Yeni birikim hedefi','Aylık özet','Hedeflerin için gereken','Aylık kullanılabilir bütçe','Başlangıç tutarı ve hatırlatma','Örn. Tatil','Hedef tarihine kadar ne kadar biriktireceğini planla.']
+})[lang]||["New savings goal","Monthly overview","Needed for your goals","Available monthly budget","Starting amount & reminder","e.g. Holiday","Plan how much to save by your target date."];
+let out=shell('＋ '+labels[0],`<form class="saving-create" onsubmit="createSaving(event)">
+<p class="muted">${labels[6]}</p>
+<div><label for="sg-name">${t('name')}</label><input id="sg-name" maxlength="70" placeholder="${labels[5]}" required></div>
+<div class="saving-create-grid">
+<div><label for="sg-target">${t('target')}</label><input id="sg-target" type="number" inputmode="decimal" placeholder="0,00" min="1" step=".01" required></div>
+<div><label for="sg-date">${t('deadline')}</label><input id="sg-date" type="date" min="${now}" required></div>
+</div>
+<details class="saving-details"><summary>${labels[4]}</summary>
+<div class="saving-create-grid">
+<div><label for="sg-saved">${t('saved')}</label><input id="sg-saved" type="number" inputmode="decimal" min="0" step=".01" value="0" oninvalid="this.closest('details').open=true"></div>
+<div><label for="sg-day">${t('remind')}</label><input id="sg-day" type="number" inputmode="numeric" min="1" max="28" value="1" oninvalid="this.closest('details').open=true"></div>
+</div>
+</details>
+<button class="saving-create-submit" type="submit">${t('create')}</button></form>`);
+out+=shell(labels[1],`<div class="saving-create-grid saving-summary"><div class="stat"><span>${labels[2]}</span><b>${money(needed)}</b></div><div class="stat"><span>${labels[3]}</span><b>${money(budget)}</b></div></div><p class="${needed>Math.max(0,budget)?'bad':'good'}"><b>${needed>Math.max(0,budget)?'⚠️ '+t('sumwarn'):'✓ '+t('sumok')}</b></p>${b&&b.available<0?`<p class="bad">⚠️ ${t('warning')}</p>`:''}`);
 if(!gs.length)return out+shell(t('title'),`<p>${t('empty')}</p><p class="muted">${t('note')}</p>`);
 for(const g of gs){const actual=num(g.saved)+savingConfirmed(g),remaining=Math.max(0,num(g.target)-actual),need=savingsNeed(g),pct=Math.min(100,Math.round(100*actual/Math.max(1,num(g.target)))),next=reminderDate(g),isDue=now.slice(8,10)>=String(Math.min(28,+g.day||1)).padStart(2,'0')&&g.ack!==now.slice(0,7)&&remaining>0;
 const status=remaining===0?t('done'):budget<=0?t('unfunded'):need>budget?t('tight'):t('possible');
