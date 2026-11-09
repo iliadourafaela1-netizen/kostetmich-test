@@ -1306,27 +1306,6 @@ html[data-km-dark="true"] #km-auth h1{color:#f5efff}
 @media(max-width:680px){header{border-radius:21px;padding-left:22px;padding-bottom:25px}header:after{right:-15px;font-size:190px;bottom:-55px}}
 </style>
 
-<script id="vant-reopen-dashboard">
-(function(){
-  'use strict';
-  let wasBackgrounded=false;
-  function goHome(){
-    if(document.getElementById('km-main')?.style.display!=='block')return;
-    if(typeof setTab==='function' && typeof tab!=='undefined' && tab!=='dashboard'){
-      setTab('dashboard');
-    }
-    const quick=document.getElementById('km-quick-modal');
-    if(quick)quick.hidden=true;
-    window.scrollTo(0,0);
-  }
-  document.addEventListener('visibilitychange',function(){
-    if(document.visibilityState==='hidden')wasBackgrounded=true;
-    else if(wasBackgrounded){wasBackgrounded=false;goHome();}
-  });
-  window.addEventListener('pageshow',function(event){
-    if(event.persisted)goHome();
-  });
-})();
-</script>
+
 </body>
 </html>
