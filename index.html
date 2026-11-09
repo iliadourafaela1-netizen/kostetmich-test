@@ -156,6 +156,7 @@ function totals(){const daily=dailyTotal();const inc=state.entries.filter(x=>x.t
  $('app').innerHTML=pages[tab]();
  const back=document.getElementById('km-menu-back');if(back){back.style.display='none';} const headerBack=document.getElementById('km-header-back');if(headerBack){headerBack.hidden=!inMenu;headerBack.style.display=inMenu?'inline-flex':'none';}
   translatePage();
+  if(tab==='notifications'&&typeof window.vantRefreshPushStatus==='function')window.vantRefreshPushStatus();
   const fab=$('km-fab');if(fab)fab.style.display='none';
 }
 const BRAKE_I18N={
@@ -679,10 +680,10 @@ function translatePage(){
 
 // VANT in-app reminder center. No background push delivery is claimed.
 const NOTICE_TEXT={
- de:{title:'Benachrichtigungen',intro:'Erinnerungen werden angezeigt, wenn du VANT öffnest. Push-Nachrichten bei geschlossener App sind noch nicht aktiviert.',bill:'Rechnung',debt:'Schuldenrate',saving:'Sparziel',brake:'Budgetwarnung',due:'heute fällig',tomorrow:'morgen fällig',days:'in {n} Tagen fällig',saveDay:'Heute ist dein Spartag.',shortfall:'Deine geplanten Ausgaben könnten dein verfügbares Geld übersteigen.',empty:'Im gewählten Zeitraum sind keine Erinnerungen fällig.',settings:'Erinnerungen einstellen',advance:'Wie viele Tage vorher erinnern?',save:'Einstellungen speichern',privacy:'Aus Datenschutzgründen werden hier keine Beträge oder Gläubigernamen angezeigt.',push:'Handy-Push bei geschlossener App ist noch nicht eingerichtet. Dafür benötigen wir eine sichere Server-Funktion und deine Zustimmung.'},
- el:{title:'Ειδοποιήσεις',intro:'Οι υπενθυμίσεις εμφανίζονται όταν ανοίγεις την εφαρμογή. Οι ειδοποιήσεις push δεν έχουν ενεργοποιηθεί ακόμη.',bill:'Λογαριασμός',debt:'Δόση χρέους',saving:'Στόχος αποταμίευσης',brake:'Προειδοποίηση προϋπολογισμού',due:'λήγει σήμερα',tomorrow:'λήγει αύριο',days:'λήγει σε {n} ημέρες',saveDay:'Σήμερα είναι η ημέρα αποταμίευσης.',shortfall:'Τα προγραμματισμένα έξοδα ίσως ξεπερνούν τα διαθέσιμα χρήματα.',empty:'Δεν υπάρχουν υπενθυμίσεις για αυτή την περίοδο.',settings:'Ρυθμίσεις υπενθυμίσεων',advance:'Πόσες ημέρες πριν;',save:'Αποθήκευση ρυθμίσεων',privacy:'Για λόγους απορρήτου δεν εμφανίζονται ποσά ή ονόματα πιστωτών.',push:'Οι ειδοποιήσεις push όταν η εφαρμογή είναι κλειστή δεν έχουν ρυθμιστεί ακόμη.'},
- en:{title:'Notifications',intro:'Reminders appear when you open VANT. Background push notifications are not enabled yet.',bill:'Bill',debt:'Debt payment',saving:'Savings goal',brake:'Budget warning',due:'due today',tomorrow:'due tomorrow',days:'due in {n} days',saveDay:'Today is your savings day.',shortfall:'Planned costs may exceed your available money.',empty:'No reminders are due in this period.',settings:'Reminder settings',advance:'Remind how many days ahead?',save:'Save settings',privacy:'For privacy, amounts and creditor names are hidden here.',push:'Background push is not set up yet. It requires a secure server and your consent.'},
- tr:{title:'Bildirimler',intro:'Hatırlatmalar VANT açıldığında görünür. Arka plan anlık bildirimleri henüz etkin değil.',bill:'Fatura',debt:'Borç ödemesi',saving:'Birikim hedefi',brake:'Bütçe uyarısı',due:'bugün son gün',tomorrow:'yarın son gün',days:'{n} gün sonra son gün',saveDay:'Bugün birikim günün.',shortfall:'Bütçen kritik seviyede olabilir.',empty:'Bu dönem için hatırlatma yok.',settings:'Hatırlatma ayarları',advance:'Kaç gün önceden hatırlatılsın?',save:'Ayarları kaydet',privacy:'Gizlilik için tutarlar ve alacaklı adları burada gösterilmez.',push:'Uygulama kapalıyken anlık bildirimler henüz kurulmadı.'}
+ de:{title:'Benachrichtigungen',intro:'Erinnerungen werden in VANT angezeigt. Handy-Push kann bei erteilter Berechtigung und registriertem Gerät auch bei geschlossener App eintreffen.',bill:'Rechnung',debt:'Schuldenrate',saving:'Sparziel',brake:'Budgetwarnung',due:'heute fällig',tomorrow:'morgen fällig',days:'in {n} Tagen fällig',saveDay:'Heute ist dein Spartag.',shortfall:'Deine geplanten Ausgaben könnten dein verfügbares Geld übersteigen.',empty:'Im gewählten Zeitraum sind keine Erinnerungen fällig.',settings:'Erinnerungen einstellen',advance:'Wie viele Tage vorher erinnern?',save:'Einstellungen speichern',privacy:'Aus Datenschutzgründen werden hier keine Beträge oder Gläubigernamen angezeigt.',push:'Den Status der Handy-Benachrichtigungen siehst du unten.'},
+ el:{title:'Ειδοποιήσεις',intro:'Οι υπενθυμίσεις εμφανίζονται στο VANT. Οι ειδοποιήσεις push μπορούν να φτάνουν και όταν η εφαρμογή είναι κλειστή, εφόσον η συσκευή έχει εγγραφεί.',bill:'Λογαριασμός',debt:'Δόση χρέους',saving:'Στόχος αποταμίευσης',brake:'Προειδοποίηση προϋπολογισμού',due:'λήγει σήμερα',tomorrow:'λήγει αύριο',days:'λήγει σε {n} ημέρες',saveDay:'Σήμερα είναι η ημέρα αποταμίευσης.',shortfall:'Τα προγραμματισμένα έξοδα ίσως ξεπερνούν τα διαθέσιμα χρήματα.',empty:'Δεν υπάρχουν υπενθυμίσεις για αυτή την περίοδο.',settings:'Ρυθμίσεις υπενθυμίσεων',advance:'Πόσες ημέρες πριν;',save:'Αποθήκευση ρυθμίσεων',privacy:'Για λόγους απορρήτου δεν εμφανίζονται ποσά ή ονόματα πιστωτών.',push:'Η κατάσταση των ειδοποιήσεων εμφανίζεται παρακάτω.'},
+ en:{title:'Notifications',intro:'Reminders appear in VANT. Push can also arrive while the app is closed when permission and device registration are active.',bill:'Bill',debt:'Debt payment',saving:'Savings goal',brake:'Budget warning',due:'due today',tomorrow:'due tomorrow',days:'due in {n} days',saveDay:'Today is your savings day.',shortfall:'Planned costs may exceed your available money.',empty:'No reminders are due in this period.',settings:'Reminder settings',advance:'Remind how many days ahead?',save:'Save settings',privacy:'For privacy, amounts and creditor names are hidden here.',push:'Your phone notification status appears below.'},
+ tr:{title:'Bildirimler',intro:'Hatırlatmalar VANT içinde görünür. İzin ve cihaz kaydı etkinse uygulama kapalıyken de push gelebilir.',bill:'Fatura',debt:'Borç ödemesi',saving:'Birikim hedefi',brake:'Bütçe uyarısı',due:'bugün son gün',tomorrow:'yarın son gün',days:'{n} gün sonra son gün',saveDay:'Bugün birikim günün.',shortfall:'Bütçen kritik seviyede olabilir.',empty:'Bu dönem için hatırlatma yok.',settings:'Hatırlatma ayarları',advance:'Kaç gün önceden hatırlatılsın?',save:'Ayarları kaydet',privacy:'Gizlilik için tutarlar ve alacaklı adları burada gösterilmez.',push:'Telefon bildirimlerinin durumu aşağıda gösterilir.'}
 };
 function nt(k){return (NOTICE_TEXT[lang]||NOTICE_TEXT.de)[k]}
 function noticePrefs(){const p=state.notificationPrefs||{};return {pushTime:p.pushTime||'12:00',advance:[0,1,3,7].includes(+p.advance)?+p.advance:3,bills:p.bills!==false,debts:p.debts!==false,savings:p.savings!==false,brake:p.brake!==false}}
@@ -943,20 +944,48 @@ render();
   const content=originalNotifications();
   const labels={de:['Handy-Benachrichtigungen','Handy-Benachrichtigungen aktivieren','Berechtigung prüfen'],el:['Ειδοποιήσεις κινητού','Ενεργοποίηση ειδοποιήσεων','Έλεγχος άδειας'],en:['Phone notifications','Enable phone notifications','Check permission'],tr:['Telefon bildirimleri','Bildirimleri etkinleştir','İzni kontrol et']};
   const l=labels[(typeof lang!=='undefined'?lang:'de')]||labels.de;
-  return content+shell('📱 '+l[0],`<p class="muted">${({de:'Hier kannst du die Erlaubnis für spätere Push-Benachrichtigungen erteilen. Der automatische Versand bei geschlossener App ist noch nicht eingerichtet.',el:'Εδώ μπορείς να επιτρέψεις μελλοντικές ειδοποιήσεις push. Η αυτόματη αποστολή όταν η εφαρμογή είναι κλειστή δεν έχει ρυθμιστεί ακόμη.',en:'You can grant permission for future push notifications here. Automatic delivery while the app is closed is not configured yet.',tr:'Buradan gelecekteki anlık bildirimlere izin verebilirsin. Uygulama kapalıyken otomatik gönderim henüz ayarlanmadı.'})[(typeof lang!=='undefined'?lang:'de')]||'Hier kannst du die Erlaubnis für spätere Push-Benachrichtigungen erteilen. Der automatische Versand bei geschlossener App ist noch nicht eingerichtet.'}</p><button type="button" onclick="kmAskPushPermission()">🔔 ${l[1]}</button><p id="km-push-status" class="muted" role="status"></p>`);
+  return content+`<section class="card" id="vant-push-card"><h2>📱 ${l[0]}</h2><p id="km-push-status" class="muted" role="status">${({de:'Benachrichtigungsstatus wird geprüft …',el:'Έλεγχος ειδοποιήσεων …',en:'Checking notification status …',tr:'Bildirim durumu kontrol ediliyor …'})[lang]||'Benachrichtigungsstatus wird geprüft …'}</p><button type="button" id="vant-push-enable" onclick="kmAskPushPermission()" style="display:none">🔔 ${l[1]}</button></section>`;
+
+ };
+ window.vantRefreshPushStatus=async function(){
+  const status=document.getElementById('km-push-status');
+  const button=document.getElementById('vant-push-enable');
+  if(!status)return;
+  const t={de:['Benachrichtigungen aktiviert. Dieses Gerät ist registriert.','Benachrichtigungen sind noch nicht aktiviert.','Benachrichtigungen sind in den Geräteeinstellungen blockiert.','Push wird von diesem Gerät oder Browser nicht unterstützt.','Die Berechtigung ist erteilt, aber dieses Gerät muss noch registriert werden.','Push-Status konnte nicht vollständig geprüft werden.'],el:['Οι ειδοποιήσεις είναι ενεργές. Αυτή η συσκευή έχει εγγραφεί.','Οι ειδοποιήσεις δεν είναι ακόμη ενεργές.','Οι ειδοποιήσεις είναι αποκλεισμένες στις ρυθμίσεις της συσκευής.','Η συσκευή ή το πρόγραμμα περιήγησης δεν υποστηρίζει push.','Η άδεια δόθηκε, αλλά η συσκευή δεν έχει εγγραφεί ακόμη.','Δεν ήταν δυνατός ο πλήρης έλεγχος της κατάστασης.'],en:['Notifications enabled. This device is registered.','Notifications are not enabled yet.','Notifications are blocked in device settings.','Push is not supported on this device or browser.','Permission granted, but this device still needs to be registered.','Could not fully verify push status.'],tr:['Bildirimler etkin. Bu cihaz kayıtlı.','Bildirimler henüz etkin değil.','Bildirimler cihaz ayarlarında engellenmiş.','Bu cihaz veya tarayıcı push desteklemiyor.','İzin verildi, ancak bu cihaz henüz kayıtlı değil.','Push durumu tam olarak doğrulanamadı.']}[lang]||null;
+  const words=t||['Benachrichtigungen aktiviert. Dieses Gerät ist registriert.','Benachrichtigungen sind noch nicht aktiviert.','Benachrichtigungen sind in den Geräteeinstellungen blockiert.','Push wird von diesem Gerät oder Browser nicht unterstützt.','Die Berechtigung ist erteilt, aber dieses Gerät muss noch registriert werden.','Push-Status konnte nicht vollständig geprüft werden.'];
+  const show=(message,enable)=>{status.textContent=message;if(button)button.style.display=enable?'inline-block':'none';};
+  if(!('Notification' in window)||!('serviceWorker' in navigator)||!('PushManager' in window)){show(words[3],false);return;}
+  if(Notification.permission==='denied'){show(words[2],false);return;}
+  if(Notification.permission!=='granted'){show(words[1],true);return;}
+  try{
+   const reg=await navigator.serviceWorker.ready;
+   const sub=await reg.pushManager.getSubscription();
+   if(!sub){show(words[4],true);return;}
+   const client=window.kostetMichClient;
+   if(!client){show(words[5],true);return;}
+   const {data:{user},error:userError}=await client.auth.getUser();
+   if(userError||!user){show(words[5],true);return;}
+   const {data,error}=await client.from('push_subscriptions').select('endpoint').eq('user_id',user.id).eq('endpoint',sub.endpoint).limit(1);
+   if(error){show(words[5],true);return;}
+   show(data&&data.length? '✅ '+words[0]:words[4],!(data&&data.length));
+  }catch(e){console.warn('Push status:',e);show(words[5],true);}
  };
  window.kmAskPushPermission=async function(){
-  const target=document.getElementById('km-push-status');
-  const set=t=>{if(target)target.textContent=t};
-  if(!('Notification' in window)||!('serviceWorker' in navigator)||!('PushManager' in window)){set('Dieses Gerät oder dieser Browser unterstützt die benötigten Web-Push-Funktionen nicht.');return}
-  const standalone=window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
-  if(/iPhone|iPad|iPod/.test(navigator.userAgent)&&!standalone){set('Auf dem iPhone: Öffne VANT über das App-Symbol auf deinem Home-Bildschirm.');return}
-  if(Notification.permission==='denied'){set('Benachrichtigungen sind blockiert. Bitte erlaube sie in den iPhone-Einstellungen für VANT.');return}
+  const status=document.getElementById('km-push-status');
+  const set=t=>{if(status)status.textContent=t};
+  if(!('Notification' in window)||!('serviceWorker' in navigator)||!('PushManager' in window)){return window.vantRefreshPushStatus();}
+  const standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+  if(/iPhone|iPad|iPod/.test(navigator.userAgent)&&!standalone){set('Bitte öffne VANT über das App-Symbol auf dem Home-Bildschirm.');return;}
   try{
-   const result=await Notification.requestPermission();
-   set(result==='granted'?'Erlaubnis erteilt! Der automatische Push-Versand muss noch separat eingerichtet werden.':result==='denied'?'Benachrichtigungen wurden nicht erlaubt. Du kannst dies später in den Geräteeinstellungen ändern.':'Noch keine Erlaubnis erteilt. Du kannst es später erneut versuchen.');
-  }catch(e){set('Die Berechtigungsanfrage konnte nicht gestartet werden: '+(e.message||e))}
+   if(Notification.permission!=='granted'){
+    const permission=await Notification.requestPermission();
+    if(permission!=='granted'){await window.vantRefreshPushStatus();return;}
+   }
+   if(typeof registerVANTPush==='function')await registerVANTPush();
+   await window.vantRefreshPushStatus();
+  }catch(e){set('Push-Fehler: '+(e.message||e));}
  };
+
 })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -1197,11 +1226,7 @@ if (saveError) {
 
 console.log('Push-Anmeldung in Supabase gespeichert.');
    
-const pushStatus = document.createElement('div');
-pushStatus.id = 'km-push-test';
-pushStatus.textContent = '✅ ' + tr('Push-Anmeldung auf diesem Gerät erfolgreich!');
-pushStatus.style.cssText = 'padding:12px;margin:12px;background:#e8f7ee;color:#176b38;border-radius:10px;font-weight:bold;';
-document.body.appendChild(pushStatus);
+if(typeof window.vantRefreshPushStatus==='function')window.vantRefreshPushStatus();
 
   
 } catch (error) {
