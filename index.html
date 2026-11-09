@@ -1164,7 +1164,7 @@ async function checkAdminPushButton() {
     .eq("user_id", session.user.id)
     .maybeSingle();
 
-  if (!adminError && admin) {
+  if (!adminError && admin && session.user.id === '8f201d4f-5d79-4203-b302-24ea24a037c4') {
     button.style.display = "block";
     const adminButton = document.getElementById("vant-admin-users-button");
     if (adminButton) adminButton.style.display = "block";
@@ -1454,7 +1454,7 @@ html[data-km-dark="true"] #km-auth h1{color:#f5efff}
   <div id="vant-admin-status" role="status" style="margin:15px 0">Lade Daten …</div>
   <div id="vant-admin-summary" style="font-weight:750;font-size:18px;margin:14px 0"></div>
   <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;text-align:left"><thead><tr><th style="padding:10px;border-bottom:1px solid #ddd">E-Mail</th><th style="padding:10px;border-bottom:1px solid #ddd">Registriert</th><th style="padding:10px;border-bottom:1px solid #ddd">Letzte Anmeldung</th><th style="padding:10px;border-bottom:1px solid #ddd">Push-Geräte</th></tr></thead><tbody id="vant-admin-rows"></tbody></table></div>
-  <p style="font-size:12px;color:#6c6579">Push-Geräte zählen gespeicherte Abonnements, nicht bestätigte Zustellungen. Es werden maximal 500 Konten angezeigt.</p>
+  <p style="font-size:12px;color:#6c6579">Push-Geräte zählen gespeicherte Abonnements, nicht bestätigte Zustellungen. Die Übersicht zeigt die aktuell registrierten Konten.</p>
  </section>
 </div>
 <script>
@@ -1473,13 +1473,13 @@ html[data-km-dark="true"] #km-auth h1{color:#f5efff}
    try {
      const client=window.kostetMichClient;
      if(!client)throw new Error('Supabase-Verbindung fehlt.');
-     const {data,error}=await client.rpc('vant_admin_user_overview');
+     const {data,error}=await client.rpc('vant_admin_users');
      if(error)throw error;
-     const users=Array.isArray(data?.users)?data.users:[];
-     summary.textContent=`${Number(data?.total_users||0)} registrierte Konten · ${Number(data?.total_push_subscriptions||0)} Push-Abonnements`;
+     const users=Array.isArray(data)?data:[];
+     summary.textContent=`${users.length} registrierte Konten · ${users.reduce((sum,u)=>sum+Number(u.push_devices||0),0)} Push-Abonnements`;
      for(const user of users){
        const tr=document.createElement('tr');
-       for(const value of [user.email||'(keine E-Mail)',dateText(user.created_at),dateText(user.last_sign_in_at),String(user.push_subscriptions||0)]){
+       for(const value of [user.email||'(keine E-Mail)',dateText(user.registered_at),dateText(user.last_login_at),String(user.push_devices||0)]){
          const td=document.createElement('td');td.textContent=value;td.style.cssText='padding:10px;border-bottom:1px solid #eee;font-size:14px;white-space:nowrap';tr.appendChild(td);
        }
        tbody.appendChild(tr);
