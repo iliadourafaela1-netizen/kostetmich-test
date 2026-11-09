@@ -247,7 +247,13 @@ function render(){
   nav.scrollLeft=Math.max(0,activeTab.offsetLeft-6);
  }
  let pages={dashboard:dashboard,entries:entries,daily:dailyExpensesPage,debts:debts,calendar:calendar,forecast:forecast,'forecast-year':forecastYear,analysis:vantAnalysis,check:check,brake:brake,savings:savings,notifications:notifications,settings:settings,'km-menu':kmMenuPage,'km-profile':kmProfilePage,'km-preferences':kmPreferencesPage,'km-legal':kmLegalPage};
+ const adminActions=$('vant-settings-admin-actions');
+ if(adminActions)document.body.append(...adminActions.children);
  $('app').innerHTML=pages[tab]();
+ if(tab==='km-menu'){
+  vantPlaceAdminControls();
+  if(typeof checkAdminPushButton==='function')checkAdminPushButton().catch(console.error);
+ }
  const back=document.getElementById('km-menu-back');if(back){back.style.display='none';} const headerBack=document.getElementById('km-header-back');if(headerBack){headerBack.hidden=!inMenu;headerBack.style.display=inMenu?'inline-flex':'none';}
   translatePage();
   if(tab==='notifications'&&typeof window.vantRefreshPushStatus==='function')window.vantRefreshPushStatus();
@@ -953,15 +959,17 @@ const VANT_SETTINGS_I18N={
 };
 function vantSettingsT(key){return (VANT_SETTINGS_I18N[lang]||VANT_SETTINGS_I18N.de)[key]}
 function kmMenuPage(){const t=vantSettingsT;return `<div class="vant-settings-page"><div class="vant-settings-hero"><span class="vant-settings-hero-icon" aria-hidden="true">⚙</span><h2>${t('hero')}</h2><p>${t('sub')}</p></div><section class="vant-settings-group"><h3>👤 ${t('account')}</h3><div class="vant-settings-list">${kmMenuItem('👤',kmT('profile'),t('profileHint'),'km-profile')}${kmMenuItem('🔔',kmT('notice'),t('noticeHint'),'notifications')}</div></section><section class="vant-settings-group"><h3>☷ ${t('app')}</h3><div class="vant-settings-list">${kmMenuItem('⚙️',kmT('pref'),t('prefHint'),'km-preferences')}</div></section><section class="vant-settings-group"><h3>🛡 ${t('security')}</h3><div class="vant-settings-list">${kmMenuItem('🔒',kmT('privacy'),t('privacyHint'),'settings')}${kmMenuItem('⚖️',kmT('legal'),t('legalHint'),'km-legal')}</div></section><button class="km-logout vant-settings-logout" type="button" onclick="kmLogout()">↪ ${kmT('logout')}</button><section id="vant-settings-admin" class="vant-settings-group" hidden><h3>👥 ${t('admin')}</h3><p class="vant-settings-admin-hint">${t('adminHint')}</p><div id="vant-settings-admin-actions"></div></section></div>`}
+let adminControlsCheck=0;
 function vantPlaceAdminControls(){
  const area=document.getElementById('vant-settings-admin'),actions=document.getElementById('vant-settings-admin-actions');
  if(!area||!actions)return;
  const admin=document.getElementById('vant-admin-users-button'),push=document.getElementById('kostetmich-test-push');
- if(!admin||!push)return;
- // The existing Supabase admin authorization decides whether the buttons are visible.
- if(admin.style.display==='block'&&push.style.display==='block'){
-  actions.append(admin,push);area.hidden=false;
- }else area.hidden=true;
+ for(const button of [admin,push]){
+  if(!button)continue;
+  if(button.style.display==='block')actions.append(button);
+  else if(button.parentElement===actions)document.body.append(button);
+ }
+ area.hidden=actions.children.length===0;
 }
 
 let vantProfileEditing=false;
@@ -1327,6 +1335,12 @@ client.auth.onAuthStateChange((event,session)=>{
   return;
  }
  if(!recoveryMode)switchUser(session?.user||null);
+ if(event==='SIGNED_OUT'||event==='SIGNED_IN'){
+  if(typeof adminControlsCheck==='number')adminControlsCheck++;
+  for(const id of ['vant-admin-users-button','kostetmich-test-push']){const control=document.getElementById(id);if(control)control.style.display='none'}
+  vantPlaceAdminControls();
+  setTimeout(()=>{if(typeof checkAdminPushButton==='function')checkAdminPushButton().catch(console.error)},0);
+ }
 });
 client.auth.getUser().then(({data,error})=>{if(recoveryMode)return;if(error&&!data?.user)showMessage('Bitte melde dich an.');switchUser(data?.user||null)}).catch(()=>showMessage('Verbindung fehlgeschlagen. Bitte später erneut versuchen.'));
 recoveryForm.addEventListener('submit',async ev=>{
@@ -1543,6 +1557,7 @@ function vantShowPushResult(data,error){
 </script>
 <script>
 async function checkAdminPushButton() {
+  const request=++adminControlsCheck;
   const button = document.getElementById("kostetmich-test-push");
   const client = window.kostetMichClient;
 
@@ -1550,20 +1565,18 @@ async function checkAdminPushButton() {
 
   const { data: { session }, error } = await client.auth.getSession();
 
-  if (error || !session?.user) return;
-
-  const { data: admin, error: adminError } = await client
+  const adminButton = document.getElementById("vant-admin-users-button");
+  const { data: admin, error: adminError } = error || !session?.user ? {} : await client
     .from("app_admins")
     .select("user_id")
     .eq("user_id", session.user.id)
     .maybeSingle();
 
-  if (!adminError && admin && session.user.id === '8f201d4f-5d79-4203-b302-24ea24a037c4') {
-    button.style.display = "block";
-    const adminButton = document.getElementById("vant-admin-users-button");
-    if (adminButton) adminButton.style.display = "block";
-    if(typeof vantPlaceAdminControls === "function")vantPlaceAdminControls();
-  }
+  if(request!==adminControlsCheck)return;
+  const allowed=!adminError&&admin&&session?.user?.id==='8f201d4f-5d79-4203-b302-24ea24a037c4';
+  button.style.display=allowed?'block':'none';
+  if(adminButton)adminButton.style.display=allowed?'block':'none';
+  vantPlaceAdminControls();
 }
 
 window.addEventListener("load", () => {
