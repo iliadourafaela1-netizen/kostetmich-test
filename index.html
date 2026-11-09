@@ -1192,6 +1192,34 @@ document.body.appendChild(pushStatus);
   🔔 Test-Push an alle senden
 </button>
 
+<style id="vant-push-result-style">
+#vant-push-result{position:fixed;right:20px;bottom:90px;z-index:10000;width:min(410px,calc(100vw - 40px));padding:15px 42px 15px 16px;border-radius:16px;background:#29213f;color:#f8f4ff;border:1px solid #8b69bf;box-shadow:0 10px 30px #0006;font-size:14px;line-height:1.5}
+#vant-push-result[hidden]{display:none!important}
+#vant-push-result-close{position:absolute;right:9px;top:7px;border:0;background:transparent;color:inherit;font-size:24px;padding:2px 8px;cursor:pointer}
+#vant-push-result-title{font-weight:750;margin-bottom:5px}
+</style>
+<div id="vant-push-result" role="status" aria-live="polite" hidden>
+ <button id="vant-push-result-close" type="button" aria-label="Schließen" onclick="document.getElementById('vant-push-result').hidden=true">×</button>
+ <div id="vant-push-result-title"></div>
+ <div id="vant-push-result-details"></div>
+</div>
+<script>
+function vantShowPushResult(data,error){
+ const language=localStorage.getItem('kostetmich-language')||'de';
+ const words={
+  de:{ok:'✓ Push-Versand abgeschlossen',fail:'⚠ Push-Versand fehlgeschlagen',sent:'Erfolgreich',failed:'Fehlgeschlagen'},
+  el:{ok:'✓ Η αποστολή ειδοποιήσεων ολοκληρώθηκε',fail:'⚠ Η αποστολή ειδοποιήσεων απέτυχε',sent:'Επιτυχείς',failed:'Αποτυχημένες'},
+  en:{ok:'✓ Push sending completed',fail:'⚠ Push sending failed',sent:'Successful',failed:'Failed'},
+  tr:{ok:'✓ Bildirim gönderimi tamamlandı',fail:'⚠ Bildirim gönderimi başarısız',sent:'Başarılı',failed:'Başarısız'}
+ };
+ const t=words[language]||words.de;
+ const panel=document.getElementById('vant-push-result');
+ document.getElementById('vant-push-result-title').textContent=error?t.fail:t.ok;
+ document.getElementById('vant-push-result-details').textContent=error?String(error):`${t.sent}: ${Number(data?.sent||0)} · ${t.failed}: ${Number(data?.failed||0)}`;
+ document.getElementById('vant-push-result-close').setAttribute('aria-label',({de:'Schließen',el:'Κλείσιμο',en:'Close',tr:'Kapat'}[language]||'Schließen'));
+ panel.hidden=false;
+}
+</script>
 <script>
 async function checkAdminPushButton() {
   const button = document.getElementById("kostetmich-test-push");
@@ -1339,9 +1367,10 @@ document.getElementById("kostetmich-test-push")
       }
       const data = await requestPush("send_test");
 
-      // Erfolgreicher Versand: keine Meldung in der App anzeigen.
+      // Ergebnis erst nach einem Test anzeigen; nur manuell über × schließen.
+      vantShowPushResult(data);
     } catch (error) {
-      alert("Fehler beim Push-Versand: " + error.message);
+      vantShowPushResult(null, error?.message || String(error));
       console.error(error);
     } finally {
       button.disabled = false;
