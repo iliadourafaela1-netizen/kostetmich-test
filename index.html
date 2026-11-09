@@ -648,7 +648,7 @@ async function vantLoadProfileAvatar(){
 }
 function kmProfilePage(){
  const u=window.vantProfileUser||{},meta=u.user_metadata||{},name=typeof meta.vant_username==='string'?meta.vant_username:'',photo=typeof meta.vant_avatar==='string'&&meta.vant_avatar.startsWith('data:image/')?meta.vant_avatar:'';
- const avatar=`<div class="vant-avatar-preview" id="vant-avatar-preview">${photo?`<img src="${photo}" alt="Profilbild">`:'👤'}</div>`;
+ const avatar=`<div class="vant-avatar-preview" id="vant-avatar-preview">${meta.vant_avatar_path?'👤':photo?`<img src="${photo}" alt="Profilbild">`:'👤'}</div>`;
  // Signed URLs werden nach dem Rendern für private Bilder geladen.
  setTimeout(vantLoadProfileAvatar,0);
  if(!vantProfileEditing)return shell('👤 '+kmT('profile'),`<div class="vant-profile-editor">${avatar}<div class="vant-profile-display-name">${name?esc(name):'Noch kein Benutzername'}</div><label>${kmT('email')}</label><div class="km-profile-email">${esc(window.kmAccountEmail||'–')}</div><div class="actions"><button type="button" onclick="vantOpenProfileEditor()">✏️ Profil bearbeiten</button></div></div>`);
@@ -938,7 +938,7 @@ window.addEventListener('online',()=>{if(cloudDirty&&cloudReady)window.vantCloud
 window.addEventListener('focus',()=>{if(cloudReady)window.vantCloud.refresh()});
 function switchUser(user){
  window.vantProfileUser=user||null;
- if(user?.user_metadata?.vant_avatar) setTimeout(vantMigrateExistingAvatar,1500);
+ // Alte Base64-Bilder nicht automatisch erneut hochladen; Migration erfolgt kontrolliert per SQL nach Sicherung.
  if(!user){cloudGeneration++;cloudReady=false;clearTimeout(cloudTimer);currentId=null;KEY='kostetmich-beta-v1';state=fresh();main.style.display='none';box.style.display=splashReady?'block':'none';return}
  if(currentId===user.id){if(tab==='km-profile'&&!vantProfileEditing)render();return;}
  cloudGeneration++;cloudReady=false;clearTimeout(cloudTimer);currentId=user.id;vantProfileEditing=false;vantPendingAvatar=null;KEY='kostetmich-user-'+user.id+'-v1';state=fresh();
