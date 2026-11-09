@@ -63,7 +63,18 @@ body, button, input, select, textarea {
 .km-scan-status{font-size:13px;margin-top:10px}
 @media(min-width:680px){.km-modal{align-items:center}}
 @media print{.km-fab,.km-modal{display:none!important}}
-</style><link rel="manifest" href="./manifest.webmanifest"><meta name="theme-color" content="#19152c"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="VANT"><link rel="apple-touch-icon" href="./icon-192.png"><link rel="icon" href="./icon-192.png"></head><body><main class="shell" id="km-main" style="display:none"><header><button id="km-header-back" type="button" class="km-header-back no-print" onclick="kmMenuBack()" aria-label="Zur Startseite" hidden>← <span>Zur Startseite</span></button><span class="tag" id="beta-tag">BETA · 100 % kostenlos</span><button type="button" class="km-menu-toggle no-print" aria-label="Menü öffnen" onclick="kmOpenMenu()">☰</button><h1 style="margin-top:12px">VANT<span class="vant-dot">.</span></h1><p style="margin-bottom:0" class="light">Take control of your money.</p></header><div class="nav no-print" id="nav"></div><div id="app"></div><footer>🔒 Finanzangaben werden lokal gespeichert und nach erfolgreicher Cloud-Einrichtung mit deinem Supabase-Konto synchronisiert. Keine Bankverbindung. Dies ist eine Test-App und keine Schuldner- oder Finanzberatung. Berechnungen sind Schätzungen. Sichere deine Daten regelmäßig per Export.</footer></main><button id="km-fab" class="km-fab no-print" type="button" aria-label="Schnell Ausgabe eintragen" onclick="kmOpenQuick()">+</button><div id="km-quick-modal" class="km-modal no-print" hidden role="dialog" aria-modal="true" aria-labelledby="km-quick-title"><div class="km-modal-panel"><div class="km-modal-header"><h2 id="km-quick-title">⚡ Blitz-Eintragung</h2><button type="button" class="secondary" onclick="kmCloseQuick()" aria-label="Schließen">✕</button></div><div id="km-quick-content"></div></div></div><script>
+</style><link rel="manifest" href="./manifest.webmanifest"><meta name="theme-color" content="#19152c"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="VANT"><link rel="apple-touch-icon" href="./icon-192.png"><link rel="icon" href="./icon-192.png"><style id="vant-ui-2026">
+:root{--vant-purple:#6d3ab0;--vant-ink:#26183f;--vant-lilac:#f4edff}
+#km-main .vant-dashboard{display:grid;gap:15px}#km-main .vant-dashboard>.card{margin:0}
+.vant-welcome{display:flex;justify-content:space-between;align-items:center;padding:10px 3px 1px}.vant-welcome h2{font-size:clamp(21px,4vw,28px);margin:5px 0;color:var(--vant-ink)}.vant-welcome p{margin:0;color:#79708a}.vant-eyebrow{letter-spacing:1.6px;font-size:10px;font-weight:800;color:#8859c2}.vant-welcome-mark{font-size:40px;font-weight:900;color:#a47ae3}.vant-welcome-mark span{color:#6a38aa}
+.vant-hero{position:relative;overflow:hidden;isolation:isolate;border-radius:24px;padding:25px 27px 29px;background:linear-gradient(125deg,#a77be3 0%,#7943bb 50%,#512c91 100%);color:#fff;box-shadow:0 13px 28px #6c39aa35}.vant-hero-top{display:flex;justify-content:space-between;align-items:center;font-size:15px}.vant-hero-amount{font-size:clamp(30px,6vw,45px);font-weight:850;letter-spacing:-1.5px;margin:14px 0 6px;overflow-wrap:anywhere}.vant-hero p{font-size:13px;color:#f2e7ff;margin:0;position:relative;z-index:1}.vant-hero-wave{position:absolute;width:65%;height:130px;right:-8%;bottom:-75px;border:2px solid #ffffff55;border-radius:50%;transform:rotate(-15deg);box-shadow:0 -14px 0 -11px #ffffff20,0 -29px 0 -25px #ffffff24;pointer-events:none}
+.vant-quick-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.vant-quick-actions button{background:#fff;color:#35254f;border:1px solid #ebe4f3;border-radius:19px;padding:15px 4px 13px;display:flex;align-items:center;flex-direction:column;gap:9px;font-size:12px;box-shadow:0 4px 12px #2d1e4909}.vant-quick-actions button span{display:grid;place-items:center;background:#efe1ff;color:#7542b6;width:41px;height:41px;border-radius:50%;font-size:27px;font-weight:600}
+.vant-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.vant-summary-tile{background:#fff;border:1px solid #e9e1f1;border-radius:18px;padding:17px;min-width:0}.vant-summary-tile span{display:block;font-size:12px;color:#716883}.vant-summary-tile strong{display:block;font-size:clamp(17px,3.2vw,25px);margin-top:10px;overflow-wrap:anywhere}
+#km-main .vant-panel{border-radius:21px;padding:20px}.vant-section-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:18px}.vant-section-heading h2{margin:0;font-size:18px}.vant-text-link{background:transparent!important;color:#7444b0!important;padding:5px!important;font-size:12px!important;white-space:nowrap}.vant-spending-layout{display:flex;align-items:center;gap:25px}.vant-donut{width:172px;height:172px;flex:0 0 172px;border-radius:50%;display:grid;place-items:center}.vant-donut>div{background:#fff;width:115px;height:115px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:8px}.vant-donut strong{font-size:16px}.vant-donut small{color:#80768d;font-size:11px}.vant-category-list{flex:1;min-width:0}.vant-category-row{display:flex;align-items:center;gap:9px;padding:8px 0;font-size:12px}.vant-category-row span:nth-child(2){flex:1;min-width:0;overflow-wrap:anywhere}.vant-category-row strong{white-space:nowrap}.vant-category-dot{width:10px;height:10px;border-radius:50%;flex:0 0 10px}.vant-small-note{font-size:11px;margin-bottom:0}.vant-goal-preview{padding:12px 0;border-bottom:1px solid #eee8f4}.vant-goal-preview:last-child{border-bottom:0}.vant-goal-preview>div:first-child{display:flex;justify-content:space-between;gap:10px;font-size:13px}.vant-goal-preview>div:first-child span{color:#736b81}.vant-progress{height:9px;border-radius:30px;background:#eae0f5;overflow:hidden;margin-top:11px}.vant-progress span{display:block;height:100%;border-radius:30px;background:linear-gradient(90deg,#c78bfa,#7740b5)}
+@media(max-width:540px){.vant-spending-layout{gap:15px}.vant-donut{width:125px;height:125px;flex-basis:125px}.vant-donut>div{width:85px;height:85px}.vant-donut strong{font-size:12px}.vant-category-row{font-size:11px;gap:6px}.vant-category-row strong{font-size:10px}.vant-summary-tile{padding:12px}.vant-goal-preview>div:first-child{flex-direction:column;gap:3px}}
+html[data-km-dark="true"] .vant-welcome h2{color:#f3edff}html[data-km-dark="true"] .vant-welcome p,html[data-km-dark="true"] .vant-category-row,html[data-km-dark="true"] .vant-goal-preview{color:#f2eafa}html[data-km-dark="true"] .vant-quick-actions button,html[data-km-dark="true"] .vant-summary-tile{background:#28233b;color:#f4edff;border-color:#51445e}html[data-km-dark="true"] .vant-donut>div{background:#28233b;color:#f4edff}html[data-km-dark="true"] .vant-goal-preview>div:first-child span{color:#d4c4e8}
+@media print{.vant-quick-actions{display:none}}
+</style></head><body><main class="shell" id="km-main" style="display:none"><header><button id="km-header-back" type="button" class="km-header-back no-print" onclick="kmMenuBack()" aria-label="Zur Startseite" hidden>← <span>Zur Startseite</span></button><span class="tag" id="beta-tag">BETA · 100 % kostenlos</span><button type="button" class="km-menu-toggle no-print" aria-label="Menü öffnen" onclick="kmOpenMenu()">☰</button><h1 style="margin-top:12px">VANT<span class="vant-dot">.</span></h1><p style="margin-bottom:0" class="light">Take control of your money.</p></header><div class="nav no-print" id="nav"></div><div id="app"></div><footer>🔒 Finanzangaben werden lokal gespeichert und nach erfolgreicher Cloud-Einrichtung mit deinem Supabase-Konto synchronisiert. Keine Bankverbindung. Dies ist eine Test-App und keine Schuldner- oder Finanzberatung. Berechnungen sind Schätzungen. Sichere deine Daten regelmäßig per Export.</footer></main><button id="km-fab" class="km-fab no-print" type="button" aria-label="Schnell Ausgabe eintragen" onclick="kmOpenQuick()">+</button><div id="km-quick-modal" class="km-modal no-print" hidden role="dialog" aria-modal="true" aria-labelledby="km-quick-title"><div class="km-modal-panel"><div class="km-modal-header"><h2 id="km-quick-title">⚡ Blitz-Eintragung</h2><button type="button" class="secondary" onclick="kmCloseQuick()" aria-label="Schließen">✕</button></div><div id="km-quick-content"></div></div></div><script>
 'use strict';let KEY='kostetmich-beta-v1';const tabs=[['dashboard','🏠 Übersicht'],['entries','💶 Einnahmen & feste Ausgaben'],['daily','💸 Meine Ausgaben'],['debts','📉 Schulden'],['calendar','📅 Kalender'],['forecast','📈 12 Monate'],['check','🛍️ Kaufcheck'],['savings','🎯 Sparziele']];let state={dailyExpenses:[],entries:[],debts:[],checks:[],reserve:100,month:new Date().toISOString().slice(0,7),brake:{balance:0,essential:0,horizon:30,extras:[]}};try{const a=JSON.parse(localStorage.getItem(KEY));if(a&&Array.isArray(a.entries)&&Array.isArray(a.debts))state={...state,...a}}catch(e){}let tab='dashboard';let lang=localStorage.getItem('kostetmich-language')||'de';const $=id=>document.getElementById(id),money=n=>Number(n||0).toLocaleString(({de:'de-DE',el:'el-GR',en:'en-IE',tr:'tr-TR'}[lang]||'de-DE'),{style:'currency',currency:'EUR'}),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),num=x=>Math.max(0,Number(x)||0),id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7),today=()=>new Date().toISOString().slice(0,10);function save(){
   
   localStorage.setItem(KEY, JSON.stringify(state));
@@ -180,81 +191,35 @@ function updateBudgetExamples(){const el=$('budget-examples');if(!el)return;cons
 function saveBudgetThresholds(ev){ev.preventDefault();const red=Number($('budget-red').value),green=Number($('budget-green').value);if(!Number.isFinite(red)||!Number.isFinite(green)||red<0||green<=red){alert(bw('error'));return}state.budgetEuroThresholds={red,green};save();render()}
 
 function dashboard(){
-let t = totals();
-let sum = state.debts.reduce((s,d) => s + num(d.balance), 0);
-
-let income = Math.max(0, t.inc);
-let expenses = Math.max(0, t.out + t.debt);
-let maximum = Math.max(income, expenses, 1);
-
-let incomeHeight = income === 0 ? 0 : income / maximum * 100;
-let expenseHeight = expenses === 0 ? 0 : expenses / maximum * 100;
-let difference = income - expenses;
-
-let chart = `
-<section class="card">
-  <h2>Deine Haushaltsplanung</h2>
-  <div class="km-chart">
-    <div class="km-chart-item">
-      <strong class="km-income-text">${money(income)}</strong>
-      <div class="km-chart-track">
-        <div class="km-chart-bar km-income-bar"
-             style="height:${incomeHeight}%"></div>
-      </div>
-      <span>Einnahmen</span>
-    </div>
-    <div class="km-chart-item">
-      <strong class="km-expense-text">${money(expenses)}</strong>
-      <div class="km-chart-track">
-        <div class="km-chart-bar km-expense-bar"
-             style="height:${expenseHeight}%"></div>
-      </div>
-      <span>Ausgaben + Raten</span>
-    </div>
-  </div>
-  <div class="km-chart-result">
-    <span>${difference < 0 ? 'Haushaltsdefizit' : 'Haushaltsüberschuss'}</span>
-    <strong class="${difference < 0 ? 'bad' : 'good'}">
-      ${money(difference)}
-    </strong>
-  </div>
-  <p class="muted">Die Rücklage wird bei deinem verfügbaren Budget zusätzlich berücksichtigt.</p>
-</section>`;
-
-return `
-<div class="grid km-dashboard-stats">
-  <div class="stat"><span>Einnahmen / Monat</span><b>${money(t.inc)}</b></div>
-  <div class="stat"><span>Ausgaben + Raten</span><b>${money(t.out+t.debt)}</b></div>
-  <div class="stat"><span>Nach Kosten & Rücklage</span><b class="${t.left<0?'bad':'good'}">${money(t.left)}</b></div>
-</div>
-` +
-budgetBanner() +
-shell('Dein Finanzstatus', `
-  <p class="${t.left<0?'bad':'good'}">
-    <b>${t.left<0?'⚠️ Deine geplanten Ausgaben übersteigen dein Budget.':'✓ Dein rechnerisches Monatsbudget ist nicht negativ.'}</b>
-  </p>
-  <p>Offene Schulden: <b>${money(sum)}</b> · Monatliche Schuldenraten: <b>${money(t.debt)}</b></p>
-  <p class="muted">Der Betrag ist eine Planung auf Basis deiner Angaben. Einmalige Kosten, schwankende Einkommen und nicht erfasste Ausgaben können das Ergebnis verändern.</p>
-  <div class="actions">
-    <button onclick="setTab('entries')">Einnahmen & feste Ausgaben eintragen</button>
-    <button class="secondary" onclick="setTab('debts')">Schulden verwalten</button>
-  </div>
-`) +
-chart +
-shell("Deine Rücklage", `
-  <p>Wie viel möchtest du monatlich für unerwartete Ausgaben zurückhalten?</p>
-  <label>Rücklage pro Monat (€)</label>
-  <input id="reserve" type="number" min="0" step="0.01" value="${state.reserve}">
-  <div class="actions">
-    <button onclick="state.reserve=num($('reserve').value);save();render()">Speichern</button>
-  </div>
-`) +
-shell('Wichtig', `
-  <p class="notice">Bei Inkasso und Krediten können Zinsen, Gebühren und abweichende Zahlungsvereinbarungen entstehen. Trage den tatsächlich aktuellen offenen Betrag ein und prüfe deine Unterlagen. Wenn du Schwierigkeiten mit Zahlungen hast, kann eine anerkannte Schuldnerberatung helfen.</p>
-`);
+ const t=totals(), debtBalance=state.debts.reduce((s,d)=>s+num(d.balance),0);
+ const income=Math.max(0,t.inc), expenses=Math.max(0,t.out+t.debt), max=Math.max(income,expenses,1);
+ const incomeHeight=income/max*100,expenseHeight=expenses/max*100;
+ const difference=income-expenses;
+ const spending=(state.dailyExpenses||[]).filter(e=>e.date&&e.date.slice(0,7)===currentMonth());
+ const byCategory={};for(const e of spending){const k=e.category||'Sonstiges';byCategory[k]=(byCategory[k]||0)+num(e.amount)}
+ const categories=Object.entries(byCategory).sort((a,b)=>b[1]-a[1]).slice(0,5);
+ const totalDaily=spending.reduce((a,e)=>a+num(e.amount),0);
+ const palette=['#7742b8','#a76ae4','#cf8ce7','#7d77d9','#e7b6f4'];
+ let cursor=0;const stops=categories.map(([name,amount],i)=>{const from=cursor;cursor+=amount/Math.max(totalDaily,1)*100;return `${palette[i]} ${from}% ${cursor}%`}).join(', ');
+ const donut=categories.length?`conic-gradient(${stops}${cursor<100?`, #eae1f6 ${cursor}% 100%`:''})`:'conic-gradient(#eae1f6 0% 100%)';
+ const chart=`<section class="card vant-panel"><div class="vant-section-heading"><h2>Deine Haushaltsplanung</h2><span class="vant-mini-label">Monatlich</span></div><div class="km-chart"><div class="km-chart-item"><strong class="km-income-text">${money(income)}</strong><div class="km-chart-track"><div class="km-chart-bar km-income-bar" style="height:${incomeHeight}%"></div></div><span>Einnahmen</span></div><div class="km-chart-item"><strong class="km-expense-text">${money(expenses)}</strong><div class="km-chart-track"><div class="km-chart-bar km-expense-bar" style="height:${expenseHeight}%"></div></div><span>Ausgaben + Raten</span></div></div><div class="km-chart-result"><span>${difference<0?'Haushaltsdefizit':'Haushaltsüberschuss'}</span><strong class="${difference<0?'bad':'good'}">${money(difference)}</strong></div><p class="muted">Deine Rücklage wird beim verfügbaren Monatsbudget zusätzlich abgezogen.</p></section>`;
+ const categoryRows=categories.length?categories.map(([name,amount],i)=>`<div class="vant-category-row"><span class="vant-category-dot" style="background:${palette[i]}"></span><span>${esc(name)}</span><strong>${money(amount)}</strong></div>`).join(''):'<p class="muted">Noch keine einzelnen Ausgaben für diesen Monat erfasst.</p>';
+ const goals=savingsData(), activeGoals=goals.filter(g=>num(g.saved)+savingConfirmed(g)<num(g.target));
+ const goalPreview=activeGoals.slice(0,2).map(g=>{const actual=num(g.saved)+savingConfirmed(g),pct=Math.min(100,Math.round(actual/Math.max(1,num(g.target))*100));return `<div class="vant-goal-preview"><div><strong>🎯 ${esc(g.name)}</strong><span>${money(actual)} / ${money(g.target)}</span></div><div class="vant-progress"><span style="width:${pct}%"></span></div></div>`}).join('');
+ return `<div class="vant-dashboard">
+ <div class="vant-welcome"><div><span class="vant-eyebrow">DEIN FINANZÜBERBLICK</span><h2>Dein Geld. Dein Überblick. 💜</h2><p>Alles Wichtige auf einen Blick.</p></div><span class="vant-welcome-mark">V<span>.</span></span></div>
+ <section class="vant-hero"><div class="vant-hero-top"><span>Nach Kosten & Rücklage</span><span aria-hidden="true">✦</span></div><div class="vant-hero-amount">${money(t.left)}</div><p>${t.left<0?'⚠️ Deine geplanten Ausgaben übersteigen dein Budget.':'Dein rechnerisch verfügbares Monatsbudget'}</p><div class="vant-hero-wave" aria-hidden="true"></div></section>
+ <div class="vant-quick-actions"><button type="button" onclick="setTab('entries')"><span>＋</span>Einnahmen</button><button type="button" onclick="setTab('daily')"><span>−</span>Ausgaben</button><button type="button" onclick="setTab('calendar')"><span>▦</span>Kalender</button><button type="button" onclick="setTab('savings')"><span>◎</span>Sparziele</button></div>
+ <div class="vant-summary"><div class="vant-summary-tile"><span>↗ Einnahmen / Monat</span><strong class="good">${money(t.inc)}</strong></div><div class="vant-summary-tile"><span>↘ Ausgaben + Raten</span><strong class="bad">${money(t.out+t.debt)}</strong></div></div>
+ <section class="card vant-panel"><div class="vant-section-heading"><h2>Ausgaben im ${new Date().toLocaleDateString('de-DE',{month:'long'})}</h2><button class="vant-text-link" type="button" onclick="setTab('daily')">Alle ansehen ›</button></div><div class="vant-spending-layout"><div class="vant-donut" style="background:${donut}"><div><strong>${money(totalDaily)}</strong><small>Einzelausgaben</small></div></div><div class="vant-category-list">${categoryRows}</div></div><p class="muted vant-small-note">Aufteilung der einzeln erfassten Ausgaben im aktuellen Monat; feste Kosten und Raten sind hier nicht enthalten.</p></section>
+ ${budgetBanner()}
+ ${chart}
+ <section class="card vant-panel"><div class="vant-section-heading"><h2>🎯 Deine Sparziele</h2><button class="vant-text-link" type="button" onclick="setTab('savings')">Alle ansehen ›</button></div>${goalPreview||'<p class="muted">Du hast noch keine aktiven Sparziele.</p>'}</section>
+ ${shell('Dein Finanzstatus',`<p>Offene Schulden: <b>${money(debtBalance)}</b> · Monatliche Raten: <b>${money(t.debt)}</b></p><p class="muted">Alle Beträge sind Schätzungen auf Basis deiner Angaben. Nicht erfasste Kosten können das Ergebnis verändern.</p><div class="actions"><button onclick="setTab('debts')">Schulden verwalten</button></div>`)}
+ ${shell('Deine Rücklage',`<p>Wie viel möchtest du monatlich für unerwartete Ausgaben zurückhalten?</p><label>Rücklage pro Monat (€)</label><input id="reserve" type="number" min="0" step="0.01" value="${state.reserve}"><div class="actions"><button onclick="state.reserve=num($('reserve').value);save();render()">Speichern</button></div>`)}
+ ${shell('Wichtig',`<p class="notice">Bei Inkasso und Krediten können Zinsen, Gebühren und abweichende Zahlungsvereinbarungen entstehen. Prüfe deine Unterlagen. Bei Zahlungsschwierigkeiten kann eine anerkannte Schuldnerberatung helfen.</p>`)}
+ </div>`;
 }
-
-
 const DAILY_I18N={
 de:{intro:'Trage hier einzelne Einkäufe ein, z. B. Lebensmittel, Tanken oder Kleidung. Diese Ausgaben werden im aktuellen Monat automatisch von deinem Budget abgezogen.',month:'Monat auswählen',total:'In diesem Monat ausgegeben',remaining:'Restbudget nach allen erfassten Kosten',add:'Neue Ausgabe eintragen',category:'Kategorie',amount:'Betrag (€)',date:'Datum',note:'Beschreibung (optional)',placeholder:'z. B. Einkauf bei REWE',save:'Ausgabe hinzufügen',list:'Ausgaben in diesem Monat',empty:'Für diesen Monat gibt es noch keine Einträge.',delete:'Ausgabe löschen?',warning:'Wichtig: Erfasse denselben Einkauf nicht zusätzlich als feste Ausgabe, sonst wird er doppelt gezählt.',categories:['🛒 Lebensmittel','⛽ Tanken','👗 Kleidung','🍽️ Restaurant & Café','🚆 Verkehr','💄 Beauty & Pflege','🎬 Freizeit','📦 Sonstiges']},
 el:{intro:'Καταχώρισε μεμονωμένες αγορές, όπως τρόφιμα, καύσιμα ή ρούχα. Αφαιρούνται αυτόματα από τον προϋπολογισμό του τρέχοντος μήνα.',month:'Επιλογή μήνα',total:'Έξοδα αυτόν τον μήνα',remaining:'Υπόλοιπο μετά τα καταχωρισμένα έξοδα',add:'Νέα δαπάνη',category:'Κατηγορία',amount:'Ποσό (€)',date:'Ημερομηνία',note:'Περιγραφή (προαιρετικά)',placeholder:'π.χ. ψώνια στο σούπερ μάρκετ',save:'Προσθήκη εξόδου',list:'Έξοδα αυτού του μήνα',empty:'Δεν υπάρχουν καταχωρίσεις για αυτόν τον μήνα.',delete:'Διαγραφή εξόδου;',warning:'Σημαντικό: Μην καταχωρίζεις την ίδια αγορά και ως πάγιο έξοδο, για να μην υπολογιστεί δύο φορές.',categories:['🛒 Τρόφιμα','⛽ Καύσιμα','👗 Ρούχα','🍽️ Εστιατόριο & καφέ','🚆 Μεταφορές','💄 Ομορφιά & περιποίηση','🎬 Ψυχαγωγία','📦 Άλλα']},
