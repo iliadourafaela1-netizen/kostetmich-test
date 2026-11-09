@@ -215,7 +215,7 @@ function render(){
   const backButton=document.querySelector('#vant-subheader .vant-back-button');
   if(backButton)backButton.textContent='← '+({de:'Zurück',el:'Πίσω',en:'Back',tr:'Geri'}[lang]||'Zurück');
   const subTitle=document.getElementById('vant-page-title');
-  const titles={calendar:'Kalender',savings:'Sparziele',entries:'Einnahmen & feste Ausgaben',daily:'Meine Ausgaben',debts:'Schulden',forecast:'12 Monate',analysis:analysisT('title'),check:'Kaufcheck',brake:'Finanzielle Notbremse',notifications:'Benachrichtigungen',settings:'Einstellungen','km-menu':'Menü','km-profile':'Profil','km-preferences':'Einstellungen','km-legal':'Rechtliches'};
+  const titles={calendar:'Kalender',savings:'Sparziele',entries:'Einnahmen & feste Ausgaben',daily:'Meine Ausgaben',debts:'Schulden',forecast:'12 Monate','forecast-year':'Alle 12 Monate',analysis:analysisT('title'),check:'Kaufcheck',brake:'Finanzielle Notbremse',notifications:'Benachrichtigungen',settings:'Einstellungen','km-menu':'Menü','km-profile':'Profil','km-preferences':'Einstellungen','km-legal':'Rechtliches'};
   if(subTitle)subTitle.textContent=titles[tab]||'VANT';
  document.getElementById('nav').style.display=inMenu?'none':'';
  const navHint=document.getElementById('vant-nav-hint');
@@ -231,6 +231,7 @@ function render(){
  };
  const nav=document.getElementById('nav');
  nav.innerHTML=tabs.map(([key,title])=>{
+  const selected=key===tab||(key==='forecast'&&tab==='forecast-year');
   const label=title.slice(title.indexOf(' ')+1);
   const tabLabels={
    entries:{de:'Einnahmen & Fixkosten',en:'Income & fixed costs',el:'Έσοδα & πάγια',tr:'Gelir ve sabit giderler'},
@@ -239,7 +240,7 @@ function render(){
    analysis:{de:'Finanzanalyse',en:'Financial analysis',el:'Οικονομική ανάλυση',tr:'Finans analizi'}
   };
   const shortLabel=tabLabels[key]?.[lang]||tr(label);
-  return `<button type="button" class="${key===tab?'active':'secondary'}" ${key===tab?'aria-current="page"':''} aria-label="${esc(tr(label))}" onclick="setTab('${key}')"><span class="vant-tab-icon" aria-hidden="true">${key==='entries'?'<span class="vant-tab-euro">€</span>':`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="${tabIcons[key]}"/></svg>`}</span><span>${key==='entries'&&lang==='de'?'Einnahmen<br>&amp; Fixkosten':esc(shortLabel)}</span></button>`;
+  return `<button type="button" class="${selected?'active':'secondary'}" ${selected?'aria-current="page"':''} aria-label="${esc(tr(label))}" onclick="setTab('${key}')"><span class="vant-tab-icon" aria-hidden="true">${key==='entries'?'<span class="vant-tab-euro">€</span>':`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="${tabIcons[key]}"/></svg>`}</span><span>${key==='entries'&&lang==='de'?'Einnahmen<br>&amp; Fixkosten':esc(shortLabel)}</span></button>`;
  }).join('');
  const activeTab=nav.querySelector('.active');
  if(activeTab&&nav.clientWidth&&activeTab.offsetLeft+activeTab.offsetWidth>nav.scrollLeft+nav.clientWidth){
@@ -247,7 +248,7 @@ function render(){
  }else if(activeTab&&activeTab.offsetLeft<nav.scrollLeft){
   nav.scrollLeft=Math.max(0,activeTab.offsetLeft-6);
  }
- let pages={dashboard:dashboard,entries:entries,daily:dailyExpensesPage,debts:debts,calendar:calendar,forecast:forecast,analysis:vantAnalysis,check:check,brake:brake,savings:savings,notifications:notifications,settings:settings,'km-menu':kmMenuPage,'km-profile':kmProfilePage,'km-preferences':kmPreferencesPage,'km-legal':kmLegalPage};
+ let pages={dashboard:dashboard,entries:entries,daily:dailyExpensesPage,debts:debts,calendar:calendar,forecast:forecast,'forecast-year':forecastYear,analysis:vantAnalysis,check:check,brake:brake,savings:savings,notifications:notifications,settings:settings,'km-menu':kmMenuPage,'km-profile':kmProfilePage,'km-preferences':kmPreferencesPage,'km-legal':kmLegalPage};
  $('app').innerHTML=pages[tab]();
  const back=document.getElementById('km-menu-back');if(back){back.style.display='none';} const headerBack=document.getElementById('km-header-back');if(headerBack){headerBack.hidden=!inMenu;headerBack.style.display=inMenu?'inline-flex':'none';}
   translatePage();
@@ -742,7 +743,53 @@ function upcomingPayments(){
  return `<section class="card vant-panel vant-upcoming"><div class="vant-section-heading"><h2>▦ ${title}</h2></div>${rows}<button type="button" class="vant-text-link" onclick="setTab('calendar')">${calendarLabel} ›</button></section>`;
 }
 function calendar(){let [y,m]=state.month.split('-').map(Number),dates=calendarPayments();return shell('Dein Zahlungskalender',`<label>Monat auswählen</label><input type="month" value="${state.month}" onchange="state.month=this.value;save();render()"><p class="muted">Hier erscheinen monatliche Posten, für die du einen Fälligkeitstag angegeben hast. Wöchentliche, jährliche und vierteljährliche Zahlungen werden noch nicht automatisch terminiert.</p>`)+shell('Fälligkeiten',dates.length?dates.map(x=>`<div class="row"><span><b>${String(monthDay(y,m-1,x.day).getDate()).padStart(2,'0')}.${String(m).padStart(2,'0')}.${y}</b> · ${esc(x.label)}</span><b class="${x.type==='income'?'good':'bad'}">${x.type==='income'?'+':'−'}${money(x.amount)}</b></div>`).join(''):'<p class="muted">Noch keine Termine eingetragen. Ergänze bei Einnahmen, Ausgaben und Schulden einen Zahlungstag.</p>')}
-function forecast(){let t=totals(),debtSum=state.debts.reduce((s,d)=>s+num(d.balance),0),rows='';for(let i=0;i<12;i++){let date=new Date();date.setDate(1);date.setMonth(date.getMonth()+i);let dateLabel=date.toLocaleDateString(({de:'de-DE',el:'el-GR',en:'en-IE',tr:'tr-TR'}[lang]||'de-DE'),{month:'short',year:'numeric'});let remaining=state.debts.reduce((s,d)=>{let b=num(d.balance);for(let j=0;j<=i;j++){if(b<=0)break;b=Math.max(0,b+b*num(d.apr)/1200-num(d.payment))}return s+b},0);rows+=`<tr><td>${dateLabel}</td><td>${money(t.inc)}</td><td>${money(t.out+t.debt)}</td><td>${money(t.left)}</td><td>${money(remaining)}</td></tr>`}return shell('12-Monats-Vorschau',`<p class="muted">Diese einfache Prognose nimmt jeden Monat gleiches Einkommen und gleichbleibende Ausgaben an. Änderungen und Einmalzahlungen sind nicht automatisch eingerechnet.</p><div style="overflow:auto"><table><thead><tr><th>Monat</th><th>Einnahmen</th><th>Kosten inkl. Raten</th><th>Nach Rücklage</th><th>Schulden ca.</th></tr></thead><tbody>${rows}</tbody></table></div><div class="actions"><button onclick="vantExportForecastPDF()">Als PDF drucken / speichern</button></div>`)}
+let forecastMonth=0;
+function forecastMonths(){
+ const now=new Date();
+ return Array.from({length:12},(_,index)=>new Date(now.getFullYear(),now.getMonth()+index,1));
+}
+function forecastMonthLabel(date,month='long'){
+ return date.toLocaleDateString(({de:'de-DE',el:'el-GR',en:'en-IE',tr:'tr-TR'})[lang]||'de-DE',{month,year:'numeric'});
+}
+function forecastRemaining(index){
+ return state.debts.reduce((sum,debt)=>{
+  let balance=num(debt.balance);
+  for(let month=0;month<=index&&balance>0;month++){
+   balance=Math.max(0,balance+balance*num(debt.apr)/1200-num(debt.payment));
+  }
+  return sum+balance;
+ },0);
+}
+function selectForecastMonth(index){
+ forecastMonth=Math.max(0,Math.min(11,index));
+ if(tab==='forecast-year')vantGoBack();
+ else render();
+}
+function forecast(){
+ const t=totals(),date=forecastMonths()[forecastMonth];
+ return shell('12-Monats-Vorschau',`
+  <div class="vant-forecast-picker">
+   <button type="button" class="secondary" aria-label="Vorheriger Monat" onclick="selectForecastMonth(${forecastMonth-1})" ${forecastMonth===0?'disabled':''}>‹</button>
+   <div><strong>${esc(forecastMonthLabel(date))}</strong><small class="muted">Monat ${forecastMonth+1} von 12</small></div>
+   <button type="button" class="secondary" aria-label="Nächster Monat" onclick="selectForecastMonth(${forecastMonth+1})" ${forecastMonth===11?'disabled':''}>›</button>
+  </div>
+  <div class="vant-forecast-values">
+   <div><span>Einnahmen</span><b>${money(t.inc)}</b></div>
+   <div><span>Kosten inkl. Raten</span><b>${money(t.out+t.debt)}</b></div>
+   <div><span>Geschätzte Restschuld</span><b>${money(forecastRemaining(forecastMonth))}</b></div>
+   <div><strong>Nach Rücklage</strong><b class="${t.left<0?'bad':'good'}">${money(t.left)}</b></div>
+  </div>
+  <button type="button" class="vant-forecast-action" onclick="setTab('forecast-year')">Alle 12 Monate ansehen</button>
+  <button type="button" class="secondary vant-forecast-action" onclick="vantExportForecastPDF()">Als PDF speichern</button>
+  <p class="muted">Schätzung bei gleichbleibenden Einnahmen und Ausgaben. Änderungen und Einmalzahlungen sind nicht automatisch eingerechnet.</p>`);
+}
+function forecastYear(){
+ const balance=totals().left;
+ return shell('Monatsbudget nach Rücklage',`<div class="vant-forecast-grid">${forecastMonths().map((date,index)=>`
+  <button type="button" class="secondary" aria-pressed="${index===forecastMonth}" onclick="selectForecastMonth(${index})">
+   <span>${esc(forecastMonthLabel(date,'short'))}</span><b class="${balance<0?'bad':'good'}">${money(balance)}</b>
+  </button>`).join('')}</div><p class="muted">Tippe auf einen Monat für Details.</p>`);
+}
 // Exportiert die 12-Monats-Prognose als echte PDF-Datei, auch ohne Druckdialog.
 function vantExportForecastPDF(){
   try{
@@ -758,14 +805,7 @@ function vantExportForecastPDF(){
     for(let i=0;i<12;i++){
       const d=new Date();d.setDate(1);d.setMonth(d.getMonth()+i);
       const month=d.toLocaleDateString('de-DE',{month:'2-digit',year:'numeric'});
-      const remaining=state.debts.reduce((sum,debt)=>{
-        let b=num(debt.balance);
-        for(let j=0;j<=i;j++){
-          if(b<=0)break;
-          b=Math.max(0,b+b*num(debt.apr)/1200-num(debt.payment));
-        }
-        return sum+b;
-      },0);
+      const remaining=forecastRemaining(i);
       lines.push(month.padEnd(15)+fmt(t.inc).padEnd(17)+fmt(t.out+t.debt).padEnd(18)+fmt(t.left).padEnd(20)+fmt(remaining));
     }
     lines.push('','Hinweis: Modellrechnung mit konstanten Einnahmen und Ausgaben.',
@@ -1877,6 +1917,19 @@ html[data-km-dark="true"] #nav button.active{background:#372255;color:#f0dcff}
 html[data-km-dark="true"] .vant-nav-hint{color:#d3bcef}
 .vant-nav-hint[hidden]{display:none}
 @media(min-width:900px){.vant-nav-hint{display:none}#nav{margin-bottom:13px}}
+
+.vant-forecast-picker{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;gap:8px;align-items:center;text-align:center}
+.vant-forecast-picker button{margin:0;padding:0;min-height:44px;font-size:24px}
+.vant-forecast-picker button:disabled{opacity:.4;cursor:default}
+.vant-forecast-picker small{display:block;margin-top:4px}
+.vant-forecast-values{margin:16px 0;padding:4px 12px;border:1px solid #9877ca;border-radius:14px}
+.vant-forecast-values>div{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:8px 0}
+.vant-forecast-values>div:last-child{border-top:1px solid #9877ca}
+.vant-forecast-values b{text-align:right;overflow-wrap:anywhere}
+.vant-forecast-action{display:block;width:100%;margin:8px 0;min-height:44px}
+.vant-forecast-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.vant-forecast-grid button{display:grid;gap:4px;align-content:center;min-height:58px;margin:0;padding:5px 2px;border:1px solid #9877ca;overflow-wrap:anywhere;font-size:clamp(11px,3.2vw,15px)}
+.vant-forecast-grid button[aria-pressed=true]{border:2px solid #a66bff}
 </style>
 
 
