@@ -1165,14 +1165,14 @@ document.getElementById("kostetmich-test-push")
         let response;
         try {
           response = await fetch(
-            projectUrl + "/functions/v1/kostetmich-push",
+            client.supabaseUrl + "/functions/v1/kostetmich-push",
             {
               method: "POST",
               mode: "cors",
               cache: "no-store",
               headers: {
                 "Content-Type": "application/json",
-                "apikey": publishableKey,
+                "apikey": client.supabaseKey,
                 "Authorization": `Bearer ${session.access_token}`
               },
               body: JSON.stringify({ action })
