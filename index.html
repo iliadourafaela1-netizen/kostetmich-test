@@ -631,7 +631,7 @@ let currentId=null;
 function showMessage(s){message.textContent=s}
 function setBusy(v){login.disabled=v;signup.disabled=v}
 let cloudGeneration=0;
-const cloudStatus=document.createElement('div');cloudStatus.id='vant-cloud-status';cloudStatus.style.cssText='font-size:12px;padding:8px 12px;background:#f1edff;color:#3e2a79;border-radius:10px;margin:8px 0';
+const cloudStatus=document.createElement('div');cloudStatus.id='vant-cloud-status';cloudStatus.hidden=true;cloudStatus.style.display='none';
 function cloudMessage(t){cloudStatus.textContent='☁️ '+t}
 let cloudReady=false,cloudTimer=null,cloudBusy=false,cloudDirty=false;
 const cloudTable='vant_finances';
@@ -656,8 +656,22 @@ async function cloudLoad(generation,first){
  const remote=data?.data;
  if(remote&&Array.isArray(remote.entries)&&Array.isArray(remote.debts)){
    if(first&&localHasData(state)&&JSON.stringify(state)!==JSON.stringify(remote)){
-     const useLocal=confirm('VANT hat unterschiedliche Finanzdaten auf diesem Gerät und in der Cloud gefunden. OK = Daten DIESES Geräts in die Cloud übernehmen. Abbrechen = Cloud-Daten auf diesem Gerät anzeigen. Bitte sichere wichtige Daten vorher als JSON.');
-     if(useLocal){cloudReady=true;window.vantCloud.queueSave();return}
+     // Lokale Abweichungen sichern, bevor die Cloud-Daten angezeigt werden.
+     // Keine automatische Überschreibung der Cloud und keine störende Dialogbox.
+     try {
+       const backupKey='vant-local-conflict-backup-'+uid;
+       const existing=JSON.parse(localStorage.getItem(backupKey)||'[]');
+       const backups=Array.isArray(existing)?existing:[];
+       const snapshot=JSON.stringify(state);
+       if(!backups.some(b=>JSON.stringify(b.data)===snapshot)) {
+         backups.push({savedAt:new Date().toISOString(),data:JSON.parse(snapshot)});
+         localStorage.setItem(backupKey,JSON.stringify(backups));
+       }
+     } catch(backupError) {
+       // Falls keine Sicherung möglich ist, lokale Daten nicht überschreiben.
+       console.error('Lokale Sicherung fehlgeschlagen',backupError);
+       return;
+     }
    }
    state={...fresh(),...remote};localStorage.setItem(KEY,JSON.stringify(state));render();
  }else if(first&&localHasData(state)){
