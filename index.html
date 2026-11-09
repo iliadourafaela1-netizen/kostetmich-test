@@ -178,7 +178,7 @@ body #vant-settings-admin-actions #vant-admin-users-button,body #vant-settings-a
 .vant-month-plot strong{font-size:11px;line-height:1.2;overflow-wrap:anywhere}
 .vant-month-plot .vant-analysis-bar{width:55%;flex-shrink:0;border-radius:8px 8px 0 0}
 .vant-month-empty{opacity:.65}
-</style></head><body><main class="shell" id="km-main" style="display:none"><header><button id="km-header-back" type="button" class="km-header-back no-print" onclick="kmMenuBack()" aria-label="Zur Startseite" hidden>← <span>Zur Startseite</span></button><span class="tag" id="beta-tag">BETA · 100 % kostenlos</span><button type="button" class="km-menu-toggle no-print" aria-label="Menü öffnen" onclick="kmOpenMenu()">☰</button><h1 style="margin-top:12px">VANT<span class="vant-dot">.</span></h1><p style="margin-bottom:0" class="light">Take control of your money.</p></header><div id="vant-subheader" class="vant-subheader no-print" hidden><button type="button" class="vant-back-button" onclick="vantGoBack()">← Zurück</button><strong id="vant-page-title"></strong><button type="button" class="vant-submenu-button" onclick="kmOpenMenu()" aria-label="Menü öffnen">☰</button></div><div class="nav no-print" id="nav"></div><div id="app"></div><footer>🔒 Finanzangaben werden lokal gespeichert und nach erfolgreicher Cloud-Einrichtung mit deinem Supabase-Konto synchronisiert. Keine Bankverbindung. Dies ist eine Test-App und keine Schuldner- oder Finanzberatung. Berechnungen sind Schätzungen. Sichere deine Daten regelmäßig per Export.</footer></main><div id="km-quick-modal" class="km-modal no-print" hidden role="dialog" aria-modal="true" aria-labelledby="km-quick-title"><div class="km-modal-panel"><div class="km-modal-header"><h2 id="km-quick-title">⚡ Blitz-Eintragung</h2><button type="button" class="secondary" onclick="kmCloseQuick()" aria-label="Schließen">✕</button></div><div id="km-quick-content"></div></div></div><script>
+</style></head><body><main class="shell" id="km-main" style="display:none"><header><button id="km-header-back" type="button" class="km-header-back no-print" onclick="kmMenuBack()" aria-label="Zur Startseite" hidden>← <span>Zur Startseite</span></button><span class="tag" id="beta-tag">BETA · 100 % kostenlos</span><button type="button" class="km-menu-toggle no-print" aria-label="Menü öffnen" onclick="kmOpenMenu()">☰</button><h1 style="margin-top:12px">VANT<span class="vant-dot">.</span></h1><p style="margin-bottom:0" class="light">Take control of your money.</p></header><div id="vant-subheader" class="vant-subheader no-print" hidden><button type="button" class="vant-back-button" onclick="vantGoBack()">← Zurück</button><strong id="vant-page-title"></strong><button type="button" class="vant-submenu-button" onclick="kmOpenMenu()" aria-label="Menü öffnen">☰</button></div><div class="nav no-print" id="nav"></div><p class="vant-nav-hint no-print" id="vant-nav-hint" hidden></p><div id="app"></div><footer>🔒 Finanzangaben werden lokal gespeichert und nach erfolgreicher Cloud-Einrichtung mit deinem Supabase-Konto synchronisiert. Keine Bankverbindung. Dies ist eine Test-App und keine Schuldner- oder Finanzberatung. Berechnungen sind Schätzungen. Sichere deine Daten regelmäßig per Export.</footer></main><div id="km-quick-modal" class="km-modal no-print" hidden role="dialog" aria-modal="true" aria-labelledby="km-quick-title"><div class="km-modal-panel"><div class="km-modal-header"><h2 id="km-quick-title">⚡ Blitz-Eintragung</h2><button type="button" class="secondary" onclick="kmCloseQuick()" aria-label="Schließen">✕</button></div><div id="km-quick-content"></div></div></div><script>
 'use strict';let KEY='kostetmich-beta-v1';const tabs=[['dashboard','🏠 Übersicht'],['entries','💶 Einnahmen & feste Ausgaben'],['daily','💸 Meine Ausgaben'],['debts','📉 Schulden'],['forecast','📈 12 Monate'],['analysis','📊 Finanzanalyse'],['check','🛍️ Kaufcheck']];let state={dailyExpenses:[],entries:[],debts:[],checks:[],reserve:0,month:new Date().toISOString().slice(0,7),brake:{balance:0,essential:0,horizon:30,extras:[]}};try{const a=JSON.parse(localStorage.getItem(KEY));if(a&&Array.isArray(a.entries)&&Array.isArray(a.debts))state={...state,...a}}catch(e){}let tab='dashboard';let lang=localStorage.getItem('kostetmich-language')||'de';const $=id=>document.getElementById(id),money=n=>Number(n||0).toLocaleString(({de:'de-DE',el:'el-GR',en:'en-IE',tr:'tr-TR'}[lang]||'de-DE'),{style:'currency',currency:'EUR'}),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),num=x=>Math.max(0,Number(x)||0),id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7),today=()=>new Date().toISOString().slice(0,10);function save(){
   
   localStorage.setItem(KEY, JSON.stringify(state));
@@ -218,6 +218,9 @@ function render(){
   const titles={calendar:'Kalender',savings:'Sparziele',entries:'Einnahmen & feste Ausgaben',daily:'Meine Ausgaben',debts:'Schulden',forecast:'12 Monate',analysis:analysisT('title'),check:'Kaufcheck',brake:'Finanzielle Notbremse',notifications:'Benachrichtigungen',settings:'Einstellungen','km-menu':'Menü','km-profile':'Profil','km-preferences':'Einstellungen','km-legal':'Rechtliches'};
   if(subTitle)subTitle.textContent=titles[tab]||'VANT';
  document.getElementById('nav').style.display=inMenu?'none':'';
+ const navHint=document.getElementById('vant-nav-hint');
+ navHint.hidden=inMenu;
+ navHint.textContent=({de:'↔ Weitere Tabs durch Wischen',en:'↔ Swipe for more tabs',el:'↔ Σύρε για περισσότερες καρτέλες',tr:'↔ Diğer sekmeler için kaydır'})[lang]||'↔ Swipe for more tabs';
  const tabIcons={
   dashboard:'M3 10l9-7 9 7v10h-6v-6H9v6H3z',
   daily:'M4 6h16v13H4z M4 6l12-3v3 M16 12h4v4h-4z',
@@ -1848,6 +1851,16 @@ summary.vant-payment-row::-webkit-details-marker{display:none}
 .vant-payment-popup button{margin:0;padding:5px 12px}
 .vant-upcoming .vant-text-link{margin-top:8px;min-height:44px;white-space:normal}
 html[data-km-dark="true"] .vant-upcoming .vant-text-link{color:#d3a8ff!important}
+
+#nav{padding:7px;gap:6px;margin-bottom:0}
+#nav button{flex-basis:112px;grid-template-rows:36px minmax(32px,auto);align-items:center;min-height:78px;font-size:12px;overflow-wrap:normal;hyphens:none}
+#nav .vant-tab-icon{width:40px;height:36px}
+#nav button.active{background:#eadcff}
+html[data-km-dark="true"] #nav button.active{background:#372255;color:#f0dcff}
+.vant-nav-hint{margin:5px 2px 13px;text-align:right;color:#5d4778;font-size:12px}
+html[data-km-dark="true"] .vant-nav-hint{color:#d3bcef}
+.vant-nav-hint[hidden]{display:none}
+@media(min-width:900px){.vant-nav-hint{display:none}#nav{margin-bottom:13px}}
 </style>
 
 
