@@ -92,7 +92,25 @@ html[data-km-dark="true"] .vant-back-button{background:#49365f;color:#f4edff}
 .vant-avatar-preview img{width:100%;height:100%;object-fit:cover}
 #vant-avatar-file{font-size:13px}
 #vant-profile-message{min-height:1.4em;font-size:13px}
-</style><style>.vant-profile-display-name{text-align:center;font-weight:750;font-size:20px;margin-bottom:20px}</style></head><body><main class="shell" id="km-main" style="display:none"><header><button id="km-header-back" type="button" class="km-header-back no-print" onclick="kmMenuBack()" aria-label="Zur Startseite" hidden>← <span>Zur Startseite</span></button><span class="tag" id="beta-tag">BETA · 100 % kostenlos</span><button type="button" class="km-menu-toggle no-print" aria-label="Menü öffnen" onclick="kmOpenMenu()">☰</button><h1 style="margin-top:12px">VANT<span class="vant-dot">.</span></h1><p style="margin-bottom:0" class="light">Take control of your money.</p></header><div id="vant-subheader" class="vant-subheader no-print" hidden><button type="button" class="vant-back-button" onclick="setTab('dashboard')">← Übersicht</button><strong id="vant-page-title"></strong><button type="button" class="vant-submenu-button" onclick="kmOpenMenu()" aria-label="Menü öffnen">☰</button></div><div class="nav no-print" id="nav"></div><div id="app"></div><footer>🔒 Finanzangaben werden lokal gespeichert und nach erfolgreicher Cloud-Einrichtung mit deinem Supabase-Konto synchronisiert. Keine Bankverbindung. Dies ist eine Test-App und keine Schuldner- oder Finanzberatung. Berechnungen sind Schätzungen. Sichere deine Daten regelmäßig per Export.</footer></main><button id="km-fab" class="km-fab no-print" type="button" aria-label="Schnell Ausgabe eintragen" onclick="kmOpenQuick()">+</button><div id="km-quick-modal" class="km-modal no-print" hidden role="dialog" aria-modal="true" aria-labelledby="km-quick-title"><div class="km-modal-panel"><div class="km-modal-header"><h2 id="km-quick-title">⚡ Blitz-Eintragung</h2><button type="button" class="secondary" onclick="kmCloseQuick()" aria-label="Schließen">✕</button></div><div id="km-quick-content"></div></div></div><script>
+</style><style>.vant-profile-display-name{text-align:center;font-weight:750;font-size:20px;margin-bottom:20px}</style><style id="vant-auth-refresh">
+#vant-splash{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 35%,#4d3378 0%,#211830 55%,#110f1d 100%);color:#f7f1ff;text-align:center}
+#vant-splash[hidden]{display:none!important}
+.vant-splash-mark{font-weight:850;font-size:clamp(58px,15vw,96px);letter-spacing:-.06em}
+.vant-splash-mark span{color:#b08aff}
+#vant-splash p{color:#c7b7dc;letter-spacing:.035em}
+#km-auth{background:linear-gradient(155deg,#29213c,#1a1629)!important;border:1px solid #55446d;color:#f5efff!important;box-shadow:0 18px 55px #0005!important}
+#km-auth h1,#km-auth h2{color:#f7f2ff!important}
+#km-auth h1 .vant-dot{color:#b38cff}
+#km-auth p,#km-auth label{color:#ded3ec}
+#km-auth input{background:#211a31!important;color:#fff!important;border:1px solid #69577f!important}
+#km-auth input::placeholder{color:#a99cba}
+#km-auth button{background:#7550b7;color:white}
+#km-auth button.secondary{background:#403350;color:#eee5ff}
+#km-auth .km-note{color:#b8acc8}
+#km-auth .vant-forgot{display:block;background:transparent;color:#c9aaff;padding:8px 0;text-decoration:underline;font-size:14px}
+#km-auth form[hidden]{display:none!important}
+body:has(#km-auth:not([style*="display: none"])) {background:#151120}
+</style></head><body><main class="shell" id="km-main" style="display:none"><header><button id="km-header-back" type="button" class="km-header-back no-print" onclick="kmMenuBack()" aria-label="Zur Startseite" hidden>← <span>Zur Startseite</span></button><span class="tag" id="beta-tag">BETA · 100 % kostenlos</span><button type="button" class="km-menu-toggle no-print" aria-label="Menü öffnen" onclick="kmOpenMenu()">☰</button><h1 style="margin-top:12px">VANT<span class="vant-dot">.</span></h1><p style="margin-bottom:0" class="light">Take control of your money.</p></header><div id="vant-subheader" class="vant-subheader no-print" hidden><button type="button" class="vant-back-button" onclick="setTab('dashboard')">← Übersicht</button><strong id="vant-page-title"></strong><button type="button" class="vant-submenu-button" onclick="kmOpenMenu()" aria-label="Menü öffnen">☰</button></div><div class="nav no-print" id="nav"></div><div id="app"></div><footer>🔒 Finanzangaben werden lokal gespeichert und nach erfolgreicher Cloud-Einrichtung mit deinem Supabase-Konto synchronisiert. Keine Bankverbindung. Dies ist eine Test-App und keine Schuldner- oder Finanzberatung. Berechnungen sind Schätzungen. Sichere deine Daten regelmäßig per Export.</footer></main><button id="km-fab" class="km-fab no-print" type="button" aria-label="Schnell Ausgabe eintragen" onclick="kmOpenQuick()">+</button><div id="km-quick-modal" class="km-modal no-print" hidden role="dialog" aria-modal="true" aria-labelledby="km-quick-title"><div class="km-modal-panel"><div class="km-modal-header"><h2 id="km-quick-title">⚡ Blitz-Eintragung</h2><button type="button" class="secondary" onclick="kmCloseQuick()" aria-label="Schließen">✕</button></div><div id="km-quick-content"></div></div></div><script>
 'use strict';let KEY='kostetmich-beta-v1';const tabs=[['dashboard','🏠 Übersicht'],['entries','💶 Einnahmen & feste Ausgaben'],['daily','💸 Meine Ausgaben'],['debts','📉 Schulden'],['forecast','📈 12 Monate'],['check','🛍️ Kaufcheck']];let state={dailyExpenses:[],entries:[],debts:[],checks:[],reserve:100,month:new Date().toISOString().slice(0,7),brake:{balance:0,essential:0,horizon:30,extras:[]}};try{const a=JSON.parse(localStorage.getItem(KEY));if(a&&Array.isArray(a.entries)&&Array.isArray(a.debts))state={...state,...a}}catch(e){}let tab='dashboard';let lang=localStorage.getItem('kostetmich-language')||'de';const $=id=>document.getElementById(id),money=n=>Number(n||0).toLocaleString(({de:'de-DE',el:'el-GR',en:'en-IE',tr:'tr-TR'}[lang]||'de-DE'),{style:'currency',currency:'EUR'}),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),num=x=>Math.max(0,Number(x)||0),id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7),today=()=>new Date().toISOString().slice(0,10);function save(){
   
   localStorage.setItem(KEY, JSON.stringify(state));
@@ -730,8 +748,8 @@ render();
   .km-chart-bar { animation: none; }
 }
 </style>
-<div id="km-auth"><h1>VANT<span class="vant-dot">.</span></h1><p>Willkommen! Melde dich an oder erstelle ein kostenloses Konto.</p>
-<form id="km-auth-form"><label for="km-email">E-Mail-Adresse</label><input id="km-email" type="email" autocomplete="email" required placeholder="name@beispiel.de"><label for="km-password">Passwort (mindestens 8 Zeichen)</label><input id="km-password" type="password" minlength="8" autocomplete="current-password" required><button type="submit" id="km-login">Anmelden</button><button type="button" class="secondary" id="km-signup">Registrieren</button></form>
+<div id="vant-splash" aria-label="VANT wird gestartet"><div class="vant-splash-mark">VANT<span>.</span></div><p>Take control of your money.</p></div><div id="km-auth" style="display:none"><h1>VANT<span class="vant-dot">.</span></h1><p>Willkommen! Melde dich an oder erstelle ein kostenloses Konto.</p>
+<form id="km-auth-form"><label for="km-email">E-Mail-Adresse</label><input id="km-email" type="email" autocomplete="email" required placeholder="name@beispiel.de"><label for="km-password">Passwort (mindestens 8 Zeichen)</label><input id="km-password" type="password" minlength="8" autocomplete="current-password" required><button type="submit" id="km-login">Anmelden</button><button type="button" class="secondary" id="km-signup">Registrieren</button><button type="button" class="vant-forgot" id="vant-forgot">Passwort vergessen?</button></form><form id="vant-recovery-form" hidden><h2>Passwort zurücksetzen</h2><p>Wir senden dir einen Link an deine E-Mail-Adresse.</p><label for="vant-recovery-email">E-Mail-Adresse</label><input type="email" id="vant-recovery-email" autocomplete="email" required><button type="submit">Link senden</button><button type="button" class="secondary" id="vant-recovery-back">Zur Anmeldung</button></form><form id="vant-new-password-form" hidden><h2>Neues Passwort festlegen</h2><label for="vant-new-password">Neues Passwort (mindestens 8 Zeichen)</label><input id="vant-new-password" type="password" minlength="8" autocomplete="new-password" required><button type="submit">Passwort speichern</button></form>
 <p id="km-auth-message" class="km-message" role="status"></p><p class="km-note">Deine Finanzdaten bleiben in dieser Testversion auf diesem Gerät. Ein Konto bedeutet noch keine Cloud-Synchronisierung. Nutze die Datensicherung regelmäßig.</p></div>
 <style>
 #km-push-setup{margin-top:14px}#km-push-setup button{margin-top:10px}#km-push-status{font-size:13px;line-height:1.5}
@@ -768,6 +786,13 @@ const publishableKey='sb_publishable_AfJv6slYXbjSPW2qi0yo5w_SH2c8Qt-';
 const box=document.getElementById('km-auth'), main=document.getElementById('km-main'), message=document.getElementById('km-auth-message');
 const form=document.getElementById('km-auth-form'), email=document.getElementById('km-email'), password=document.getElementById('km-password');
 const login=document.getElementById('km-login'), signup=document.getElementById('km-signup');
+const splash=document.getElementById('vant-splash');
+let splashReady=false;
+setTimeout(()=>{splashReady=true;splash.hidden=true;if(main.style.display!=='block')box.style.display='block'},1350);
+const forgot=document.getElementById('vant-forgot'),recoveryForm=document.getElementById('vant-recovery-form'),recoveryEmail=document.getElementById('vant-recovery-email'),recoveryBack=document.getElementById('vant-recovery-back'),newPasswordForm=document.getElementById('vant-new-password-form');
+let recoveryMode=false;
+forgot.addEventListener('click',()=>{form.hidden=true;recoveryForm.hidden=false;newPasswordForm.hidden=true;recoveryEmail.value=email.value;showMessage('')});
+recoveryBack.addEventListener('click',()=>{recoveryForm.hidden=true;form.hidden=false;showMessage('')});
 const fresh=()=>({entries:[],debts:[],checks:[],reserve:100,month:new Date().toISOString().slice(0,7),brake:{balance:0,essential:0,horizon:30,extras:[]}});
 let currentId=null;
 function showMessage(s){message.textContent=s}
@@ -826,7 +851,7 @@ window.addEventListener('online',()=>{if(cloudDirty&&cloudReady)window.vantCloud
 window.addEventListener('focus',()=>{if(cloudReady)window.vantCloud.refresh()});
 function switchUser(user){
  window.vantProfileUser=user||null;
- if(!user){cloudGeneration++;cloudReady=false;clearTimeout(cloudTimer);currentId=null;KEY='kostetmich-beta-v1';state=fresh();main.style.display='none';box.style.display='block';return}
+ if(!user){cloudGeneration++;cloudReady=false;clearTimeout(cloudTimer);currentId=null;KEY='kostetmich-beta-v1';state=fresh();main.style.display='none';box.style.display=splashReady?'block':'none';return}
  if(currentId===user.id){if(tab==='km-profile'&&!vantProfileEditing)render();return;}
  cloudGeneration++;cloudReady=false;clearTimeout(cloudTimer);currentId=user.id;vantProfileEditing=false;vantPendingAvatar=null;KEY='kostetmich-user-'+user.id+'-v1';state=fresh();
  try{const stored=JSON.parse(localStorage.getItem(KEY));if(stored&&Array.isArray(stored.entries)&&Array.isArray(stored.debts))state={...state,...stored}}catch(e){}
@@ -836,8 +861,39 @@ function switchUser(user){
 }
 if(!window.supabase||!window.supabase.createClient){showMessage('Anmeldung konnte nicht geladen werden. Bitte prüfe deine Internetverbindung und lade die Seite neu.');return}
 const client = window.kostetMichClient = window.supabase.createClient(projectUrl,publishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
-client.auth.onAuthStateChange((_event,session)=>switchUser(session?.user||null));
-client.auth.getUser().then(({data,error})=>{if(error&&!data?.user)showMessage('Bitte melde dich an.');switchUser(data?.user||null)}).catch(()=>showMessage('Verbindung fehlgeschlagen. Bitte später erneut versuchen.'));
+client.auth.onAuthStateChange((event,session)=>{
+ if(event==='PASSWORD_RECOVERY'){
+  recoveryMode=true;main.style.display='none';box.style.display='block';splash.hidden=true;splashReady=true;
+  form.hidden=true;recoveryForm.hidden=true;newPasswordForm.hidden=false;
+  showMessage('Bitte lege jetzt dein neues Passwort fest.');
+  return;
+ }
+ if(!recoveryMode)switchUser(session?.user||null);
+});
+client.auth.getUser().then(({data,error})=>{if(recoveryMode)return;if(error&&!data?.user)showMessage('Bitte melde dich an.');switchUser(data?.user||null)}).catch(()=>showMessage('Verbindung fehlgeschlagen. Bitte später erneut versuchen.'));
+recoveryForm.addEventListener('submit',async ev=>{
+ ev.preventDefault();
+ const address=recoveryEmail.value.trim();
+ if(!address)return;
+ showMessage('Link wird gesendet …');
+ try{
+  const {error}=await client.auth.resetPasswordForEmail(address,{redirectTo:location.origin+location.pathname});
+  if(error)throw error;
+  showMessage('Falls für diese E-Mail-Adresse ein Konto besteht, erhältst du einen Link zum Zurücksetzen. Prüfe auch den Spam-Ordner.');
+ }catch(e){showMessage('Der Link konnte nicht gesendet werden: '+e.message)}
+});
+newPasswordForm.addEventListener('submit',async ev=>{
+ ev.preventDefault();const pw=document.getElementById('vant-new-password').value;
+ showMessage('Passwort wird geändert …');
+ try{
+  const {error}=await client.auth.updateUser({password:pw});
+  if(error)throw error;
+  recoveryMode=false;newPasswordForm.hidden=true;form.hidden=false;password.value='';
+  showMessage('Dein Passwort wurde geändert. Du kannst dich jetzt anmelden.');
+  await client.auth.signOut();
+  switchUser(null);
+ }catch(e){showMessage('Passwort konnte nicht geändert werden: '+e.message)}
+});
 form.addEventListener('submit',async ev=>{ev.preventDefault();setBusy(true);showMessage('Anmeldung läuft …');try{const {error}=await client.auth.signInWithPassword({email:email.value.trim(),password:password.value});if(error)throw error;showMessage('Erfolgreich angemeldet.')}catch(e){showMessage('Anmeldung fehlgeschlagen: '+e.message)}finally{setBusy(false)}});
 signup.addEventListener('click',async()=>{if(!form.reportValidity())return;setBusy(true);showMessage('Registrierung läuft …');try{const {data,error}=await client.auth.signUp({email:email.value.trim(),password:password.value,options:{emailRedirectTo:location.origin+location.pathname}});if(error)throw error;showMessage(data.session?'Konto erstellt und angemeldet.':'Bitte öffne die Bestätigungs-E-Mail und bestätige deine Adresse. Danach kannst du dich anmelden.')}catch(e){showMessage('Registrierung fehlgeschlagen: '+e.message)}finally{setBusy(false)}});
 })();
