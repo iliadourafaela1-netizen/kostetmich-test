@@ -411,9 +411,6 @@ function vantAnalysis(){
 
 function dashboard(){
  const t=totals(), debtBalance=state.debts.reduce((s,d)=>s+num(d.balance),0);
- const income=Math.max(0,t.inc), expenses=Math.max(0,t.out+t.debt), max=Math.max(income,expenses,1);
- const incomeHeight=income/max*100,expenseHeight=expenses/max*100;
- const difference=income-expenses;
  const spending=(state.dailyExpenses||[]).filter(e=>e.date&&e.date.slice(0,7)===currentMonth());
  // All monthly spending: everyday purchases, normalized fixed expenses and debt installments.
  const byCategory={};
@@ -426,7 +423,7 @@ function dashboard(){
  const palette=['#7742b8','#a76ae4','#cf8ce7','#7d77d9','#e7b6f4','#6d9de5','#d79a71','#69b3a2'];
  let cursor=0;const stops=categories.map(([,amount],i)=>{const from=cursor;cursor+=amount/Math.max(totalSpending,1)*100;return `${palette[i%palette.length]} ${from}% ${cursor}%`}).join(', ');
  const donut=categories.length?`conic-gradient(${stops})`:'conic-gradient(#eae1f6 0% 100%)';
- const chart=`<section class="card vant-panel"><div class="vant-section-heading"><h2>Deine Haushaltsplanung</h2><span class="vant-mini-label">Monatlich</span></div><div class="km-chart"><div class="km-chart-item"><strong class="km-income-text">${money(income)}</strong><div class="km-chart-track"><div class="km-chart-bar km-income-bar" style="height:${incomeHeight}%"></div></div><span>Einnahmen</span></div><div class="km-chart-item"><strong class="km-expense-text">${money(expenses)}</strong><div class="km-chart-track"><div class="km-chart-bar km-expense-bar" style="height:${expenseHeight}%"></div></div><span>Ausgaben + Raten</span></div></div><div class="km-chart-result"><span>${difference<0?'Haushaltsdefizit':'Haushaltsüberschuss'}</span><strong class="${difference<0?'bad':'good'}">${money(difference)}</strong></div><p class="muted">Deine Rücklage wird beim verfügbaren Monatsbudget zusätzlich abgezogen.</p></section>`;
+
  const categoryRows=categories.length?categories.map(([name,amount],i)=>`<div class="vant-category-row"><span class="vant-category-dot" style="background:${palette[i%palette.length]}"></span><span>${esc(name)}</span><strong>${money(amount)}</strong></div>`).join(''):'<p class="muted">Noch keine Ausgaben erfasst.</p>';
  const goals=savingsData(), activeGoals=goals.filter(g=>num(g.saved)+savingConfirmed(g)<num(g.target));
  const goalPreview=activeGoals.slice(0,2).map(g=>{const actual=num(g.saved)+savingConfirmed(g),pct=Math.min(100,Math.round(actual/Math.max(1,num(g.target))*100));return `<div class="vant-goal-preview"><div><strong>🎯 ${esc(g.name)}</strong><span>${money(actual)} / ${money(g.target)}</span></div><div class="vant-progress"><span style="width:${pct}%"></span></div></div>`}).join('');
@@ -437,7 +434,7 @@ function dashboard(){
  <div class="vant-summary"><div class="vant-summary-tile"><span>↗ Einnahmen / Monat</span><strong class="good">${money(t.inc)}</strong></div><div class="vant-summary-tile"><span>↘ Ausgaben + Raten</span><strong class="bad">${money(t.out+t.debt)}</strong></div></div>
  ${vantAnalysis()}
  ${budgetBanner()}
- ${chart}
+ ${upcomingPayments()}
  <section class="card vant-panel"><div class="vant-section-heading"><h2>🎯 Deine Sparziele</h2><button class="vant-text-link" type="button" onclick="setTab('savings')">Alle ansehen ›</button></div>${goalPreview||'<p class="muted">Du hast noch keine aktiven Sparziele.</p>'}</section>
  ${shell('Dein Finanzstatus',`<p>Offene Schulden: <b>${money(debtBalance)}</b> · Monatliche Raten: <b>${money(t.debt)}</b></p><p class="muted">Alle Beträge sind Schätzungen auf Basis deiner Angaben. Nicht erfasste Kosten können das Ergebnis verändern.</p><div class="actions"><button onclick="setTab('debts')">Schulden verwalten</button></div>`)}
  ${shell('Deine Rücklage',`<p>Wie viel möchtest du monatlich für unerwartete Ausgaben zurückhalten?</p><label>Rücklage pro Monat (€)</label><input id="reserve" type="number" min="0" step="0.01" value="${state.reserve}"><div class="actions"><button onclick="state.reserve=num($('reserve').value);save();render()">Speichern</button></div>`)}
@@ -694,7 +691,34 @@ return `
  return outstanding+form+sim;
 }
 function addDebt(e){e.preventDefault();state.debts.push({id:id(),name:$('dname').value.trim(),balance:num($('dbalance').value),originalBalance:num($('dbalance').value),payment:num($('dpayment').value),apr:num($('dapr').value),day:$('dday').value?Math.min(31,Math.max(1,+$('dday').value)):null});save();render()}function delDebt(x){if(confirm(tr('Schuld löschen?'))){state.debts=state.debts.filter(d=>d.id!==x);save();render()}}function payDebt(x){let d=state.debts.find(d=>d.id===x);let raw=prompt(tr('Wie viel wurde auf die offene Forderung angerechnet? Bitte anhand der Abrechnung prüfen.'),String(d.payment));if(raw===null)return;let n=Number(raw.replace(',','.'));if(!Number.isFinite(n)||n<0)return alert(tr('Bitte gültigen Betrag eingeben.'));d.balance=Math.max(0,d.balance-n);save();render()}function simulate(){let e=num($('extra').value),base=state.debts.map(d=>debtEstimate(d)),plus=state.debts.map(d=>debtEstimate(d,state.debts.length?e/state.debts.length:0));$('simresult').innerHTML=`<p>Zusätzliche Rate wird gleichmäßig auf ${state.debts.length} Forderung(en) verteilt.</p>`+state.debts.map((d,i)=>`<div class="row"><span>${esc(d.name)}</span><b>${base[i]?base[i].months+' Mon.':'–'} → ${plus[i]?plus[i].months+' Mon.':'–'}</b></div>`).join('')+`<p class="muted">Vereinfachte Modellrechnung. Zusätzliche Tilgung ist nicht bei jeder Forderung gleich sinnvoll oder zulässig.</p>`}
-function monthDay(y,m,day){return new Date(y,m,Math.min(day,new Date(y,m+1,0).getDate()))}function calendar(){let [y,m]=state.month.split('-').map(Number),dates=[];for(let e of state.entries){if(e.day&&e.cycle==='monthly')dates.push({day:e.day,label:e.name,amount:monthly(e),type:e.type});}for(let d of state.debts)if(d.day)dates.push({day:d.day,label:d.name+' (Rate)',amount:num(d.payment),type:'expense'});dates.sort((a,b)=>a.day-b.day);return shell('Dein Zahlungskalender',`<label>Monat auswählen</label><input type="month" value="${state.month}" onchange="state.month=this.value;save();render()"><p class="muted">Hier erscheinen monatliche Posten, für die du einen Fälligkeitstag angegeben hast. Wöchentliche, jährliche und vierteljährliche Zahlungen werden noch nicht automatisch terminiert.</p>`)+shell('Fälligkeiten',dates.length?dates.map(x=>`<div class="row"><span><b>${String(monthDay(y,m-1,x.day).getDate()).padStart(2,'0')}.${String(m).padStart(2,'0')}.${y}</b> · ${esc(x.label)}</span><b class="${x.type==='income'?'good':'bad'}">${x.type==='income'?'+':'−'}${money(x.amount)}</b></div>`).join(''):'<p class="muted">Noch keine Termine eingetragen. Ergänze bei Einnahmen, Ausgaben und Schulden einen Zahlungstag.</p>')}
+function monthDay(y,m,day){return new Date(y,m,Math.min(day,new Date(y,m+1,0).getDate()))}function calendarPayments(){const dates=[];for(let e of state.entries){if(e.day&&e.cycle==='monthly')dates.push({day:e.day,label:e.name,amount:monthly(e),type:e.type});}for(let d of state.debts)if(d.day)dates.push({day:d.day,label:d.name+' (Rate)',amount:num(d.payment),type:'expense'});dates.sort((a,b)=>a.day-b.day);return dates}
+function upcomingPayments(){
+ const now=new Date(),payments=calendarPayments().filter(item=>item.type==='expense'&&item.amount>0);
+ const locale=({de:'de-DE',en:'en-GB',el:'el-GR',tr:'tr-TR'})[lang]||'de-DE';
+ const [title,...labels]=({
+ de:['Zahlungen in den nächsten 3 Tagen','Heute','Morgen','Übermorgen','Keine Zahlungen','Zahlungen','Gesamt','Zahlungskalender öffnen','Schließen'],
+ en:['Payments in the next 3 days','Today','Tomorrow','Day after tomorrow','No payments','payments','Total','Open payment calendar','Close'],
+ el:['Πληρωμές τις επόμενες 3 ημέρες','Σήμερα','Αύριο','Μεθαύριο','Καμία πληρωμή','πληρωμές','Σύνολο','Άνοιγμα ημερολογίου πληρωμών','Κλείσιμο'],
+ tr:['Önümüzdeki 3 günün ödemeleri','Bugün','Yarın','Yarından sonra','Ödeme yok','ödeme','Toplam','Ödeme takvimini aç','Kapat']
+ })[lang]||['Payments in the next 3 days','Today','Tomorrow','Day after tomorrow','No payments','payments','Total','Open payment calendar','Close'];
+ const [empty,countLabel,totalLabel,calendarLabel,closeLabel]=labels.slice(3);
+ const rows=labels.slice(0,3).map((label,offset)=>{
+  const date=new Date(now.getFullYear(),now.getMonth(),now.getDate()+offset);
+  const due=payments.filter(item=>monthDay(date.getFullYear(),date.getMonth(),Number(item.day)).getDate()===date.getDate());
+  const day=`<strong>${label}<small>${date.toLocaleDateString(locale,{day:'numeric',month:'short'})}</small></strong>`;
+  if(due.length===0)return `<div class="vant-payment-row">${day}<span class="muted">${empty}</span></div>`;
+  if(due.length===1)return `<div class="vant-payment-row">${day}<span>${esc(due[0].label)}</span><b>${money(due[0].amount)}</b></div>`;
+  const total=due.reduce((sum,item)=>sum+item.amount,0),popupId='vant-payments-'+offset;
+  return `<details class="vant-payment-day" name="vant-payment-days"><summary class="vant-payment-row">${day}<span>${due.length} ${countLabel}</span><b>${money(total)} <span aria-hidden="true">›</span></b></summary>
+   <div class="vant-payment-popup" aria-labelledby="${popupId}">
+    <div class="vant-payment-line"><strong id="${popupId}">${label} · ${due.length} ${countLabel}</strong><button type="button" class="secondary" aria-label="${closeLabel}" onclick="const day=this.closest('details');day.open=false;day.querySelector('summary').focus()">×</button></div>
+    <ul>${due.map(item=>`<li class="vant-payment-line"><span>${esc(item.label)}</span><b>${money(item.amount)}</b></li>`).join('')}</ul>
+    <div class="vant-payment-line"><strong>${totalLabel}</strong><b>${money(total)}</b></div>
+   </div></details>`;
+ }).join('');
+ return `<section class="card vant-panel vant-upcoming"><div class="vant-section-heading"><h2>▦ ${title}</h2></div>${rows}<button type="button" class="vant-text-link" onclick="setTab('calendar')">${calendarLabel} ›</button></section>`;
+}
+function calendar(){let [y,m]=state.month.split('-').map(Number),dates=calendarPayments();return shell('Dein Zahlungskalender',`<label>Monat auswählen</label><input type="month" value="${state.month}" onchange="state.month=this.value;save();render()"><p class="muted">Hier erscheinen monatliche Posten, für die du einen Fälligkeitstag angegeben hast. Wöchentliche, jährliche und vierteljährliche Zahlungen werden noch nicht automatisch terminiert.</p>`)+shell('Fälligkeiten',dates.length?dates.map(x=>`<div class="row"><span><b>${String(monthDay(y,m-1,x.day).getDate()).padStart(2,'0')}.${String(m).padStart(2,'0')}.${y}</b> · ${esc(x.label)}</span><b class="${x.type==='income'?'good':'bad'}">${x.type==='income'?'+':'−'}${money(x.amount)}</b></div>`).join(''):'<p class="muted">Noch keine Termine eingetragen. Ergänze bei Einnahmen, Ausgaben und Schulden einen Zahlungstag.</p>')}
 function forecast(){let t=totals(),debtSum=state.debts.reduce((s,d)=>s+num(d.balance),0),rows='';for(let i=0;i<12;i++){let date=new Date();date.setDate(1);date.setMonth(date.getMonth()+i);let dateLabel=date.toLocaleDateString(({de:'de-DE',el:'el-GR',en:'en-IE',tr:'tr-TR'}[lang]||'de-DE'),{month:'short',year:'numeric'});let remaining=state.debts.reduce((s,d)=>{let b=num(d.balance);for(let j=0;j<=i;j++){if(b<=0)break;b=Math.max(0,b+b*num(d.apr)/1200-num(d.payment))}return s+b},0);rows+=`<tr><td>${dateLabel}</td><td>${money(t.inc)}</td><td>${money(t.out+t.debt)}</td><td>${money(t.left)}</td><td>${money(remaining)}</td></tr>`}return shell('12-Monats-Vorschau',`<p class="muted">Diese einfache Prognose nimmt jeden Monat gleiches Einkommen und gleichbleibende Ausgaben an. Änderungen und Einmalzahlungen sind nicht automatisch eingerechnet.</p><div style="overflow:auto"><table><thead><tr><th>Monat</th><th>Einnahmen</th><th>Kosten inkl. Raten</th><th>Nach Rücklage</th><th>Schulden ca.</th></tr></thead><tbody>${rows}</tbody></table></div><div class="actions"><button onclick="vantExportForecastPDF()">Als PDF drucken / speichern</button></div>`)}
 // Exportiert die 12-Monats-Prognose als echte PDF-Datei, auch ohne Druckdialog.
 function vantExportForecastPDF(){
@@ -1805,6 +1829,20 @@ html[data-km-dark="true"] #km-auth h1{color:#f5efff}
 html[data-km-dark="true"] #nav{background:#1c1333;border-color:#594183}
 html[data-km-dark="true"] #nav button{color:#e3d6f4}
 html[data-km-dark="true"] #nav button.active{color:#d3a8ff}
+
+.vant-payment-day{position:relative}
+.vant-payment-row{display:grid;grid-template-columns:minmax(72px,auto) minmax(0,1fr) auto;align-items:center;gap:8px;padding:11px 0;border-top:1px solid #9b74ce55;overflow-wrap:anywhere}
+.vant-payment-row small{display:block;font-weight:400}
+.vant-payment-row b,.vant-payment-line b{white-space:nowrap}
+summary.vant-payment-row{cursor:pointer;list-style:none}
+summary.vant-payment-row::-webkit-details-marker{display:none}
+.vant-payment-popup{position:absolute;z-index:5;inset-inline-end:0;top:100%;width:min(100%,310px);box-sizing:border-box;padding:12px;border:1px solid #9b6ddd;border-radius:16px;background:#2c1748;color:#fff;box-shadow:0 12px 28px #0008}
+.vant-payment-popup ul{list-style:none;padding:0;margin:6px 0;max-height:min(38vh,240px);overflow-y:auto}
+.vant-payment-line{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;overflow-wrap:anywhere}
+.vant-payment-popup li{border-top:1px solid #a986ce55}
+.vant-payment-popup button{margin:0;padding:5px 12px}
+.vant-upcoming .vant-text-link{margin-top:8px;min-height:44px;white-space:normal}
+html[data-km-dark="true"] .vant-upcoming .vant-text-link{color:#d3a8ff!important}
 </style>
 
 
