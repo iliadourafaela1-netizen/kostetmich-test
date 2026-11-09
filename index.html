@@ -1690,6 +1690,67 @@ html[data-km-dark="true"] body{background:#14111f}
 html[data-km-dark="true"] header{background:radial-gradient(circle at 88% 14%,#4b396f 0%,transparent 38%),linear-gradient(120deg,#19152c,#30264c)}
 html[data-km-dark="true"] #km-auth h1{color:#f5efff}
 @media(max-width:680px){header{border-radius:21px;padding-left:22px;padding-bottom:25px}header:after{right:-15px;font-size:190px;bottom:-55px}}
+
+/* Shared dark palette for the VANT screens. */
+@media screen {
+  html[data-km-dark="true"] {
+    --vant-night:#100b20;
+    --vant-surface:#1c1333;
+    --vant-edge:#594183;
+    --vant-text:#faf5ff;
+    --vant-muted:#c9b9e8;
+    --vant-mint:#80efc6;
+    --vant-panel:linear-gradient(145deg,#2a184b,#1c1333 68%);
+    --vant-action:linear-gradient(115deg,#6526ce,#7830df);
+  }
+  html[data-km-dark="true"] body {
+    background:radial-gradient(ellipse at top,#281449 0%,transparent 42rem),var(--vant-night);
+    color:var(--vant-text);
+  }
+  html[data-km-dark="true"] header,
+  html[data-km-dark="true"] .vant-hero,
+  html[data-km-dark="true"] .vant-settings-hero {
+    background:radial-gradient(ellipse at top right,#5b2ca3,transparent 75%),#211337;
+    border-color:var(--vant-edge);
+  }
+  html[data-km-dark="true"] #app .card,
+  html[data-km-dark="true"] #km-main .vant-settings-group,
+  html[data-km-dark="true"] #km-auth {
+    background:var(--vant-panel);
+    border-color:var(--vant-edge);
+    color:var(--vant-text);
+    box-shadow:0 12px 30px #09051450;
+  }
+  html[data-km-dark="true"] #app .stat,
+  html[data-km-dark="true"] .vant-summary-tile,
+  html[data-km-dark="true"] .vant-quick-actions button {
+    background:#271a42;
+    border:1px solid var(--vant-edge);
+    color:var(--vant-text);
+  }
+  html[data-km-dark="true"] #app :is(input,select,textarea) {
+    background:var(--vant-surface);
+    border-color:var(--vant-edge);
+    color:var(--vant-text);
+  }
+  html[data-km-dark="true"] #app :is(input,textarea)::placeholder {color:var(--vant-muted);opacity:1}
+  html[data-km-dark="true"] #app button[type="submit"] {
+    background:var(--vant-action);
+    color:#fff;
+    border-radius:14px;
+  }
+  html[data-km-dark="true"] #app button.secondary {
+    background:#302049;
+    color:var(--vant-text);
+  }
+  html[data-km-dark="true"] #app :is(.muted,.stat span,.vant-summary-tile span) {color:var(--vant-muted)}
+  html[data-km-dark="true"] #app .good {color:var(--vant-mint)}
+  html[data-km-dark="true"] #app :is(button,input,select,textarea,summary):focus-visible {
+    outline:2px solid #c49aff;
+    outline-offset:2px;
+  }
+  html[data-km-dark="true"] .saving-ring::before {background:var(--vant-surface)}
+}
 </style>
 
 
