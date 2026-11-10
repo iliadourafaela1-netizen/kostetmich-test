@@ -221,19 +221,20 @@ function renderBottomNavigation(){
   '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="4" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="20" cy="12" r="2"/></svg>'
  ];
  const current=targets.includes(tab)?targets.indexOf(tab):4;
- const previous=nav.dataset.activeIndex;
  nav.classList.add('vant-bottom-nav');
  nav.setAttribute('role','navigation');
  nav.style.display='';
  nav.setAttribute('aria-label',({de:'Hauptnavigation',en:'Main navigation',el:'Κύρια πλοήγηση',tr:'Ana gezinme'})[lang]||'Main navigation');
- nav.innerHTML=targets.map((target,index)=>`<button type="button" class="${index===current?'active':''} ${index===2?'vant-home-tab':''}" ${index===current?'aria-current="page"':''} onclick="setTab('${target}')"><span class="vant-tab-icon" aria-hidden="true">${icons[index]}</span><span>${esc(labels[index])}</span></button>`).join('');
+ if(nav.dataset.language!==lang||nav.children.length!==targets.length){
+  nav.innerHTML=targets.map((target,index)=>`<button type="button" class="${index===2?'vant-home-tab':''}" onclick="setTab('${target}')"><span class="vant-tab-icon" aria-hidden="true">${icons[index]}</span><span>${esc(labels[index])}</span></button>`).join('');
+  nav.dataset.language=lang;
+ }
+ Array.from(nav.children).forEach((button,index)=>{
+  button.classList.toggle('active',index===current);
+  if(index===current)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');
+ });
  nav.style.setProperty('--active-tab',current);
  nav.dataset.activeIndex=current;
- if(previous!==undefined&&Number(previous)!==current){
-  nav.classList.remove('vant-liquid-moving');
-  void nav.offsetWidth;
-  nav.classList.add('vant-liquid-moving');
- }
  const hint=document.getElementById('vant-nav-hint');if(hint)hint.hidden=true;
 }
 function render(){
@@ -2044,58 +2045,56 @@ html[data-km-dark="true"] .vant-nav-hint{color:#d3bcef}
 .vant-sim-presets button{flex:1;min-height:44px;margin:0}
 #vant-sim-sheet select{width:100%;box-sizing:border-box;background:#170f27;color:#fff;border-color:#8463a3}
 
-/* Floating glass navigation. */
+/* Quiet floating glass navigation, lifted above the home indicator. */
 @media screen{
- #km-main{padding-bottom:calc(104px + env(safe-area-inset-bottom,0px))}
+ #km-main{padding-bottom:calc(132px + env(safe-area-inset-bottom,0px))}
  #nav.vant-bottom-nav{
-  position:fixed;z-index:1000;left:50%;bottom:calc(10px + env(safe-area-inset-bottom,0px));
-  transform:translateX(-50%);width:min(calc(100% - 20px),560px);box-sizing:border-box;
+  position:fixed;z-index:1000;left:50%;bottom:calc(28px + env(safe-area-inset-bottom,0px));
+  transform:translateX(-50%);width:min(calc(100% - 32px),520px);box-sizing:border-box;
   display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;overflow:visible;
-  padding:6px;margin:0;border:1px solid #fff7;border-radius:38px;
-  background:linear-gradient(150deg,#b6a0cb40,#392c493d 48%,#8c759f3d),#21172cda;
-  -webkit-backdrop-filter:blur(24px) saturate(150%);backdrop-filter:blur(24px) saturate(150%);
-  box-shadow:inset 0 1px 1px #ffffff80,inset 0 -1px 2px #ffffff30,0 10px 30px #0007;
+  padding:5px;margin:0;border:1px solid #ded0f23d;border-radius:32px;
+  background:#241d34f5;
+  -webkit-backdrop-filter:blur(28px) saturate(135%);backdrop-filter:blur(28px) saturate(135%);
+  box-shadow:inset 0 1px 0 #ffffff24,0 8px 24px #08030f38;
+  isolation:isolate;
  }
  @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
-  #nav.vant-bottom-nav{background:linear-gradient(150deg,#b6a0cb40,#392c4970 48%,#8c759f45)}
+  #nav.vant-bottom-nav{background:#2b233bc9}
  }
  #nav.vant-bottom-nav::before{
-  content:'';position:absolute;pointer-events:none;left:6px;top:6px;bottom:6px;width:calc((100% - 12px)/5);
-  border-radius:30px;box-sizing:border-box;
+  content:'';position:absolute;pointer-events:none;left:5px;top:5px;bottom:5px;width:calc((100% - 10px)/5);
+  border-radius:26px;box-sizing:border-box;
   transform:translateX(calc(var(--active-tab,2)*100%));
-  background:radial-gradient(ellipse at 20% 0%,#ffffff70,transparent 48%),linear-gradient(135deg,#ddc6f24d,#ffffff0d);
-  border:1px solid #ffffff70;box-shadow:inset 0 1px 2px #fffc,inset 0 -1px 3px #ffffff40,0 2px 8px #08011240;
-  transition:transform .42s cubic-bezier(.22,.85,.27,1.1);
+  background:linear-gradient(160deg,#ffffff24,#d8c6f21a);
+  border:1px solid #ffffff21;box-shadow:inset 0 1px 0 #ffffff1f;
+  transition:transform 320ms cubic-bezier(.2,.75,.25,1);
+  will-change:transform;
  }
  #nav.vant-bottom-nav button{
-  position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
-  min-width:0;min-height:58px;height:58px;padding:3px 0;margin:0;border:0;border-radius:28px;background:transparent;
-  color:#e9e1f3;font-size:clamp(9px,2.5vw,12px);font-weight:500;line-height:1.15;overflow-wrap:normal;white-space:nowrap;
+  position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  min-width:0;min-height:55px;height:55px;padding:3px 0;margin:0;border:0;border-radius:26px;background:transparent;
+  color:#c5bdcf;font-size:clamp(9px,2.5vw,11px);font-weight:550;line-height:1.15;overflow-wrap:normal;white-space:nowrap;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+  transition:color 180ms ease;
  }
- #nav.vant-bottom-nav button.active{background:transparent;color:#fff;font-weight:750}
- #nav.vant-bottom-nav button.active::after{content:'';position:absolute;bottom:0;width:4px;height:4px;border-radius:50%;background:#d3adff}
- #nav.vant-bottom-nav .vant-tab-icon{display:grid;place-items:center;width:30px;height:29px;background:transparent;color:inherit}
- #nav.vant-bottom-nav svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+ #nav.vant-bottom-nav button.active{background:transparent;color:#fff;font-weight:700}
+ #nav.vant-bottom-nav button.active::after{content:none}
+ #nav.vant-bottom-nav .vant-tab-icon{display:grid;place-items:center;width:28px;height:25px;background:transparent;color:inherit}
+ #nav.vant-bottom-nav svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
  #nav.vant-bottom-nav svg circle{fill:currentColor;stroke:none}
- #nav.vant-bottom-nav .vant-tab-euro{font:600 25px/1 system-ui,sans-serif}
- #nav.vant-bottom-nav .vant-home-tab{font-weight:750}
+ #nav.vant-bottom-nav .vant-tab-euro{font:550 25px/1 system-ui,sans-serif}
+ #nav.vant-bottom-nav .vant-home-tab{font-weight:700;color:#e6daf6}
  #nav.vant-bottom-nav .vant-home-tab .vant-tab-icon{
-  width:46px;height:46px;flex-shrink:0;margin-top:-22px;margin-bottom:1px;border-radius:50%;
-  background:radial-gradient(ellipse at 28% 5%,#ffffff90,transparent 40%),linear-gradient(145deg,#b99cda99,#5c3c8077);
-  border:1px solid #e5d0ffb3;box-shadow:inset 0 1px 2px #fffd,0 3px 10px #10051b50;color:#fff;
-  -webkit-backdrop-filter:blur(15px);backdrop-filter:blur(15px);
+  width:39px;height:39px;flex-shrink:0;margin-top:-13px;margin-bottom:0;border-radius:50%;
+  background:linear-gradient(150deg,#a07bd5,#7651ad);
+  border:1px solid #dbc2fb66;box-shadow:inset 0 1px 0 #ffffff40,0 3px 8px #10051b30;color:#fff;
  }
- #nav.vant-bottom-nav .vant-home-tab svg{width:27px;height:27px}
+ #nav.vant-bottom-nav .vant-home-tab svg{width:23px;height:23px}
  #nav.vant-bottom-nav .vant-home-tab svg path{fill:currentColor;stroke:none}
- #nav.vant-bottom-nav .vant-home-tab.active .vant-tab-icon{box-shadow:inset 0 1px 2px #fff,0 0 10px #bd85ff70}
  #nav.vant-bottom-nav button:focus-visible{outline:2px solid #e4c5ff;outline-offset:2px}
  #vant-nav-hint{display:none!important}
 }
-@media(prefers-reduced-motion:no-preference){
- #nav.vant-liquid-moving::before{animation:vant-water-glint .42s ease-out}
- @keyframes vant-water-glint{40%{border-radius:40% 45% 45% 40%;filter:brightness(1.25)}}
-}
-@media(prefers-reduced-motion:reduce){#nav.vant-bottom-nav::before{transition:none}}
+@media(prefers-reduced-motion:reduce){#nav.vant-bottom-nav::before,#nav.vant-bottom-nav button{transition:none}}
 @media print{#nav.vant-bottom-nav{display:none!important}}
 </style>
 
