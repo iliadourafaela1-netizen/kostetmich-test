@@ -742,7 +742,7 @@ return `
  <div id="simresult" aria-live="polite"></div>
  <p class="muted">Modellrechnung mit deinen eingetragenen Raten und Zinsen. Gebühren und besondere Vereinbarungen können die tatsächliche Dauer verändern.</p></div></dialog>`;
 
- return outstanding+form+sim;
+ return sim+outstanding+form;
 }
 function openDebtSheet(){
  const sheet=document.getElementById('vant-debt-sheet');
