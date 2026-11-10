@@ -732,8 +732,12 @@ return `
  <div class="vant-debt-sheet-content"><div class="vant-debt-grip" aria-hidden="true"></div>
  <div class="vant-debt-sheet-heading"><h2 id="vant-sim-title">Schneller schuldenfrei?</h2><button type="button" class="secondary" aria-label="Schließen" onclick="this.closest('dialog').close()">×</button></div>
  <form class="saving-create" onsubmit="event.preventDefault();simulate()">
- <label for="extra">Wie viel könntest du monatlich zusätzlich zahlen?</label>
+ <label for="vant-sim-debt">Welche Forderung möchtest du prüfen?</label>
+ <select id="vant-sim-debt" onchange="updateSimulationChoice()"><option value="all">Alle offenen Forderungen</option>${state.debts.map((debt,index)=>num(debt.balance)>0?`<option value="${index}">${esc(debt.name)} · ${money(debt.balance)} offen</option>`:'').join('')}</select>
+ <p id="vant-sim-current" class="muted"></p>
+ <label id="vant-sim-rate-label" for="extra">Zusätzlich pro Monat (€)</label>
  <input id="extra" type="number" inputmode="decimal" min="0" step="0.01" value="20" required>
+ <div class="vant-sim-presets" aria-label="Betrag auswählen">${[30,50,100].map(amount=>`<button type="button" class="secondary" onclick="document.getElementById('extra').value=${amount};document.getElementById('simresult').replaceChildren()">${amount} €</button>`).join('')}</div>
  <button class="saving-create-submit" type="submit">Berechnen</button></form>
  <div id="simresult" aria-live="polite"></div>
  <p class="muted">Modellrechnung mit deinen eingetragenen Raten und Zinsen. Gebühren und besondere Vereinbarungen können die tatsächliche Dauer verändern.</p></div></dialog>`;
@@ -745,23 +749,34 @@ function openDebtSheet(){
  if(!sheet)return;
  sheet.showModal();
 }
-function addDebt(e){e.preventDefault();state.debts.push({id:id(),name:$('dname').value.trim(),balance:num($('dbalance').value),originalBalance:num($('dbalance').value),payment:num($('dpayment').value),apr:num($('dapr').value),day:$('dday').value?Math.min(31,Math.max(1,+$('dday').value)):null});save();render()}function delDebt(x){if(confirm(tr('Schuld löschen?'))){state.debts=state.debts.filter(d=>d.id!==x);save();render()}}function payDebt(x){let d=state.debts.find(d=>d.id===x);let raw=prompt(tr('Wie viel wurde auf die offene Forderung angerechnet? Bitte anhand der Abrechnung prüfen.'),String(d.payment));if(raw===null)return;let n=Number(raw.replace(',','.'));if(!Number.isFinite(n)||n<0)return alert(tr('Bitte gültigen Betrag eingeben.'));d.balance=Math.max(0,d.balance-n);save();render()}function simulate(){
+function addDebt(e){e.preventDefault();state.debts.push({id:id(),name:$('dname').value.trim(),balance:num($('dbalance').value),originalBalance:num($('dbalance').value),payment:num($('dpayment').value),apr:num($('dapr').value),day:$('dday').value?Math.min(31,Math.max(1,+$('dday').value)):null});save();render()}function delDebt(x){if(confirm(tr('Schuld löschen?'))){state.debts=state.debts.filter(d=>d.id!==x);save();render()}}function payDebt(x){let d=state.debts.find(d=>d.id===x);let raw=prompt(tr('Wie viel wurde auf die offene Forderung angerechnet? Bitte anhand der Abrechnung prüfen.'),String(d.payment));if(raw===null)return;let n=Number(raw.replace(',','.'));if(!Number.isFinite(n)||n<0)return alert(tr('Bitte gültigen Betrag eingeben.'));d.balance=Math.max(0,d.balance-n);save();render()}function updateSimulationChoice(){
+ const choice=$('vant-sim-debt').value;
+ const debt=choice==='all'?null:state.debts[Number(choice)];
+ $('vant-sim-rate-label').textContent=debt?'Gewünschte Monatsrate (€)':'Zusätzlich pro Monat (€)';
+ $('vant-sim-current').textContent=debt?'Aktuelle Monatsrate: '+money(debt.payment):'Der Zusatzbetrag wird gleichmäßig auf offene Forderungen verteilt.';
+ $('extra').value=debt?num(debt.payment):20;
+ $('simresult').replaceChildren();
+}
+function simulate(){
  const extra=Number($('extra').value);
  if(!Number.isFinite(extra)||extra<0)return;
- const debts=state.debts.filter(debt=>num(debt.balance)>0);
+ const choice=$('vant-sim-debt').value;
+ const selected=choice==='all'?null:state.debts[Number(choice)];
+ const debts=selected?[selected]:state.debts.filter(debt=>num(debt.balance)>0);
  const result=$('simresult');
  if(!debts.length){result.innerHTML='<p class="muted">Du hast aktuell keine offenen Forderungen eingetragen.</p>';return}
  const baseline=debts.map(debt=>debtEstimate(debt));
- const improved=debts.map(debt=>debtEstimate(debt,extra/debts.length));
+ const improved=debts.map(debt=>selected?debtEstimate({...debt,payment:extra}):debtEstimate(debt,extra/debts.length));
  const duration=estimates=>estimates.some(estimate=>!estimate)?null:Math.max(...estimates.map(estimate=>estimate.months));
  const before=duration(baseline),after=duration(improved);
  const format=months=>months===null?'Nicht berechenbar':'ca. '+months+' '+(months===1?'Monat':'Monate');
  let message;
  if(after===null)message='Mindestens eine Rate reicht im Modell nicht aus oder die Rückzahlung dauert länger als 100 Jahre.';
- else if(before===null)message='Mit dem zusätzlichen Betrag wären die eingetragenen Forderungen im Modell in etwa '+after+' Monaten abbezahlt.';
+ else if(before===null)message='Mit dem gewählten Betrag wären die ausgewählten Forderungen im Modell in etwa '+after+' Monaten abbezahlt.';
+ else if(before<after)message='Etwa '+(after-before)+' Monate länger bis zur Rückzahlung';
  else if(before>after)message='Etwa '+(before-after)+' '+(before-after===1?'Monat':'Monate')+' früher fertig';
  else message='Bei diesem Betrag bleibt die geschätzte Anzahl der Monate gleich.';
- result.innerHTML=`<div class="vant-sim-result"><div class="vant-payment-line"><span>Aktuelle Rate</span><b>${format(before)}</b></div><div class="vant-payment-line"><span>Mit ${money(extra)} zusätzlich</span><b>${format(after)}</b></div><p class="${after===null?'muted':'good'}"><strong>${message}</strong></p></div><p class="muted">Der Zusatzbetrag wird gleichmäßig auf ${debts.length} offene Forderung(en) verteilt. Frei werdende Raten werden nicht weiterverteilt.</p>`;
+ result.innerHTML=`<div class="vant-sim-result"><div class="vant-payment-line"><span>Aktuelle Rate</span><b>${format(before)}</b></div><div class="vant-payment-line"><span>${selected?'Gewünschte Rate: '+money(extra):'Mit '+money(extra)+' zusätzlich'}</span><b>${format(after)}</b></div><p class="${after===null||(before!==null&&after>before)?'muted':'good'}"><strong>${message}</strong></p></div><p class="muted">${selected?'Berechnung für '+esc(selected.name)+'.':'Der Zusatzbetrag wird gleichmäßig auf '+debts.length+' offene Forderung(en) verteilt. Frei werdende Raten werden nicht weiterverteilt.'}</p>`;
 }
 
 function monthDay(y,m,day){return new Date(y,m,Math.min(day,new Date(y,m+1,0).getDate()))}function calendarPayments(){const dates=[];for(let e of state.entries){if(e.day&&e.cycle==='monthly')dates.push({day:e.day,label:e.name,amount:monthly(e),type:e.type});}for(let d of state.debts)if(d.day)dates.push({day:d.day,label:d.name+' (Rate)',amount:num(d.payment),type:'expense'});dates.sort((a,b)=>a.day-b.day);return dates}
@@ -2020,6 +2035,10 @@ html[data-km-dark="true"] .vant-nav-hint{color:#d3bcef}
 .vant-sim-result .vant-payment-line{align-items:baseline}
 .vant-sim-result b{text-align:right;white-space:normal}
 #vant-sim-sheet input{width:100%;box-sizing:border-box}
+
+.vant-sim-presets{display:flex;gap:8px;flex-wrap:wrap}
+.vant-sim-presets button{flex:1;min-height:44px;margin:0}
+#vant-sim-sheet select{width:100%;box-sizing:border-box;background:#170f27;color:#fff;border-color:#8463a3}
 </style>
 
 
