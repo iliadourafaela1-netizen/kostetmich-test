@@ -204,6 +204,38 @@ function vantGoBack(){
  tab=vantPageStack.length?vantPageStack.pop():'dashboard';
  render();window.scrollTo({top:0,behavior:'smooth'});
 }
+function renderBottomNavigation(){
+ const nav=document.getElementById('nav');
+ const labels=({
+  de:['Einnahmen','Alltag','Startseite','Schulden','Mehr'],
+  en:['Income','Daily','Home','Debts','More'],
+  el:['Έσοδα','Καθημερινά','Αρχική','Οφειλές','Περισσότερα'],
+  tr:['Gelir','Günlük','Ana sayfa','Borçlar','Diğer']
+ })[lang]||['Income','Daily','Home','Debts','More'];
+ const targets=['entries','daily','dashboard','debts','km-menu'];
+ const icons=[
+  '<span class="vant-tab-euro">€</span>',
+  '<svg viewBox="0 0 24 24"><path d="M4 6h16v14H4z M4 6l12-3v3 M16 12h4v4h-4z"/></svg>',
+  '<svg viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M2 10L12 2l10 8v11h-7v-7H9v7H2z"/></svg>',
+  '<svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v5c0 4 16 4 16 0V5M4 10v5c0 4 16 4 16 0v-5M4 15v4c0 4 16 4 16 0v-4"/></svg>',
+  '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="4" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="20" cy="12" r="2"/></svg>'
+ ];
+ const current=targets.includes(tab)?targets.indexOf(tab):4;
+ const previous=nav.dataset.activeIndex;
+ nav.classList.add('vant-bottom-nav');
+ nav.setAttribute('role','navigation');
+ nav.style.display='';
+ nav.setAttribute('aria-label',({de:'Hauptnavigation',en:'Main navigation',el:'Κύρια πλοήγηση',tr:'Ana gezinme'})[lang]||'Main navigation');
+ nav.innerHTML=targets.map((target,index)=>`<button type="button" class="${index===current?'active':''} ${index===2?'vant-home-tab':''}" ${index===current?'aria-current="page"':''} onclick="setTab('${target}')"><span class="vant-tab-icon" aria-hidden="true">${icons[index]}</span><span>${esc(labels[index])}</span></button>`).join('');
+ nav.style.setProperty('--active-tab',current);
+ nav.dataset.activeIndex=current;
+ if(previous!==undefined&&Number(previous)!==current){
+  nav.classList.remove('vant-liquid-moving');
+  void nav.offsetWidth;
+  nav.classList.add('vant-liquid-moving');
+ }
+ const hint=document.getElementById('vant-nav-hint');if(hint)hint.hidden=true;
+}
 function render(){
  for(const sheetId of ['vant-debt-sheet','vant-sim-sheet']){
   const sheet=document.getElementById(sheetId);if(sheet?.open)sheet.close();
@@ -220,35 +252,7 @@ function render(){
   const subTitle=document.getElementById('vant-page-title');
   const titles={calendar:'Kalender',savings:'Sparziele',entries:'Einnahmen & feste Ausgaben',daily:'Meine Ausgaben',debts:'Schulden',forecast:'12 Monate','forecast-year':'Alle 12 Monate',analysis:analysisT('title'),check:'Kaufcheck',brake:'Finanzielle Notbremse',notifications:'Benachrichtigungen',settings:'Einstellungen','km-menu':'Menü','km-profile':'Profil','km-preferences':'Einstellungen','km-legal':'Rechtliches'};
   if(subTitle)subTitle.textContent=titles[tab]||'VANT';
- document.getElementById('nav').style.display=inMenu?'none':'';
- const navHint=document.getElementById('vant-nav-hint');
- navHint.hidden=inMenu;
- navHint.textContent=({de:'↔ Weitere Tabs durch Wischen',en:'↔ Swipe for more tabs',el:'↔ Σύρε για περισσότερες καρτέλες',tr:'↔ Diğer sekmeler için kaydır'})[lang]||'↔ Swipe for more tabs';
- const tabIcons={
-  dashboard:'M3 10l9-7 9 7v10h-6v-6H9v6H3z',
-  daily:'M4 6h16v13H4z M4 6l12-3v3 M16 12h4v4h-4z',
-  debts:'M3 5l7 7 4-4 7 8m-5 0h5v-5',
-  forecast:'M4 6h16v14H4z M4 10h16 M8 3v5m8-5v5',
-  check:'M4 8h16l1 12H3z M8 9V7a4 4 0 018 0v2'
- };
- const nav=document.getElementById('nav');
- nav.innerHTML=tabs.map(([key,title])=>{
-  const selected=key===tab||(key==='forecast'&&tab==='forecast-year');
-  const label=title.slice(title.indexOf(' ')+1);
-  const tabLabels={
-   entries:{de:'Einnahmen & Fixkosten',en:'Income & fixed costs',el:'Έσοδα & πάγια',tr:'Gelir ve sabit giderler'},
-   daily:{de:'Alltagsausgaben',en:'Daily spending',el:'Καθημερινά έξοδα',tr:'Günlük harcamalar'},
-   forecast:{de:'Jahresvorschau',en:'12-month outlook',el:'Πρόβλεψη 12 μηνών',tr:'12 aylık tahmin'}
-  };
-  const shortLabel=tabLabels[key]?.[lang]||tr(label);
-  return `<button type="button" class="${selected?'active':'secondary'}" ${selected?'aria-current="page"':''} aria-label="${esc(tr(label))}" onclick="setTab('${key}')"><span class="vant-tab-icon" aria-hidden="true">${key==='entries'?'<span class="vant-tab-euro">€</span>':`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="${tabIcons[key]}"/></svg>`}</span><span>${key==='entries'&&lang==='de'?'Einnahmen<br>&amp; Fixkosten':esc(shortLabel)}</span></button>`;
- }).join('');
- const activeTab=nav.querySelector('.active');
- if(activeTab&&nav.clientWidth&&activeTab.offsetLeft+activeTab.offsetWidth>nav.scrollLeft+nav.clientWidth){
-  nav.scrollLeft=activeTab.offsetLeft+activeTab.offsetWidth-nav.clientWidth+6;
- }else if(activeTab&&activeTab.offsetLeft<nav.scrollLeft){
-  nav.scrollLeft=Math.max(0,activeTab.offsetLeft-6);
- }
+ renderBottomNavigation();
  let pages={dashboard:dashboard,entries:entries,daily:dailyExpensesPage,debts:debts,calendar:calendar,forecast:forecast,'forecast-year':forecastYear,analysis:vantAnalysis,check:check,brake:brake,savings:savings,notifications:notifications,settings:settings,'km-menu':kmMenuPage,'km-profile':kmProfilePage,'km-preferences':kmPreferencesPage,'km-legal':kmLegalPage};
  const adminActions=$('vant-settings-admin-actions');
  if(adminActions)document.body.append(...adminActions.children);
@@ -1018,7 +1022,7 @@ const VANT_SETTINGS_I18N={
  tr:{hero:'Ayarlar',sub:'VANT. uygulamasını kendine göre ayarla.',account:'Hesap ve uygulama',app:'Uygulama ayarları',security:'Güvenlik ve yasal',admin:'Yönetim',adminHint:'Yalnızca yetkili yöneticiler için',profileHint:'Hesabını yönet',noticeHint:'Hatırlatmalar ve anlık bildirimler',prefHint:'Görünüm, dil ve diğer seçenekler',privacyHint:'Verilerin ve güvenliğin',legalHint:'Yasal bilgiler'}
 };
 function vantSettingsT(key){return (VANT_SETTINGS_I18N[lang]||VANT_SETTINGS_I18N.de)[key]}
-function kmMenuPage(){const t=vantSettingsT;return `<div class="vant-settings-page"><div class="vant-settings-hero"><span class="vant-settings-hero-icon" aria-hidden="true">⚙</span><h2>${t('hero')}</h2><p>${t('sub')}</p></div><section class="vant-settings-group"><h3>👤 ${t('account')}</h3><div class="vant-settings-list">${kmMenuItem('👤',kmT('profile'),t('profileHint'),'km-profile')}${kmMenuItem('🔔',kmT('notice'),t('noticeHint'),'notifications')}</div></section><section class="vant-settings-group"><h3>☷ ${t('app')}</h3><div class="vant-settings-list">${kmMenuItem('⚙️',kmT('pref'),t('prefHint'),'km-preferences')}</div></section><section class="vant-settings-group"><h3>🛡 ${t('security')}</h3><div class="vant-settings-list">${kmMenuItem('🔒',kmT('privacy'),t('privacyHint'),'settings')}${kmMenuItem('⚖️',kmT('legal'),t('legalHint'),'km-legal')}</div></section><button class="km-logout vant-settings-logout" type="button" onclick="kmLogout()">↪ ${kmT('logout')}</button><section id="vant-settings-admin" class="vant-settings-group" hidden><h3>👥 ${t('admin')}</h3><p class="vant-settings-admin-hint">${t('adminHint')}</p><div id="vant-settings-admin-actions"></div></section></div>`}
+function kmMenuPage(){const t=vantSettingsT;return `<div class="vant-settings-page"><div class="vant-settings-hero"><span class="vant-settings-hero-icon" aria-hidden="true">⚙</span><h2>${t('hero')}</h2><p>${t('sub')}</p></div><section class="vant-settings-group"><h3>${({de:'Weitere Funktionen',en:'More features',el:'Περισσότερες λειτουργίες',tr:'Diğer özellikler'})[lang]||'More features'}</h3><div class="vant-settings-list">${kmMenuItem('▦',tr('Kalender'),'','calendar')}${kmMenuItem('◎',sw('title'),'','savings')}${kmMenuItem('▤',tr('Jahresvorschau'),'','forecast')}${kmMenuItem('♧',tr('Kaufcheck'),'','check')}${kmMenuItem('⏸',brakeT('title'),'','brake')}</div></section><section class="vant-settings-group"><h3>👤 ${t('account')}</h3><div class="vant-settings-list">${kmMenuItem('👤',kmT('profile'),t('profileHint'),'km-profile')}${kmMenuItem('🔔',kmT('notice'),t('noticeHint'),'notifications')}</div></section><section class="vant-settings-group"><h3>☷ ${t('app')}</h3><div class="vant-settings-list">${kmMenuItem('⚙️',kmT('pref'),t('prefHint'),'km-preferences')}</div></section><section class="vant-settings-group"><h3>🛡 ${t('security')}</h3><div class="vant-settings-list">${kmMenuItem('🔒',kmT('privacy'),t('privacyHint'),'settings')}${kmMenuItem('⚖️',kmT('legal'),t('legalHint'),'km-legal')}</div></section><button class="km-logout vant-settings-logout" type="button" onclick="kmLogout()">↪ ${kmT('logout')}</button><section id="vant-settings-admin" class="vant-settings-group" hidden><h3>👥 ${t('admin')}</h3><p class="vant-settings-admin-hint">${t('adminHint')}</p><div id="vant-settings-admin-actions"></div></section></div>`}
 let adminControlsCheck=0;
 function vantPlaceAdminControls(){
  const area=document.getElementById('vant-settings-admin'),actions=document.getElementById('vant-settings-admin-actions');
@@ -2039,6 +2043,60 @@ html[data-km-dark="true"] .vant-nav-hint{color:#d3bcef}
 .vant-sim-presets{display:flex;gap:8px;flex-wrap:wrap}
 .vant-sim-presets button{flex:1;min-height:44px;margin:0}
 #vant-sim-sheet select{width:100%;box-sizing:border-box;background:#170f27;color:#fff;border-color:#8463a3}
+
+/* Floating glass navigation. */
+@media screen{
+ #km-main{padding-bottom:calc(104px + env(safe-area-inset-bottom,0px))}
+ #nav.vant-bottom-nav{
+  position:fixed;z-index:1000;left:50%;bottom:calc(10px + env(safe-area-inset-bottom,0px));
+  transform:translateX(-50%);width:min(calc(100% - 20px),560px);box-sizing:border-box;
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;overflow:visible;
+  padding:6px;margin:0;border:1px solid #fff7;border-radius:38px;
+  background:linear-gradient(150deg,#b6a0cb40,#392c493d 48%,#8c759f3d),#21172cda;
+  -webkit-backdrop-filter:blur(24px) saturate(150%);backdrop-filter:blur(24px) saturate(150%);
+  box-shadow:inset 0 1px 1px #ffffff80,inset 0 -1px 2px #ffffff30,0 10px 30px #0007;
+ }
+ @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  #nav.vant-bottom-nav{background:linear-gradient(150deg,#b6a0cb40,#392c4970 48%,#8c759f45)}
+ }
+ #nav.vant-bottom-nav::before{
+  content:'';position:absolute;pointer-events:none;left:6px;top:6px;bottom:6px;width:calc((100% - 12px)/5);
+  border-radius:30px;box-sizing:border-box;
+  transform:translateX(calc(var(--active-tab,2)*100%));
+  background:radial-gradient(ellipse at 20% 0%,#ffffff70,transparent 48%),linear-gradient(135deg,#ddc6f24d,#ffffff0d);
+  border:1px solid #ffffff70;box-shadow:inset 0 1px 2px #fffc,inset 0 -1px 3px #ffffff40,0 2px 8px #08011240;
+  transition:transform .42s cubic-bezier(.22,.85,.27,1.1);
+ }
+ #nav.vant-bottom-nav button{
+  position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  min-width:0;min-height:58px;height:58px;padding:3px 0;margin:0;border:0;border-radius:28px;background:transparent;
+  color:#e9e1f3;font-size:clamp(9px,2.5vw,12px);font-weight:500;line-height:1.15;overflow-wrap:normal;white-space:nowrap;
+ }
+ #nav.vant-bottom-nav button.active{background:transparent;color:#fff;font-weight:750}
+ #nav.vant-bottom-nav button.active::after{content:'';position:absolute;bottom:0;width:4px;height:4px;border-radius:50%;background:#d3adff}
+ #nav.vant-bottom-nav .vant-tab-icon{display:grid;place-items:center;width:30px;height:29px;background:transparent;color:inherit}
+ #nav.vant-bottom-nav svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+ #nav.vant-bottom-nav svg circle{fill:currentColor;stroke:none}
+ #nav.vant-bottom-nav .vant-tab-euro{font:600 25px/1 system-ui,sans-serif}
+ #nav.vant-bottom-nav .vant-home-tab{font-weight:750}
+ #nav.vant-bottom-nav .vant-home-tab .vant-tab-icon{
+  width:46px;height:46px;flex-shrink:0;margin-top:-22px;margin-bottom:1px;border-radius:50%;
+  background:radial-gradient(ellipse at 28% 5%,#ffffff90,transparent 40%),linear-gradient(145deg,#b99cda99,#5c3c8077);
+  border:1px solid #e5d0ffb3;box-shadow:inset 0 1px 2px #fffd,0 3px 10px #10051b50;color:#fff;
+  -webkit-backdrop-filter:blur(15px);backdrop-filter:blur(15px);
+ }
+ #nav.vant-bottom-nav .vant-home-tab svg{width:27px;height:27px}
+ #nav.vant-bottom-nav .vant-home-tab svg path{fill:currentColor;stroke:none}
+ #nav.vant-bottom-nav .vant-home-tab.active .vant-tab-icon{box-shadow:inset 0 1px 2px #fff,0 0 10px #bd85ff70}
+ #nav.vant-bottom-nav button:focus-visible{outline:2px solid #e4c5ff;outline-offset:2px}
+ #vant-nav-hint{display:none!important}
+}
+@media(prefers-reduced-motion:no-preference){
+ #nav.vant-liquid-moving::before{animation:vant-water-glint .42s ease-out}
+ @keyframes vant-water-glint{40%{border-radius:40% 45% 45% 40%;filter:brightness(1.25)}}
+}
+@media(prefers-reduced-motion:reduce){#nav.vant-bottom-nav::before{transition:none}}
+@media print{#nav.vant-bottom-nav{display:none!important}}
 </style>
 
 
