@@ -238,7 +238,7 @@ function renderBottomNavigation(){
  const hint=document.getElementById('vant-nav-hint');if(hint)hint.hidden=true;
 }
 function render(){
- for(const sheetId of ['vant-debt-sheet','vant-sim-sheet']){
+ for(const sheetId of ['vant-debt-sheet','vant-sim-sheet','vant-debt-detail']){
   const sheet=document.getElementById(sheetId);if(sheet?.open)sheet.close();
  }
  const menuPages=['km-menu','km-profile','km-preferences','km-legal','settings','notifications'];
@@ -674,64 +674,12 @@ function debts(){
   <button class="saving-create-submit" type="submit">Schuld hinzufügen</button>
  </form></div></dialog>`;
  
-const rows = state.debts.length
-  ? state.debts.map(d => {
-      const q = debtEstimate(d);
-      const rest = Math.max(0, num(d.balance));
-      const rate = Math.max(0, num(d.payment));
-      const original = Math.max(0, num(d.originalBalance || d.balance));
-const progress = original > 0
-  ? Math.min(100, Math.max(0, Math.round(((original - rest) / original) * 100)))
-  : 0;
-const paid = Math.max(0, original - rest);
-     
-return `
-  <div class="card" style="margin:16px 0;padding:24px;border-radius:28px;background:#f8f5ff;border:1px solid #e9e0f5">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:18px">
-      <strong style="color:#302448;font-size:15px">MEINE SCHULDEN</strong>
-      <span style="background:#eae5f0;padding:6px 12px;border-radius:20px;font-size:13px">${esc(d.name)}</span>
-    </div>
-
-    <div style="background:white;border-radius:24px;padding:22px">
-      <small style="color:#82758f">Noch offener Betrag</small>
-      <h2 style="font-size:clamp(28px,7vw,38px);color:#302448;margin:12px 0 24px">${money(rest)}</h2>
-
-      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
-        <strong style="color:#7652d4">${progress}% zurückgezahlt</strong>
-        <span style="color:#82758f">${money(paid)} von ${money(original)}</span>
-      </div>
-
-      <div style="background:#eeeaf7;height:12px;border-radius:20px;margin:14px 0 26px;overflow:hidden">
-        <div style="width:${progress}%;height:100%;border-radius:20px;background:linear-gradient(90deg,#9b6dff,#7652d4)"></div>
-      </div>
-
-      <div style="border-top:1px solid #eee;padding-top:22px;display:grid;grid-template-columns:1fr 1fr;gap:16px">
-        <div>
-          <small style="color:#82758f">Monatliche Rate</small>
-          <h3 style="color:#302448;margin:10px 0">${money(rate)}</h3>
-        </div>
-        <div>
-          <small style="color:#82758f">Voraussichtlich</small>
-          <h3 style="color:#302448;margin:10px 0">${q ? q.months + " Monate" : "Nicht berechenbar"}</h3>
-        </div>
-      </div>
-
-      <button onclick="payDebt('${d.id}')" style="width:100%;background:#7652d4;color:white;border:0;border-radius:16px;padding:17px;margin-top:20px;font-size:16px;font-weight:700">
-        💶 Zahlung verbuchen
-      </button>
-
-      <button onclick="delDebt('${d.id}')" style="width:100%;background:transparent;color:#b84b65;border:0;padding:16px;margin-top:8px;font-size:15px">
-        🗑 Forderung löschen
-      </button>
-    </div>
-  </div>
-`;
-
-      
-    }).join("")
-  : '<p class="muted">Noch keine Schulden eingetragen.</p>';
-
- const outstanding=shell('Offene Forderungen',rows+`<p class="muted">Schätzungen setzen gleichbleibende Raten und Zinssätze voraus. Inkasso-Gebühren und besondere Vereinbarungen sind nicht automatisch berücksichtigt. Eine verbuchte Zahlung reduziert nur den eingegebenen offenen Betrag.</p>`);
+ const rows=state.debts.length?state.debts.map((d,index)=>{
+  const stats=vantDebtStats(d),t=vantDebtCopy();
+  return `<article class="vant-debt-compact"><div class="vant-debt-compact-top"><h3>${esc(d.name)}</h3><div><strong>${money(stats.rest)}</strong><small>${esc(t.open)}</small></div></div><div class="vant-debt-compact-bottom"><span>${money(stats.rate)} ${esc(t.perMonth)}</span><button type="button" onclick="openDebtDetails(${index})" aria-label="${esc(t.more+': '+d.name)}">${esc(t.more)} <span aria-hidden="true">›</span></button></div></article>`;
+ }).join(''):`<p class="muted">${esc(vantDebtCopy().empty)}</p>`;
+ const outstanding=`<section class="vant-debt-overview"><div class="vant-debt-overview-heading"><h2>${esc(vantDebtCopy().claims)}</h2><small>${state.debts.length}</small></div><div class="vant-debt-compact-list">${rows}</div></section>`;
+ const detail=`<dialog id="vant-debt-detail" aria-labelledby="vant-debt-detail-title" onclick="if(event.target===this)this.close()"><div id="vant-debt-detail-content" class="vant-debt-sheet-content"></div></dialog>`;
  const sim=`<button type="button" class="secondary vant-sim-open" onclick="document.getElementById('vant-sim-sheet').showModal()">→ Schneller schuldenfrei?</button>
  <dialog id="vant-sim-sheet" class="vant-bottom-sheet" aria-labelledby="vant-sim-title" onclick="if(event.target===this)this.close()">
  <div class="vant-debt-sheet-content"><div class="vant-debt-grip" aria-hidden="true"></div>
@@ -747,7 +695,32 @@ return `
  <div id="simresult" aria-live="polite"></div>
  <p class="muted">Modellrechnung mit deinen eingetragenen Raten und Zinsen. Gebühren und besondere Vereinbarungen können die tatsächliche Dauer verändern.</p></div></dialog>`;
 
- return sim+outstanding+form;
+ return sim+outstanding+form+detail;
+}
+let vantSelectedDebtId=null;
+function vantDebtCopy(){return ({
+ de:{open:'offen',perMonth:'/ Monat',more:'Weitere Infos',empty:'Noch keine Schulden eingetragen.',claims:'Deine Forderungen',close:'Schließen',paid:'zurückgezahlt',of:'von',rate:'Monatsrate',estimate:'Voraussichtlich',months:'Monate',unknown:'Nicht berechenbar',day:'Zahlungstag',apr:'Jahreszins',pay:'Zahlung verbuchen',remove:'Forderung löschen',note:'Schätzung bei gleichbleibenden Raten und Zinsen. Gebühren und besondere Vereinbarungen sind nicht automatisch berücksichtigt. Eine verbuchte Zahlung reduziert nur den eingetragenen offenen Betrag.'},
+ en:{open:'outstanding',perMonth:'/ month',more:'More details',empty:'No debts recorded yet.',claims:'Your debts',close:'Close',paid:'repaid',of:'of',rate:'Monthly payment',estimate:'Estimated duration',months:'months',unknown:'Cannot be calculated',day:'Payment day',apr:'Annual interest',pay:'Record payment',remove:'Delete debt',note:'Estimate based on unchanged payments and interest. Fees and special agreements are not automatically included. Recording a payment only reduces the entered balance.'},
+ el:{open:'υπόλοιπο',perMonth:'/ μήνα',more:'Πληροφορίες',empty:'Δεν έχουν καταχωριστεί οφειλές.',claims:'Οι οφειλές σου',close:'Κλείσιμο',paid:'αποπληρώθηκε',of:'από',rate:'Μηνιαία δόση',estimate:'Εκτιμώμενη διάρκεια',months:'μήνες',unknown:'Δεν υπολογίζεται',day:'Ημέρα πληρωμής',apr:'Ετήσιος τόκος',pay:'Καταχώριση πληρωμής',remove:'Διαγραφή οφειλής',note:'Εκτίμηση με σταθερές δόσεις και τόκους. Προμήθειες και ειδικές συμφωνίες δεν περιλαμβάνονται αυτόματα. Η καταχώριση πληρωμής μειώνει μόνο το καταχωρισμένο υπόλοιπο.'},
+ tr:{open:'kalan',perMonth:'/ ay',more:'Ayrıntılar',empty:'Henüz borç eklenmedi.',claims:'Borçların',close:'Kapat',paid:'ödendi',of:'/',rate:'Aylık taksit',estimate:'Tahmini süre',months:'ay',unknown:'Hesaplanamıyor',day:'Ödeme günü',apr:'Yıllık faiz',pay:'Ödeme kaydet',remove:'Borcu sil',note:'Sabit taksit ve faiz üzerinden tahmin. Ücretler ve özel anlaşmalar otomatik olarak dahil edilmez. Ödeme kaydı yalnızca girilen bakiyeyi azaltır.'}
+ })[lang]||vantDebtCopyGerman();}
+function vantDebtCopyGerman(){return {open:'offen',perMonth:'/ Monat',more:'Weitere Infos',empty:'Noch keine Schulden eingetragen.',claims:'Deine Forderungen',close:'Schließen',paid:'zurückgezahlt',of:'von',rate:'Monatsrate',estimate:'Voraussichtlich',months:'Monate',unknown:'Nicht berechenbar',day:'Zahlungstag',apr:'Jahreszins',pay:'Zahlung verbuchen',remove:'Forderung löschen',note:'Schätzung bei gleichbleibenden Raten und Zinsen.'};}
+function vantDebtStats(d){
+ const rest=Math.max(0,num(d.balance)),rate=Math.max(0,num(d.payment)),original=Math.max(0,num(d.originalBalance||d.balance));
+ return {rest,rate,original,paid:Math.max(0,original-rest),progress:original>0?Math.min(100,Math.max(0,Math.round((original-rest)/original*100))):0};
+}
+function openDebtDetails(index){
+ const d=state.debts[index],sheet=$('vant-debt-detail');if(!d||!sheet)return;
+ vantSelectedDebtId=d.id;
+ const t=vantDebtCopy(),v=vantDebtStats(d),q=debtEstimate(d);
+ $('vant-debt-detail-content').innerHTML=`<div class="vant-debt-grip" aria-hidden="true"></div><div class="vant-debt-sheet-heading"><h2 id="vant-debt-detail-title">${esc(d.name)}</h2><button type="button" class="secondary" aria-label="${esc(t.close)}" onclick="this.closest('dialog').close()">×</button></div><div class="vant-debt-detail-balance"><span>${esc(t.open)}</span><strong>${money(v.rest)}</strong></div><div class="vant-debt-detail-progress-copy"><span>${v.progress}% ${esc(t.paid)}</span><small>${money(v.paid)} ${esc(t.of)} ${money(v.original)}</small></div><div class="vant-debt-detail-progress" role="progressbar" aria-label="${esc(t.paid)}" aria-valuenow="${v.progress}" aria-valuemin="0" aria-valuemax="100"><span style="width:${v.progress}%"></span></div><div class="vant-debt-detail-grid"><div><small>${esc(t.rate)}</small><strong>${money(v.rate)}</strong></div><div><small>${esc(t.estimate)}</small><strong>${q?q.months+' '+esc(t.months):esc(t.unknown)}</strong></div>${d.day?`<div><small>${esc(t.day)}</small><strong>${Number(d.day)}.</strong></div>`:''}${num(d.apr)>0?`<div><small>${esc(t.apr)}</small><strong>${num(d.apr)} %</strong></div>`:''}</div><button type="button" class="vant-debt-detail-pay" onclick="vantPaySelectedDebt()">${esc(t.pay)}</button><button type="button" class="vant-debt-detail-delete" onclick="delDebt(vantSelectedDebtId)">${esc(t.remove)}</button><p class="vant-debt-detail-note">${esc(t.note)}</p>`;
+ if(!sheet.open)sheet.showModal();
+}
+function vantPaySelectedDebt(){
+ const selected=vantSelectedDebtId;if(!state.debts.some(d=>d.id===selected))return;
+ payDebt(selected);
+ const index=state.debts.findIndex(d=>d.id===selected);
+ if(tab==='debts'&&index>=0)openDebtDetails(index);
 }
 function openDebtSheet(){
  const sheet=document.getElementById('vant-debt-sheet');
@@ -2064,6 +2037,34 @@ html[data-km-dark="true"] .vant-nav-hint{color:#d3bcef}
 .vant-sim-presets button{flex:1;min-height:44px;margin:0}
 #vant-sim-sheet select{width:100%;box-sizing:border-box;background:#170f27;color:#fff;border-color:#8463a3}
 
+
+
+/* Compact debt overview; details are opened on demand. */
+.vant-debt-overview{margin:16px 0;padding:0;border:0;background:none;box-shadow:none}
+.vant-debt-overview-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px}
+.vant-debt-overview-heading h2{font-size:21px;margin:0}.vant-debt-overview-heading>small{font-size:13px;color:#b89dca}
+.vant-debt-compact-list{display:grid;gap:9px}
+.vant-debt-compact{padding:13px 15px;border:1px solid #ae8bd142;border-radius:18px;background:linear-gradient(130deg,#ffffff09,#b68ce805);box-shadow:inset 0 1px 0 #ffffff0b}
+.vant-debt-compact-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.vant-debt-compact-top h3{min-width:0;flex:1;margin:0;font-size:16px;line-height:1.3;overflow-wrap:anywhere}
+.vant-debt-compact-top>div{display:flex;gap:5px;align-items:baseline;flex-wrap:wrap;justify-content:flex-end}
+.vant-debt-compact-top strong{font-size:17px;white-space:nowrap}.vant-debt-compact-top small{font-size:11px;color:#a98bbb}
+.vant-debt-compact-bottom{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px;font-size:12px;color:#ac96bb}
+.vant-debt-compact-bottom button{margin:0;min-height:32px;padding:3px 0 3px 8px;border:0;background:none;color:#ae80dc;font-size:12px;font-weight:650;box-shadow:none;white-space:nowrap}
+.vant-debt-compact-bottom button:focus-visible{outline:2px solid #bf97f0;outline-offset:3px}
+html[data-km-dark="true"] .vant-debt-compact{color:#f8f2ff;background:linear-gradient(130deg,#ffffff09,#b68ce805)!important}
+html[data-km-dark="true"] .vant-debt-compact-bottom{color:#c4b7d2}html[data-km-dark="true"] .vant-debt-compact-bottom button{color:#d4adff!important;background:transparent!important}
+#vant-debt-detail{position:fixed;inset:auto 0 0;margin:0 auto;width:min(100%,520px);max-width:100%;max-height:85dvh;padding:0;box-sizing:border-box;border:1px solid #8860ba;border-bottom:0;border-radius:24px 24px 0 0;background:#21182e;color:#f8efff;overflow-y:auto;overscroll-behavior:contain}
+#vant-debt-detail::backdrop{background:#08051199}
+#vant-debt-detail .vant-debt-sheet-heading h2{font-size:24px;overflow-wrap:anywhere}
+.vant-debt-detail-balance{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:22px 0 16px}.vant-debt-detail-balance span{color:#c5afd9;font-size:14px}.vant-debt-detail-balance strong{font-size:27px;overflow-wrap:anywhere}
+.vant-debt-detail-progress-copy{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;font-size:14px}.vant-debt-detail-progress-copy small{font-size:12px;color:#c5afd9}
+.vant-debt-detail-progress{height:7px;background:#ffffff20;border-radius:10px;overflow:hidden;margin:10px 0 21px}.vant-debt-detail-progress>span{display:block;height:100%;background:linear-gradient(90deg,#d6b5ff,#9964dc);border-radius:10px}
+.vant-debt-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:18px 0;border-top:1px solid #ffffff24}.vant-debt-detail-grid small{display:block;color:#c5afd9;font-size:12px}.vant-debt-detail-grid strong{display:block;font-size:18px;margin-top:5px;overflow-wrap:anywhere}
+#vant-debt-detail .vant-debt-detail-pay{width:100%;margin:12px 0 0;padding:14px;border:0;border-radius:14px;background:#b992ef;color:#1b102c;font-size:15px;font-weight:750}
+#vant-debt-detail .vant-debt-detail-delete{width:100%;margin:6px 0 0;padding:12px;background:none;border:0;color:#e09bad;font-size:13px;box-shadow:none}
+.vant-debt-detail-note{font-size:11px;line-height:1.5;color:#b9a7c9;margin:12px 0 0}
+@media(max-width:360px){.vant-debt-compact{padding:10px 12px}.vant-debt-compact-top h3{font-size:15px}.vant-debt-compact-top strong{font-size:16px}}
 
 /* Discover: two compact groups, separate from account settings. */
 .vant-discover-page{max-width:640px;margin:0 auto;padding:12px 2px 20px;color:#f8f3ff}
