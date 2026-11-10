@@ -207,18 +207,18 @@ function vantGoBack(){
 function renderBottomNavigation(){
  const nav=document.getElementById('nav');
  const labels=({
-  de:['Einnahmen','Alltag','Startseite','Schulden','Mehr'],
-  en:['Income','Daily','Home','Debts','More'],
-  el:['Έσοδα','Καθημερινά','Αρχική','Οφειλές','Περισσότερα'],
-  tr:['Gelir','Günlük','Ana sayfa','Borçlar','Diğer']
+  de:['Einnahmen','Alltag','Startseite','Schulden','Entdecken'],
+  en:['Income','Daily','Home','Debts','Explore'],
+  el:['Έσοδα','Καθημερινά','Αρχική','Οφειλές','Εξερεύνηση'],
+  tr:['Gelir','Günlük','Ana sayfa','Borçlar','Keşfet']
  })[lang]||['Income','Daily','Home','Debts','More'];
- const targets=['entries','daily','dashboard','debts','km-menu'];
+ const targets=['entries','daily','dashboard','debts','discover'];
  const icons=[
   '<span class="vant-tab-euro">€</span>',
   '<svg viewBox="0 0 24 24"><path d="M4 6h16v14H4z M4 6l12-3v3 M16 12h4v4h-4z"/></svg>',
   '<svg viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M2 10L12 2l10 8v11h-7v-7H9v7H2z"/></svg>',
   '<svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v5c0 4 16 4 16 0V5M4 10v5c0 4 16 4 16 0v-5M4 15v4c0 4 16 4 16 0v-4"/></svg>',
-  '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="4" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="20" cy="12" r="2"/></svg>'
+  '<svg viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="9" ry="9"/><path d="m16 8-2.5 5.5L8 16l2.5-5.5z"/></svg>'
  ];
  const current=targets.includes(tab)?targets.indexOf(tab):4;
  nav.classList.add('vant-bottom-nav');
@@ -247,14 +247,14 @@ function render(){
   const mainHeader=document.querySelector('#km-main > header');
   if(mainHeader)mainHeader.hidden=!isDashboard;
   const subHeader=document.getElementById('vant-subheader');
-  if(subHeader)subHeader.hidden=isDashboard;
+  if(subHeader)subHeader.hidden=isDashboard||tab==='discover';
   const backButton=document.querySelector('#vant-subheader .vant-back-button');
   if(backButton)backButton.textContent='← '+({de:'Zurück',el:'Πίσω',en:'Back',tr:'Geri'}[lang]||'Zurück');
   const subTitle=document.getElementById('vant-page-title');
-  const titles={calendar:'Kalender',savings:'Sparziele',entries:'Einnahmen & feste Ausgaben',daily:'Meine Ausgaben',debts:'Schulden',forecast:'12 Monate','forecast-year':'Alle 12 Monate',analysis:analysisT('title'),check:'Kaufcheck',brake:'Finanzielle Notbremse',notifications:'Benachrichtigungen',settings:'Einstellungen','km-menu':'Menü','km-profile':'Profil','km-preferences':'Einstellungen','km-legal':'Rechtliches'};
+  const titles={calendar:'Kalender',savings:'Sparziele',entries:'Einnahmen & feste Ausgaben',daily:'Meine Ausgaben',debts:'Schulden',forecast:'12 Monate','forecast-year':'Alle 12 Monate',analysis:analysisT('title'),check:'Kaufcheck',brake:'Finanzielle Notbremse',notifications:'Benachrichtigungen',settings:'Einstellungen',discover:'Entdecken','km-menu':'Einstellungen','km-profile':'Profil','km-preferences':'Einstellungen','km-legal':'Rechtliches'};
   if(subTitle)subTitle.textContent=titles[tab]||'VANT';
  renderBottomNavigation();
- let pages={dashboard:dashboard,entries:entries,daily:dailyExpensesPage,debts:debts,calendar:calendar,forecast:forecast,'forecast-year':forecastYear,analysis:vantAnalysis,check:check,brake:brake,savings:savings,notifications:notifications,settings:settings,'km-menu':kmMenuPage,'km-profile':kmProfilePage,'km-preferences':kmPreferencesPage,'km-legal':kmLegalPage};
+ let pages={dashboard:dashboard,entries:entries,daily:dailyExpensesPage,debts:debts,calendar:calendar,forecast:forecast,'forecast-year':forecastYear,analysis:vantAnalysis,check:check,brake:brake,savings:savings,notifications:notifications,settings:settings,discover:vantDiscoverPage,'km-menu':kmMenuPage,'km-profile':kmProfilePage,'km-preferences':kmPreferencesPage,'km-legal':kmLegalPage};
  const adminActions=$('vant-settings-admin-actions');
  if(adminActions)document.body.append(...adminActions.children);
  $('app').innerHTML=pages[tab]();
@@ -1023,7 +1023,26 @@ const VANT_SETTINGS_I18N={
  tr:{hero:'Ayarlar',sub:'VANT. uygulamasını kendine göre ayarla.',account:'Hesap ve uygulama',app:'Uygulama ayarları',security:'Güvenlik ve yasal',admin:'Yönetim',adminHint:'Yalnızca yetkili yöneticiler için',profileHint:'Hesabını yönet',noticeHint:'Hatırlatmalar ve anlık bildirimler',prefHint:'Görünüm, dil ve diğer seçenekler',privacyHint:'Verilerin ve güvenliğin',legalHint:'Yasal bilgiler'}
 };
 function vantSettingsT(key){return (VANT_SETTINGS_I18N[lang]||VANT_SETTINGS_I18N.de)[key]}
-function kmMenuPage(){const t=vantSettingsT;return `<div class="vant-settings-page"><div class="vant-settings-hero"><span class="vant-settings-hero-icon" aria-hidden="true">⚙</span><h2>${t('hero')}</h2><p>${t('sub')}</p></div><section class="vant-settings-group"><h3>${({de:'Weitere Funktionen',en:'More features',el:'Περισσότερες λειτουργίες',tr:'Diğer özellikler'})[lang]||'More features'}</h3><div class="vant-settings-list">${kmMenuItem('▦',tr('Kalender'),'','calendar')}${kmMenuItem('◎',sw('title'),'','savings')}${kmMenuItem('▤',tr('Jahresvorschau'),'','forecast')}${kmMenuItem('♧',tr('Kaufcheck'),'','check')}${kmMenuItem('⏸',brakeT('title'),'','brake')}</div></section><section class="vant-settings-group"><h3>👤 ${t('account')}</h3><div class="vant-settings-list">${kmMenuItem('👤',kmT('profile'),t('profileHint'),'km-profile')}${kmMenuItem('🔔',kmT('notice'),t('noticeHint'),'notifications')}</div></section><section class="vant-settings-group"><h3>☷ ${t('app')}</h3><div class="vant-settings-list">${kmMenuItem('⚙️',kmT('pref'),t('prefHint'),'km-preferences')}</div></section><section class="vant-settings-group"><h3>🛡 ${t('security')}</h3><div class="vant-settings-list">${kmMenuItem('🔒',kmT('privacy'),t('privacyHint'),'settings')}${kmMenuItem('⚖️',kmT('legal'),t('legalHint'),'km-legal')}</div></section><button class="km-logout vant-settings-logout" type="button" onclick="kmLogout()">↪ ${kmT('logout')}</button><section id="vant-settings-admin" class="vant-settings-group" hidden><h3>👥 ${t('admin')}</h3><p class="vant-settings-admin-hint">${t('adminHint')}</p><div id="vant-settings-admin-actions"></div></section></div>`}
+const VANT_DISCOVER_I18N={
+ de:{title:'Entdecken',sub:'Mehr Möglichkeiten für dein Geld.',plan:'Planen & sparen',act:'Entscheiden & handeln',settings:'Einstellungen',items:[['Kalender','Zahlungen im Blick'],['Sparziele','Wünsche Schritt für Schritt'],['Jahresvorschau','Deine nächsten 12 Monate'],['Kaufcheck','Passt das in dein Budget?'],['Notbremse','Überblick, wenn es eng wird']]},
+ en:{title:'Explore',sub:'More possibilities for your money.',plan:'Plan & save',act:'Decide & act',settings:'Settings',items:[['Calendar','Keep track of payments'],['Savings goals','Your wishes, step by step'],['Year ahead','Your next 12 months'],['Purchase check','Does it fit your budget?'],['Safety brake','Clarity when money is tight']]},
+ el:{title:'Εξερεύνηση',sub:'Περισσότερες δυνατότητες για τα χρήματά σου.',plan:'Σχεδιασμός & αποταμίευση',act:'Αποφάσεις & δράση',settings:'Ρυθμίσεις',items:[['Ημερολόγιο','Οι πληρωμές σου με μια ματιά'],['Στόχοι αποταμίευσης','Βήμα βήμα προς τις επιθυμίες σου'],['Ετήσια πρόβλεψη','Οι επόμενοι 12 μήνες'],['Έλεγχος αγοράς','Χωράει στον προϋπολογισμό σου;'],['Φρένο ασφαλείας','Εικόνα όταν τα χρήματα λιγοστεύουν']]},
+ tr:{title:'Keşfet',sub:'Paran için daha fazla olanak.',plan:'Planla ve biriktir',act:'Karar ver ve harekete geç',settings:'Ayarlar',items:[['Takvim','Ödemelerin kontrol altında'],['Birikim hedefleri','İsteklerine adım adım'],['Yıllık görünüm','Önümüzdeki 12 ay'],['Alışveriş kontrolü','Bütçene uygun mu?'],['Güvenlik freni','Para azaldığında net bir bakış']]}
+};
+function vantDiscoverPage(){
+ const t=VANT_DISCOVER_I18N[lang]||VANT_DISCOVER_I18N.de;
+ const paths=[
+  '<rect x="4" y="5" width="16" height="16" rx="3"/><path d="M8 3v5m8-5v5M4 11h16m-11 4h.01M12 15h.01M15 15h.01"/>',
+  '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="m12 12 8-8m-4 0h4v4"/>',
+  '<path d="M4 12h16"/><circle cx="4" cy="12" r="2.5"/><circle cx="12" cy="12" r="2.5"/><circle cx="20" cy="12" r="2.5"/>',
+  '<path d="M5 7h14l2 14H3zM8 7V5a4 4 0 0 1 8 0v2"/>',
+  '<circle cx="12" cy="12" r="9"/><path d="M9 8v8m6-8v8"/>'
+ ];
+ const targets=['calendar','savings','forecast','check','brake'];
+ const row=i=>`<button type="button" class="vant-discover-row" onclick="setTab('${targets[i]}')"><span class="vant-discover-icon" aria-hidden="true"><svg viewBox="0 0 24 24">${paths[i]}</svg></span><span class="vant-discover-copy"><strong>${esc(t.items[i][0])}</strong><small>${esc(t.items[i][1])}</small></span><svg class="vant-discover-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>`;
+ return `<div class="vant-discover-page"><div class="vant-discover-top"><span class="vant-discover-brand">VANT<span>.</span></span><button type="button" class="vant-discover-settings" onclick="kmOpenMenu()" aria-label="${esc(t.settings)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 3-1 3-3 1-2 4 2 2-1 3 3 3 3-1 2 3 4-1 1-3 3-1 1-4-2-2 1-3-3-3-3 1-2-2z"/><circle cx="12" cy="12" r="3"/></svg></button></div><h2>${esc(t.title)}</h2><p class="vant-discover-sub">${esc(t.sub)}</p><section class="vant-discover-group" aria-labelledby="vant-discover-plan"><h3 id="vant-discover-plan">${esc(t.plan)}</h3><div class="vant-discover-panel">${[0,1,2].map(row).join('')}</div></section><section class="vant-discover-group" aria-labelledby="vant-discover-act"><h3 id="vant-discover-act">${esc(t.act)}</h3><div class="vant-discover-panel">${[3,4].map(row).join('')}</div></section></div>`;
+}
+function kmMenuPage(){const t=vantSettingsT;return `<div class="vant-settings-page"><div class="vant-settings-hero"><span class="vant-settings-hero-icon" aria-hidden="true">⚙</span><h2>${t('hero')}</h2><p>${t('sub')}</p></div><section class="vant-settings-group"><h3>👤 ${t('account')}</h3><div class="vant-settings-list">${kmMenuItem('👤',kmT('profile'),t('profileHint'),'km-profile')}${kmMenuItem('🔔',kmT('notice'),t('noticeHint'),'notifications')}</div></section><section class="vant-settings-group"><h3>☷ ${t('app')}</h3><div class="vant-settings-list">${kmMenuItem('⚙️',kmT('pref'),t('prefHint'),'km-preferences')}</div></section><section class="vant-settings-group"><h3>🛡 ${t('security')}</h3><div class="vant-settings-list">${kmMenuItem('🔒',kmT('privacy'),t('privacyHint'),'settings')}${kmMenuItem('⚖️',kmT('legal'),t('legalHint'),'km-legal')}</div></section><button class="km-logout vant-settings-logout" type="button" onclick="kmLogout()">↪ ${kmT('logout')}</button><section id="vant-settings-admin" class="vant-settings-group" hidden><h3>👥 ${t('admin')}</h3><p class="vant-settings-admin-hint">${t('adminHint')}</p><div id="vant-settings-admin-actions"></div></section></div>`}
 let adminControlsCheck=0;
 function vantPlaceAdminControls(){
  const area=document.getElementById('vant-settings-admin'),actions=document.getElementById('vant-settings-admin-actions');
@@ -2044,6 +2063,27 @@ html[data-km-dark="true"] .vant-nav-hint{color:#d3bcef}
 .vant-sim-presets{display:flex;gap:8px;flex-wrap:wrap}
 .vant-sim-presets button{flex:1;min-height:44px;margin:0}
 #vant-sim-sheet select{width:100%;box-sizing:border-box;background:#170f27;color:#fff;border-color:#8463a3}
+
+
+/* Discover: two compact groups, separate from account settings. */
+.vant-discover-page{max-width:640px;margin:0 auto;padding:12px 2px 20px;color:#f8f3ff}
+.vant-discover-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:25px}
+.vant-discover-brand{font-size:27px;font-weight:850;letter-spacing:-1px}.vant-discover-brand>span{color:#b68ce8}
+.vant-discover-settings{display:grid;place-items:center;width:42px;height:42px;margin:0;padding:9px;border-radius:14px;border:1px solid #d8bfff55;background:#ffffff08;color:#efe3ff;box-shadow:inset 0 1px 0 #ffffff20}
+.vant-discover-page svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.vant-discover-page h2{font-size:clamp(30px,7.8vw,40px);letter-spacing:-1px;line-height:1.12;margin:0 0 9px;color:#fff}
+.vant-discover-sub{font-size:15px;line-height:1.5;color:#c7bdd4;margin:0 0 26px}
+.vant-discover-group{margin:0 0 24px;padding:0;border:0;background:none;box-shadow:none}
+.vant-discover-group h3{font-size:20px;letter-spacing:-.3px;line-height:1.3;margin:0 0 13px;color:#f5eefc}
+.vant-discover-panel{padding:0 14px;border:1px solid #c6a4e63d;border-radius:22px;background:linear-gradient(135deg,#ffffff0d,#b590e508);box-shadow:inset 0 1px 0 #ffffff0c;overflow:hidden}
+.vant-discover-panel .vant-discover-row{display:flex;align-items:center;gap:14px;width:100%;min-height:83px;margin:0;padding:17px 0;text-align:left;background:none;border:0;border-radius:0;color:#dcc2fa;box-shadow:none}
+.vant-discover-panel .vant-discover-row+.vant-discover-row{border-top:1px solid #c9afdf26}
+.vant-discover-icon{display:grid;place-items:center;width:37px;flex:0 0 37px}.vant-discover-icon svg{width:32px;height:32px}
+.vant-discover-copy{min-width:0;flex:1}.vant-discover-copy strong{display:block;font-size:17px;line-height:1.25;color:#fcf8ff;font-weight:700}.vant-discover-copy small{display:block;margin-top:5px;font-size:13px;font-weight:400;line-height:1.35;color:#c8bdd5}
+.vant-discover-row svg.vant-discover-chevron{width:18px;height:18px;flex:0 0 18px;color:#dfd0ec}
+.vant-discover-row:focus-visible,.vant-discover-settings:focus-visible{outline:2px solid #d4b1ff;outline-offset:3px}
+.vant-discover-row:active{opacity:.7}
+@media(max-width:360px){.vant-discover-panel{padding:0 11px}.vant-discover-panel .vant-discover-row{gap:9px}.vant-discover-copy strong{font-size:16px}.vant-discover-copy small{font-size:12px}}
 
 /* Transparent glass navigation, lifted above the home indicator. */
 @media screen{
