@@ -679,7 +679,7 @@ function debts(){
   return `<article class="vant-debt-compact"><div class="vant-debt-compact-top"><h3>${esc(d.name)}</h3><div><strong>${money(stats.rest)}</strong><small>${esc(t.open)}</small></div></div><div class="vant-debt-compact-bottom"><span>${money(stats.rate)} ${esc(t.perMonth)}</span><button type="button" onclick="openDebtDetails(${index})" aria-label="${esc(t.more+': '+d.name)}">${esc(t.more)} <span aria-hidden="true">›</span></button></div></article>`;
  }).join(''):`<p class="muted">${esc(vantDebtCopy().empty)}</p>`;
  const outstanding=`<section class="vant-debt-overview"><div class="vant-debt-overview-heading"><h2>${esc(vantDebtCopy().claims)}</h2><small>${state.debts.length}</small></div><div class="vant-debt-compact-list">${rows}</div></section>`;
- const detail=`<dialog id="vant-debt-detail" aria-labelledby="vant-debt-detail-title" onclick="if(event.target===this)this.close()"><div id="vant-debt-detail-content" class="vant-debt-sheet-content"></div></dialog>`;
+ const detail=`<dialog id="vant-debt-detail" aria-labelledby="vant-debt-detail-title" closedby="none" oncancel="event.preventDefault()"><div id="vant-debt-detail-content" class="vant-debt-sheet-content"></div></dialog>`;
  const sim=`<button type="button" class="secondary vant-sim-open" onclick="document.getElementById('vant-sim-sheet').showModal()">→ Schneller schuldenfrei?</button>
  <dialog id="vant-sim-sheet" class="vant-bottom-sheet" aria-labelledby="vant-sim-title" onclick="if(event.target===this)this.close()">
  <div class="vant-debt-sheet-content"><div class="vant-debt-grip" aria-hidden="true"></div>
