@@ -2045,35 +2045,35 @@ html[data-km-dark="true"] .vant-nav-hint{color:#d3bcef}
 .vant-sim-presets button{flex:1;min-height:44px;margin:0}
 #vant-sim-sheet select{width:100%;box-sizing:border-box;background:#170f27;color:#fff;border-color:#8463a3}
 
-/* Quiet floating glass navigation, lifted above the home indicator. */
+/* Transparent glass navigation, lifted above the home indicator. */
 @media screen{
  #km-main{padding-bottom:calc(132px + env(safe-area-inset-bottom,0px))}
  #nav.vant-bottom-nav{
   position:fixed;z-index:1000;left:50%;bottom:calc(28px + env(safe-area-inset-bottom,0px));
   transform:translateX(-50%);width:min(calc(100% - 32px),520px);box-sizing:border-box;
   display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;overflow:visible;
-  padding:5px;margin:0;border:1px solid #ded0f23d;border-radius:32px;
-  background:#241d34f5;
-  -webkit-backdrop-filter:blur(28px) saturate(135%);backdrop-filter:blur(28px) saturate(135%);
-  box-shadow:inset 0 1px 0 #ffffff24,0 8px 24px #08030f38;
+  padding:5px;margin:0;border:1px solid #ffffff54;border-radius:32px;
+  background:#21192bd9;
+  -webkit-backdrop-filter:blur(10px) saturate(160%);backdrop-filter:blur(10px) saturate(160%);
+  box-shadow:inset 0 1px 1px #ffffff65,inset 0 -1px 1px #ffffff20,0 8px 24px #08030f30;
   isolation:isolate;
  }
  @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
-  #nav.vant-bottom-nav{background:#2b233bc9}
+  #nav.vant-bottom-nav{background:linear-gradient(135deg,#ffffff14,#ffffff03 48%,#dbc4ff0c),#20162a24}
  }
  #nav.vant-bottom-nav::before{
   content:'';position:absolute;pointer-events:none;left:5px;top:5px;bottom:5px;width:calc((100% - 10px)/5);
   border-radius:26px;box-sizing:border-box;
   transform:translateX(calc(var(--active-tab,2)*100%));
-  background:linear-gradient(160deg,#ffffff24,#d8c6f21a);
-  border:1px solid #ffffff21;box-shadow:inset 0 1px 0 #ffffff1f;
+  background:radial-gradient(ellipse at 25% 0%,#ffffff38,transparent 60%),linear-gradient(155deg,#ffffff1f,#ffffff08);
+  border:1px solid #ffffff65;box-shadow:inset 0 1px 1px #ffffff65,inset 0 -1px 1px #ffffff20,0 2px 6px #00000010;
   transition:transform 320ms cubic-bezier(.2,.75,.25,1);
   will-change:transform;
  }
  #nav.vant-bottom-nav button{
   position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
   min-width:0;min-height:55px;height:55px;padding:3px 0;margin:0;border:0;border-radius:26px;background:transparent;
-  color:#c5bdcf;font-size:clamp(9px,2.5vw,11px);font-weight:550;line-height:1.15;overflow-wrap:normal;white-space:nowrap;
+  color:#ece6f4;text-shadow:0 1px 3px #09041190;font-size:clamp(9px,2.5vw,11px);font-weight:550;line-height:1.15;overflow-wrap:normal;white-space:nowrap;
   -webkit-tap-highlight-color:transparent;touch-action:manipulation;
   transition:color 180ms ease;
  }
@@ -2086,8 +2086,9 @@ html[data-km-dark="true"] .vant-nav-hint{color:#d3bcef}
  #nav.vant-bottom-nav .vant-home-tab{font-weight:700;color:#e6daf6}
  #nav.vant-bottom-nav .vant-home-tab .vant-tab-icon{
   width:39px;height:39px;flex-shrink:0;margin-top:-13px;margin-bottom:0;border-radius:50%;
-  background:linear-gradient(150deg,#a07bd5,#7651ad);
-  border:1px solid #dbc2fb66;box-shadow:inset 0 1px 0 #ffffff40,0 3px 8px #10051b30;color:#fff;
+  background:radial-gradient(ellipse at 25% 0%,#ffffff55,transparent 60%),linear-gradient(145deg,#c4a1f340,#7953b533);
+  -webkit-backdrop-filter:blur(10px) saturate(160%);backdrop-filter:blur(10px) saturate(160%);
+  border:1px solid #e8d8ffb0;box-shadow:inset 0 1px 1px #ffffff88,inset 0 -1px 1px #ffffff22,0 3px 8px #10051b25;color:#fff;
  }
  #nav.vant-bottom-nav .vant-home-tab svg{width:23px;height:23px}
  #nav.vant-bottom-nav .vant-home-tab svg path{fill:currentColor;stroke:none}
