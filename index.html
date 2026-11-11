@@ -249,7 +249,10 @@ function render(){
   const subHeader=document.getElementById('vant-subheader');
   if(subHeader)subHeader.hidden=isDashboard||tab==='discover';
   const backButton=document.querySelector('#vant-subheader .vant-back-button');
-  if(backButton)backButton.textContent='← '+({de:'Zurück',el:'Πίσω',en:'Back',tr:'Geri'}[lang]||'Zurück');
+  if(backButton){
+   backButton.textContent='← '+({de:'Zurück',el:'Πίσω',en:'Back',tr:'Geri'}[lang]||'Zurück');
+   backButton.hidden=['dashboard','entries','daily','debts','discover'].includes(tab);
+  }
   const subTitle=document.getElementById('vant-page-title');
   const titles={calendar:'Kalender',savings:'Sparziele',entries:'Einnahmen & feste Ausgaben',daily:'Meine Ausgaben',debts:'Schulden',forecast:'12 Monate','forecast-year':'Alle 12 Monate',analysis:analysisT('title'),check:'Kaufcheck',brake:'Finanzielle Notbremse',notifications:'Benachrichtigungen',settings:'Einstellungen',discover:'Entdecken','km-menu':'Einstellungen','km-profile':'Profil','km-preferences':'Einstellungen','km-legal':'Rechtliches'};
   if(subTitle)subTitle.textContent=titles[tab]||'VANT';
@@ -2124,6 +2127,9 @@ html[data-km-dark="true"] .vant-mini-status{color:#c9b8d8}html[data-km-dark="tru
 
 .vant-fine-print,#km-main>footer{font-size:11px;line-height:1.5;font-weight:400;color:#81758e;margin:12px 2px;padding:0;border:0;border-radius:0;background:none;box-shadow:none}
 html[data-km-dark="true"] .vant-fine-print,html[data-km-dark="true"] #km-main>footer{color:#ab9eb9}
+
+
+#vant-subheader .vant-back-button[hidden]{display:none!important}
 
 /* Compact debt overview; details are opened on demand. */
 .vant-debt-overview{margin:16px 0;padding:0;border:0;background:none;box-shadow:none}
