@@ -1494,6 +1494,7 @@ async function cloudLoad(generation,first){
    cloudReady=true;window.vantCloud.queueSave();return;
  }
  cloudReady=true;cloudMessage('Daten sind synchronisiert');
+ syncReminders().catch(error=>console.error('Zahlungserinnerungen:',error));
  }catch(e){if(generation===cloudGeneration)cloudMessage('Cloud noch nicht eingerichtet oder nicht erreichbar: '+e.message+' – lokale Daten bleiben erhalten')}
 }
 window.addEventListener('online',()=>{if(cloudDirty&&cloudReady)window.vantCloud.queueSave();else window.vantCloud.refresh()});
@@ -1557,56 +1558,23 @@ signup.addEventListener('click',async()=>{if(!form.reportValidity())return;setBu
  
 <script>
  
-const reminderSettings = {
-  enabled: true,
-  daysBefore: [3],
-  time: state.notificationPrefs?.pushTime || "18:30"
-};
- 
-async function syncReminders() {
-  const client = window.kostetMichClient;
-  if (!client) return;
-
-  const { data: { user }, error: authError } =
-    await client.auth.getUser();
-
-  if (authError || !user) return;
-
-  const reminders = [];
-
-  for (const entry of state.entries || []) {
-    if (entry.type !== "expense" || !entry.day) continue;
-
-    reminders.push({
-      user_id: user.id,
-      title: entry.name || "Rechnung",
-      amount: entry.amount == null ? null : Number(entry.amount),
-      due_date: `${state.month}-${String(entry.day).padStart(2, "0")}`,
-     remind_at: new Date(`${state.month}-${String(entry.day).padStart(2, "0")}T12:00:00${new Intl.DateTimeFormat("en-US", {timeZone:"Europe/Berlin", timeZoneName:"shortOffset"}).formatToParts(new Date(`${state.month}-${String(entry.day).padStart(2, "0")}T12:00:00Z`)).find(p=>p.type==="timeZoneName").value.replace("GMT","").replace(/^([+-]\d{1,2})$/, "$1:00").replace(/^([+-])(\d):/, "$10$2:")}`).toISOString(),
-      type: "bill"
-    });
-  }
-
-  for (const debt of state.debts || []) {
-    if (!debt.day) continue;
-
-    reminders.push({
-      user_id: user.id,
-      title: debt.name || "Schuldenrate",
-      amount: debt.amount == null ? null : Number(debt.amount),
-      due_date: `${state.month}-${String(debt.day).padStart(2, "0")}`,
-      remind_at: new Date(`${state.month}-${String(debt.day).padStart(2, "0")}T18:30:00+01:00`).toISOString(),
-      type: "debt"
-    });
-  }
-
-  if (!reminders.length) return;
-
-  const { error } = await client
-    .from("reminders")
-    .upsert(reminders, { onConflict: "user_id,type,title,due_date" });
-
-  if (error) throw error;
+let reminderQueue=Promise.resolve();
+function syncReminders(){
+  const client=window.kostetMichClient;
+  if(!client)return Promise.resolve();
+  const payments=[
+    ...(state.entries||[]).filter(e=>e.type==='expense'&&e.cycle==='monthly')
+      .map(e=>({source_id:'bill:'+e.id,title:e.name||'Rechnung',amount:Number(e.amount),day:Number(e.day),type:'bill'})),
+    ...(state.debts||[]).map(d=>({source_id:'debt:'+d.id,title:d.name||'Schuldenrate',amount:Number(d.payment),day:Number(d.day),type:'debt'}))
+  ].filter(p=>Number.isInteger(p.day)&&p.day>=1&&p.day<=31&&Number.isFinite(p.amount)&&p.amount>0);
+  const owner=window.vantProfileUser?.id;
+  if(!owner)return Promise.resolve();
+  reminderQueue=reminderQueue.catch(()=>{}).then(async()=>{
+    if(window.vantProfileUser?.id!==owner)return;
+    const {error}=await client.rpc('vant_sync_payment_reminders',{owner,payments});
+    if(error)throw error;
+  });
+  return reminderQueue;
 }
 
 const VAPID_PUBLIC_KEY = 'BNv7gdOCi6e8Dhd5rTXUWsjhOANH8AUGgL_P09_8aBl6kVB4ygMkWctb2wFXw8VOmVE1dIuoctCT2mmxTKfS4TI';
