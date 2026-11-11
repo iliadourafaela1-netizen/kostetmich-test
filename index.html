@@ -194,6 +194,11 @@ body #vant-settings-admin-actions #vant-admin-users-button,body #vant-settings-a
   function monthly(e){return num(e.amount)*({monthly:1,weekly:52/12,quarterly:1/3,yearly:1/12,once:0}[e.cycle]??1)}function currentMonth(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
 function dailyTotal(month=currentMonth()){return (state.dailyExpenses||[]).filter(e=>e.date&&e.date.slice(0,7)===month).reduce((sum,e)=>sum+num(e.amount),0)}
 function totals(){const daily=dailyTotal();const inc=state.entries.filter(x=>x.type==='income').reduce((a,e)=>a+monthly(e),0),out=state.entries.filter(x=>x.type==='expense').reduce((a,e)=>a+monthly(e),0),debt=state.debts.reduce((a,d)=>a+num(d.payment),0);return {inc,out:out+daily,debt,left:inc-out-daily-debt-num(state.reserve)}}function shell(title,body){return `<section class="card"><h2>${title}</h2>${body}</section>`}const vantPageStack=[];
+function switchMainTab(t){
+ if(t===tab)return;
+ vantPageStack.length=0;
+ tab=t;render();window.scrollTo({top:0,behavior:'smooth'});
+}
 function setTab(t){
  if(t===tab)return;
  if(t==='dashboard')vantPageStack.length=0;
@@ -201,7 +206,8 @@ function setTab(t){
  tab=t;render();window.scrollTo({top:0,behavior:'smooth'});
 }
 function vantGoBack(){
- tab=vantPageStack.length?vantPageStack.pop():'dashboard';
+ if(!vantPageStack.length)return;
+ tab=vantPageStack.pop();
  render();window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -255,7 +261,7 @@ function renderBottomNavigation(){
  nav.style.display='';
  nav.setAttribute('aria-label',({de:'Hauptnavigation',en:'Main navigation',el:'Κύρια πλοήγηση',tr:'Ana gezinme'})[lang]||'Main navigation');
  if(nav.dataset.language!==lang||nav.children.length!==targets.length){
-  nav.innerHTML=targets.map((target,index)=>`<button type="button" class="${index===2?'vant-home-tab':''}" onclick="setTab('${target}')"><span class="vant-tab-icon" aria-hidden="true">${icons[index]}</span><span>${esc(labels[index])}</span></button>`).join('');
+  nav.innerHTML=targets.map((target,index)=>`<button type="button" class="${index===2?'vant-home-tab':''}" onclick="switchMainTab('${target}')"><span class="vant-tab-icon" aria-hidden="true">${icons[index]}</span><span>${esc(labels[index])}</span></button>`).join('');
   nav.dataset.language=lang;
  }
  Array.from(nav.children).forEach((button,index)=>{
