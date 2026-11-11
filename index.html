@@ -690,10 +690,53 @@ function dailyExpensesPage(){
 function addDailyExpense(ev){ev.preventDefault();const amount=Number($('daily-amount').value),date=$('daily-date').value;if(!Number.isFinite(amount)||amount<=0||!/^\d{4}-\d{2}-\d{2}$/.test(date))return; if(!Array.isArray(state.dailyExpenses))state.dailyExpenses=[];state.dailyExpenses.push({id:id(),amount,category:Number($('daily-category').value),date,note:$('daily-note').value.trim()});dailyViewMonth=date.slice(0,7);save();render()}
 function deleteDailyExpense(x){if(!confirm((DAILY_I18N[lang]||DAILY_I18N.de).delete))return;state.dailyExpenses=(state.dailyExpenses||[]).filter(e=>e.id!==x);save();render()}
 function dailyTouchEnd(ev){if(!entryTouch||entryTouch.row!==ev.currentTarget||!ev.changedTouches.length)return;const start=entryTouch;entryTouch=null;const touch=ev.changedTouches[0],dx=touch.clientX-start.x,dy=touch.clientY-start.y;if(dx< -75&&Math.abs(dx)>Math.abs(dy)*1.5)deleteDailyExpense(start.row.dataset.entryId)}
-function entries(){
+function entryWords(){
  const words={de:{income:'Einnahme',expense:'Ausgabe',day:'Tag',perMonth:'Mon.',perPayment:'je Zahlung',delete:'Eintrag löschen',empty:'Noch keine Einträge vorhanden.',title:'Deine Einträge',cycles:{monthly:'monatlich',weekly:'wöchentlich',quarterly:'vierteljährlich',yearly:'jährlich',once:'einmalig'}},el:{income:'Έσοδο',expense:'Έξοδο',day:'Ημέρα',perMonth:'μήνα',perPayment:'ανά πληρωμή',delete:'Διαγραφή καταχώρισης',empty:'Δεν υπάρχουν ακόμη καταχωρίσεις.',title:'Οι καταχωρίσεις σου',cycles:{monthly:'μηνιαία',weekly:'εβδομαδιαία',quarterly:'τριμηνιαία',yearly:'ετήσια',once:'εφάπαξ'}},en:{income:'Income',expense:'Expense',day:'Day',perMonth:'mo.',perPayment:'per payment',delete:'Delete entry',empty:'No entries yet.',title:'Your entries',cycles:{monthly:'monthly',weekly:'weekly',quarterly:'quarterly',yearly:'yearly',once:'one-time'}},tr:{income:'Gelir',expense:'Gider',day:'Gün',perMonth:'ay',perPayment:'ödeme başına',delete:'Kaydı sil',empty:'Henüz kayıt yok.',title:'Kayıtların',cycles:{monthly:'aylık',weekly:'haftalık',quarterly:'üç aylık',yearly:'yıllık',once:'tek seferlik'}}};
- const w=words[lang]||words.de;
- return shell(w.title,state.entries.length?state.entries.map(e=>`<div class="row km-entry-row" data-entry-id="${e.id}" ontouchstart="entryTouchStart(event)" ontouchend="entryTouchEnd(event)" ontouchcancel="entryTouchCancel(event)"><div class="km-entry-details"><b>${esc(e.name)}</b><small>${e.type==='income'?w.income:w.expense} · ${w.cycles[e.cycle]||esc(e.cycle)}${e.day?' · '+w.day+' '+e.day:''}</small></div><div class="right km-entry-right"><b class="km-entry-amount ${e.type==='income'?'km-income':'km-expense'}">${money(monthly(e))}/${w.perMonth}</b><small>${money(e.amount)} ${w.perPayment}</small><button type="button" class="km-entry-minus" aria-label="${esc(e.name)} ${w.delete}" title="${w.delete}" onclick="delEntry('${e.id}')">−</button></div></div>`).join(''):`<p class="muted">${w.empty}</p>`)}
+ return words[lang]||words.de;
+}
+function entryEditText(){
+ return ({
+  de:['Eintrag bearbeiten','Bezeichnung','Betrag je Zahlung (€)','Häufigkeit','Zahlungstag im Monat (optional)','Art','Änderungen speichern','Abbrechen'],
+  en:['Edit entry','Name','Amount per payment (€)','Frequency','Payment day of month (optional)','Type','Save changes','Cancel'],
+  el:['Επεξεργασία καταχώρισης','Περιγραφή','Ποσό ανά πληρωμή (€)','Συχνότητα','Ημέρα πληρωμής (προαιρετικά)','Τύπος','Αποθήκευση αλλαγών','Ακύρωση'],
+  tr:['Kaydı düzenle','Ad','Ödeme başına tutar (€)','Sıklık','Ödeme günü (isteğe bağlı)','Tür','Değişiklikleri kaydet','İptal']
+ })[lang]||['Edit entry','Name','Amount per payment (€)','Frequency','Payment day of month (optional)','Type','Save changes','Cancel'];
+}
+function entries(){
+ const w=entryWords(),[edit]=entryEditText();
+ return shell(w.title,state.entries.length?state.entries.map((e,index)=>`<div class="row km-entry-row" data-entry-id="${e.id}" ontouchstart="entryTouchStart(event)" ontouchend="entryTouchEnd(event)" ontouchcancel="entryTouchCancel(event)"><div class="km-entry-details"><b>${esc(e.name)}</b><small>${e.type==='income'?w.income:w.expense} · ${w.cycles[e.cycle]||esc(e.cycle)}${e.day?' · '+w.day+' '+e.day:''}</small></div><div class="right km-entry-right"><b class="km-entry-amount ${e.type==='income'?'km-income':'km-expense'}">${money(monthly(e))}/${w.perMonth}</b><small>${money(e.amount)} ${w.perPayment}</small><button type="button" class="secondary vant-entry-edit" aria-label="${esc(edit+': '+e.name)}" title="${esc(edit)}" onclick="vantEditEntry(${index})">✎</button> <button type="button" class="km-entry-minus" aria-label="${esc(e.name)} ${w.delete}" title="${w.delete}" onclick="delEntry('${e.id}')">−</button></div></div>`).join(''):`<p class="muted">${w.empty}</p>`)}
+
+function vantEditEntry(index){
+ const entry=state.entries[index], modal=$('km-quick-modal');
+ if(!entry||!modal)return;
+ const w=entryWords(),[title,name,amount,cycle,day,type,saveLabel,cancel]=entryEditText();
+ $('km-quick-title').textContent=title;
+ $('km-quick-content').innerHTML=`<form id="vant-entry-editor"><div class="two">
+ <div><label for="vant-edit-name">${name}</label><input id="vant-edit-name" required maxlength="70"></div>
+ <div><label for="vant-edit-amount">${amount}</label><input id="vant-edit-amount" required type="number" min="0" step="0.01" inputmode="decimal"></div>
+ <div><label for="vant-edit-type">${type}</label><select id="vant-edit-type"><option value="income">${w.income}</option><option value="expense">${w.expense}</option></select></div>
+ <div><label for="vant-edit-cycle">${cycle}</label><select id="vant-edit-cycle">${Object.entries(w.cycles).map(([key,label])=>`<option value="${key}">${label}</option>`).join('')}</select></div>
+ <div><label for="vant-edit-day">${day}</label><input id="vant-edit-day" type="number" min="1" max="31" inputmode="numeric"></div>
+ </div><div class="actions"><button type="submit">${saveLabel}</button><button type="button" class="secondary" onclick="kmCloseQuick()">${cancel}</button></div></form>`;
+ const form=$('vant-entry-editor'),nameInput=$('vant-edit-name');
+ nameInput.value=entry.name;
+ $('vant-edit-amount').value=entry.amount;
+ $('vant-edit-type').value=entry.type==='income'?'income':'expense';
+ $('vant-edit-cycle').value=Object.hasOwn(w.cycles,entry.cycle)?entry.cycle:'monthly';
+ $('vant-edit-day').value=entry.day??'';
+ nameInput.addEventListener('input',()=>nameInput.setCustomValidity(''));
+ form.onsubmit=event=>{
+  event.preventDefault();
+  const current=state.entries.find(item=>item.id===entry.id);
+  if(!current){kmCloseQuick();return}
+  const trimmed=nameInput.value.trim();
+  if(!trimmed){nameInput.setCustomValidity(name);nameInput.reportValidity();return}
+  const dayValue=$('vant-edit-day').value;
+  Object.assign(current,{name:trimmed,amount:Number($('vant-edit-amount').value),type:$('vant-edit-type').value,cycle:$('vant-edit-cycle').value,day:dayValue===''?null:Number(dayValue)});
+  save();kmCloseQuick();render();
+ };
+ modal.hidden=false;
+}
 function addEntry(ev){ev.preventDefault();state.entries.push({id:id(),type:$('etype').value,name:$('ename').value.trim(),amount:num($('eamount').value),cycle:$('ecycle').value,day:$('eday').value?Math.min(31,Math.max(1,+$('eday').value)):null});save();render()}function delEntry(x){if(confirm(tr('Diesen Eintrag löschen?'))){state.entries=state.entries.filter(e=>e.id!==x);save();render()}}
 // Wisch nach links: Löschbestätigung öffnen, ohne vertikales Scrollen zu blockieren.
 let entryTouch = null;
@@ -2459,5 +2502,5 @@ html:not([data-km-dark="true"]) .vant-glass-edit{border-top-color:#cdb7df70}
 .vant-crop-slider{display:flex;align-items:center;gap:10px}.vant-crop-slider input{padding:0;accent-color:#bc91ed;min-width:0}.vant-crop-slider button{width:40px;height:40px;padding:0;flex:0 0 40px;font-size:22px;background:#ffffff12;color:inherit}
 .vant-crop-tools{display:flex;gap:10px;margin-top:12px}.vant-crop-tools button{flex:1;min-height:44px;padding:9px 5px;font-size:13px;background:#ffffff12;color:inherit}.vant-crop-tools .vant-crop-accept{background:#bc91ed;color:#20102f;font-weight:700}
 html:not([data-km-dark="true"]) #vant-avatar-crop{background:#fcfaff;color:#30233e}html:not([data-km-dark="true"]) #vant-avatar-crop p{color:#71617f}html:not([data-km-dark="true"]) #vant-avatar-crop button:not(.vant-crop-accept){background:#eee4f7}
-</style></body>
+</style><style>.km-entry-right .vant-entry-edit{min-width:36px;min-height:36px;margin-top:6px;font-size:18px;line-height:1}</style></body>
 </html>
