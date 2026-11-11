@@ -489,9 +489,8 @@ function dashboard(){
  ${vantAnalysisBudget()}
  ${upcomingPayments()}
  ${vantAnalysis(false)}
- ${budgetBanner()}
- <section class="card vant-panel"><div class="vant-section-heading"><h2>🎯 Deine Sparziele</h2><button class="vant-text-link" type="button" onclick="setTab('savings')">Alle ansehen ›</button></div>${goalPreview||'<p class="muted">Du hast noch keine aktiven Sparziele.</p>'}</section>
- ${shell('Dein Finanzstatus',`<p>Offene Schulden: <b>${money(debtBalance)}</b> · Monatliche Raten: <b>${money(t.debt)}</b></p><p class="muted">Alle Beträge sind Schätzungen auf Basis deiner Angaben. Nicht erfasste Kosten können das Ergebnis verändern.</p><div class="actions"><button onclick="setTab('debts')">Schulden verwalten</button></div>`)}
+ <div class="vant-mini-grid"><section class="card vant-mini-card"><h2>Budgetampel</h2><strong class="vant-mini-amount">${money(t.left)}</strong><p class="vant-mini-status"><span class="vant-status-dot" style="background:${({green:'#7edcb1',yellow:'#edc16b',red:'#f297a8',missing:'#bba6cc'})[budgetLevel()]}"></span>${esc(bw(budgetLevel()))}</p><details class="vant-mini-info"><summary>Weitere Infos</summary><p>${esc(bw(budgetLevel()==='missing'?'missing':'explain'))}</p></details></section><section class="card vant-mini-card"><h2>Schulden</h2><strong class="vant-mini-amount">${money(debtBalance)}</strong><p class="vant-mini-status">offen · ${money(t.debt)} / Monat</p><button class="vant-mini-link" type="button" onclick="setTab('debts')">Verwalten ›</button></section></div>
+ <section class="card vant-mini-goals"><div class="vant-section-heading"><h2>Deine Sparziele</h2><button class="vant-text-link" type="button" onclick="setTab('savings')">Alle ansehen ›</button></div>${goalPreview||'<p class="muted">Du hast noch keine aktiven Sparziele.</p>'}</section>
 
  ${shell('Wichtig',`<p class="notice">${tr("Bei Inkasso und Krediten können Zinsen, Gebühren und abweichende Zahlungsvereinbarungen entstehen. Prüfe deine Unterlagen. Bei Zahlungsschwierigkeiten kann eine anerkannte Schuldnerberatung helfen.")}</p>`)}
  </div>`;
@@ -2105,6 +2104,22 @@ html[data-km-dark="true"] .vant-nav-hint{color:#d3bcef}
 .vant-saving-modes button{min-height:44px;margin:0;padding:8px 6px;font-size:13px;border-radius:10px;background:transparent;color:#d1bedf}
 .vant-saving-modes button[aria-pressed=true]{background:#7650b5;color:white}
 #sg-target-fields[hidden],#sg-monthly-fields[hidden]{display:none!important}
+
+
+.vant-mini-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}
+.vant-dashboard .vant-mini-card{min-width:0;margin:0;padding:15px 12px;border-radius:20px;display:flex;flex-direction:column;align-items:stretch}
+.vant-dashboard .vant-mini-card h2{font-size:16px;margin:0 0 14px;line-height:1.25;overflow-wrap:anywhere}
+.vant-mini-amount{font-size:clamp(18px,5vw,26px);line-height:1.2;letter-spacing:-.5px;overflow-wrap:anywhere}
+.vant-mini-status{font-size:12px;line-height:1.4;margin:8px 0 13px;color:#ac95c0}
+.vant-status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+.vant-mini-info{font-size:12px;margin-top:auto;border-top:1px solid #a98ac53d;padding-top:9px}
+.vant-mini-info summary{cursor:pointer;color:#ad80d8;min-height:30px;display:flex;align-items:center}
+.vant-mini-info p{font-size:12px;line-height:1.5;margin:8px 0 0}
+.vant-dashboard .vant-mini-link{margin:auto 0 0;padding:9px 0 0;min-height:39px;text-align:left;background:none!important;color:#ad80d8!important;font-size:12px;border:0;border-top:1px solid #a98ac53d;border-radius:0;box-shadow:none}
+.vant-dashboard .vant-mini-goals{padding:15px;border-radius:20px;margin-bottom:12px}
+.vant-mini-goals .vant-section-heading{margin-bottom:8px;gap:8px}.vant-mini-goals .vant-section-heading h2{font-size:17px;margin:0}.vant-mini-goals .vant-text-link{font-size:12px;padding:5px 0;min-height:32px}
+.vant-mini-goals .vant-goal-preview{padding:8px 0;margin:0}.vant-mini-goals .vant-goal-preview strong{font-size:14px}.vant-mini-goals .vant-goal-preview span{font-size:12px}.vant-mini-goals .vant-progress{height:5px;margin-top:7px}
+html[data-km-dark="true"] .vant-mini-status{color:#c9b8d8}html[data-km-dark="true"] .vant-mini-info summary,html[data-km-dark="true"] .vant-dashboard .vant-mini-link{color:#d7b4ff!important}
 
 /* Compact debt overview; details are opened on demand. */
 .vant-debt-overview{margin:16px 0;padding:0;border:0;background:none;box-shadow:none}
