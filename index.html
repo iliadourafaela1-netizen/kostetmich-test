@@ -1149,16 +1149,28 @@ async function vantPreviewAvatar(ev){
   const url=URL.createObjectURL(f);
   const img=new Image();
   try{await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=reject;img.src=url})}finally{URL.revokeObjectURL(url)}
-  const c=document.createElement('canvas'),size=160;c.width=size;c.height=size;
-  const ctx=c.getContext('2d');const scale=Math.max(size/img.naturalWidth,size/img.naturalHeight);
-  const w=img.naturalWidth*scale,h=img.naturalHeight*scale;
-  ctx.drawImage(img,(size-w)/2,(size-h)/2,w,h);
-  vantPendingAvatar=c.toDataURL('image/jpeg',.66);
-  if(vantPendingAvatar.length>45000)throw Error('Bild konnte nicht ausreichend verkleinert werden.');
-  $('vant-avatar-preview').innerHTML='<img alt="Profilbild-Vorschau">';
-  $('vant-avatar-preview').querySelector('img').src=vantPendingAvatar;
-  msg.textContent='Bild ausgewählt. Bitte auf „Änderungen speichern“ tippen.';
+  vantOpenAvatarCrop(img);
+
  }catch(e){vantPendingAvatar=null;msg.textContent='Das Bild konnte nicht verarbeitet werden. Bitte wähle ein anderes.'}
+}
+let vantCrop=null;
+function vantCropBounds(c){const base=Math.max(300/c.source.width,300/c.source.height),scale=base*c.zoom;c.x=Math.max(-(c.source.width*scale-300)/2,Math.min((c.source.width*scale-300)/2,c.x));c.y=Math.max(-(c.source.height*scale-300)/2,Math.min((c.source.height*scale-300)/2,c.y));return scale;}
+function vantCropDraw(){const c=vantCrop;if(!c)return;const scale=vantCropBounds(c),canvas=$('vant-crop-canvas'),ctx=canvas.getContext('2d');ctx.clearRect(0,0,300,300);ctx.drawImage(c.source,150-c.source.width*scale/2+c.x,150-c.source.height*scale/2+c.y,c.source.width*scale,c.source.height*scale);$('vant-crop-live').src=canvas.toDataURL('image/jpeg',.7);$('vant-crop-zoom').value=c.zoom;}
+function vantCropSource(){const c=vantCrop,source=document.createElement('canvas'),swap=c.rotation%180!==0;source.width=swap?c.image.naturalHeight:c.image.naturalWidth;source.height=swap?c.image.naturalWidth:c.image.naturalHeight;const ctx=source.getContext('2d');ctx.translate(source.width/2,source.height/2);ctx.rotate(c.rotation*Math.PI/180);ctx.drawImage(c.image,-c.image.naturalWidth/2,-c.image.naturalHeight/2);c.source=source;}
+function vantCropZoom(value){if(!vantCrop)return;vantCrop.zoom=Math.max(1,Math.min(4,Number(value)||1));vantCropDraw();}
+function vantCropReset(){if(!vantCrop)return;Object.assign(vantCrop,{rotation:0,zoom:1,x:0,y:0});vantCropSource();vantCropDraw();}
+function vantCropRotate(){if(!vantCrop)return;vantCrop.rotation=(vantCrop.rotation+90)%360;vantCrop.x=0;vantCrop.y=0;vantCropSource();vantCropDraw();}
+function vantCropCancel(){const dialog=$('vant-avatar-crop');if(dialog)dialog.close();vantCrop=null;}
+function vantCropAccept(){if(!vantCrop)return;const canvas=document.createElement('canvas');canvas.width=160;canvas.height=160;canvas.getContext('2d').drawImage($('vant-crop-canvas'),0,0,160,160);const data=canvas.toDataURL('image/jpeg',.66);if(data.length>45000)return;vantPendingAvatar=data;const img=document.createElement('img');img.alt='Profilbild-Vorschau';img.src=data;$('vant-avatar-preview').replaceChildren(img);$('vant-profile-message').textContent='Ausschnitt übernommen. Bitte auf „Änderungen speichern“ tippen.';vantCropCancel();}
+function vantOpenAvatarCrop(image){
+ let dialog=$('vant-avatar-crop');if(!dialog){dialog=document.createElement('dialog');dialog.id='vant-avatar-crop';dialog.setAttribute('aria-labelledby','vant-crop-title');dialog.setAttribute('closedby','none');dialog.addEventListener('cancel',e=>{e.preventDefault();vantCropCancel()});document.body.append(dialog);}
+ dialog.innerHTML=`<div class="vant-crop-head"><h2 id="vant-crop-title">Profilbild anpassen</h2><button type="button" aria-label="Abbrechen" onclick="vantCropCancel()">×</button></div><p>Verschiebe das Foto und passe den Ausschnitt an.</p><div class="vant-crop-work"><canvas id="vant-crop-canvas" width="300" height="300" aria-label="Foto mit dem Finger verschieben"></canvas><div class="vant-crop-mask" aria-hidden="true"></div></div><p class="vant-crop-hint">Mit zwei Fingern zoomen oder den Regler verwenden.</p><div class="vant-crop-preview"><img id="vant-crop-live" alt="Live-Vorschau des runden Profilbilds"><span>So erscheint dein Profilbild</span></div><label for="vant-crop-zoom">Zoom</label><div class="vant-crop-slider"><button type="button" aria-label="Verkleinern" onclick="vantCropZoom(vantCrop.zoom-.1)">−</button><input id="vant-crop-zoom" type="range" min="1" max="4" step=".01" value="1" oninput="vantCropZoom(this.value)"><button type="button" aria-label="Vergrößern" onclick="vantCropZoom(vantCrop.zoom+.1)">+</button></div><div class="vant-crop-tools"><button type="button" onclick="vantCropRotate()">↻ 90° drehen</button><button type="button" onclick="vantCropReset()">Zurücksetzen</button></div><div class="vant-crop-tools"><button type="button" onclick="vantCropCancel()">Abbrechen</button><button type="button" class="vant-crop-accept" onclick="vantCropAccept()">Übernehmen</button></div>`;
+ vantCrop={image,source:null,rotation:0,zoom:1,x:0,y:0};vantCropSource();dialog.showModal();vantCropDraw();
+ const canvas=$('vant-crop-canvas'),points=new Map();let previous=null;
+ const reset=()=>{const a=[...points.values()];previous=a.length===2?{x:(a[0].x+a[1].x)/2,y:(a[0].y+a[1].y)/2,d:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)}:a.length===1?{...a[0],d:0}:null;};
+ canvas.onpointerdown=e=>{if(points.size>=2)return;canvas.setPointerCapture(e.pointerId);points.set(e.pointerId,{x:e.clientX,y:e.clientY});reset();};
+ canvas.onpointermove=e=>{if(!vantCrop||!points.has(e.pointerId))return;const old=previous;points.set(e.pointerId,{x:e.clientX,y:e.clientY});reset();if(!old||!previous)return;const factor=300/canvas.getBoundingClientRect().width;vantCrop.x+=(previous.x-old.x)*factor;vantCrop.y+=(previous.y-old.y)*factor;if(old.d>0&&previous.d>0)vantCrop.zoom=Math.max(1,Math.min(4,vantCrop.zoom*previous.d/old.d));vantCropDraw();};
+ canvas.onpointerup=canvas.onpointercancel=e=>{points.delete(e.pointerId);reset();};
 }
 function vantRemoveAvatar(){
  vantPendingAvatar='';
@@ -2436,5 +2448,16 @@ html:not([data-km-dark="true"]) .vant-glass-profile{background:radial-gradient(e
 html:not([data-km-dark="true"]) .vant-profile-wave{background:radial-gradient(ellipse at 70% 5%,#fff9,transparent 68%),linear-gradient(120deg,#e5d2f4,#cdb2e5)}
 html:not([data-km-dark="true"]) .vant-glass-email{color:#71617f}
 html:not([data-km-dark="true"]) .vant-glass-edit{border-top-color:#cdb7df70}
+</style><style id="vant-avatar-crop-style">
+#vant-avatar-crop{width:min(calc(100% - 20px),460px);max-height:94dvh;margin:auto;padding:18px;border:1px solid #b994df80;border-radius:24px;background:#21182e;color:#f7efff;overflow:auto;overscroll-behavior:contain}
+#vant-avatar-crop::backdrop{background:#080511c9}#vant-avatar-crop p{font-size:13px;color:#c7b5d9;line-height:1.4;margin:10px 0}
+.vant-crop-head{display:flex;align-items:center;gap:8px;justify-content:space-between}.vant-crop-head h2{font-size:21px;margin:0}.vant-crop-head button{min-width:40px;min-height:40px;padding:0;background:#ffffff12;color:inherit;font-size:25px}
+.vant-crop-work{position:relative;width:min(100%,300px);aspect-ratio:1;margin:16px auto 0;border-radius:10px;overflow:hidden;background:#110b1a}
+#vant-crop-canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+.vant-crop-mask{position:absolute;inset:0;border:2px solid #d4adff;border-radius:50%;box-shadow:0 0 0 70px #10091b99;pointer-events:none}
+.vant-crop-preview{display:flex;align-items:center;gap:15px;margin:14px 0;font-size:13px}.vant-crop-preview img{width:62px;height:62px;border-radius:50%;border:2px solid #c9a3f3}
+.vant-crop-slider{display:flex;align-items:center;gap:10px}.vant-crop-slider input{padding:0;accent-color:#bc91ed;min-width:0}.vant-crop-slider button{width:40px;height:40px;padding:0;flex:0 0 40px;font-size:22px;background:#ffffff12;color:inherit}
+.vant-crop-tools{display:flex;gap:10px;margin-top:12px}.vant-crop-tools button{flex:1;min-height:44px;padding:9px 5px;font-size:13px;background:#ffffff12;color:inherit}.vant-crop-tools .vant-crop-accept{background:#bc91ed;color:#20102f;font-weight:700}
+html:not([data-km-dark="true"]) #vant-avatar-crop{background:#fcfaff;color:#30233e}html:not([data-km-dark="true"]) #vant-avatar-crop p{color:#71617f}html:not([data-km-dark="true"]) #vant-avatar-crop button:not(.vant-crop-accept){background:#eee4f7}
 </style></body>
 </html>
