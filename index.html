@@ -492,7 +492,7 @@ function dashboard(){
  <div class="vant-mini-grid"><section class="card vant-mini-card"><h2>Budgetampel</h2><strong class="vant-mini-amount">${money(t.left)}</strong><p class="vant-mini-status"><span class="vant-status-dot" style="background:${({green:'#7edcb1',yellow:'#edc16b',red:'#f297a8',missing:'#bba6cc'})[budgetLevel()]}"></span>${esc(bw(budgetLevel()))}</p><details class="vant-mini-info"><summary>Weitere Infos</summary><p>${esc(bw(budgetLevel()==='missing'?'missing':'explain'))}</p></details></section><section class="card vant-mini-card"><h2>Schulden</h2><strong class="vant-mini-amount">${money(debtBalance)}</strong><p class="vant-mini-status">offen · ${money(t.debt)} / Monat</p><button class="vant-mini-link" type="button" onclick="setTab('debts')">Verwalten ›</button></section></div>
  <section class="card vant-mini-goals"><div class="vant-section-heading"><h2>Deine Sparziele</h2><button class="vant-text-link" type="button" onclick="setTab('savings')">Alle ansehen ›</button></div>${goalPreview||'<p class="muted">Du hast noch keine aktiven Sparziele.</p>'}</section>
 
- ${shell('Wichtig',`<p class="notice">${tr("Bei Inkasso und Krediten können Zinsen, Gebühren und abweichende Zahlungsvereinbarungen entstehen. Prüfe deine Unterlagen. Bei Zahlungsschwierigkeiten kann eine anerkannte Schuldnerberatung helfen.")}</p>`)}
+ <p class="vant-fine-print">${tr("Bei Inkasso und Krediten können Zinsen, Gebühren und abweichende Zahlungsvereinbarungen entstehen. Prüfe deine Unterlagen. Bei Zahlungsschwierigkeiten kann eine anerkannte Schuldnerberatung helfen.")}</p>
  </div>`;
 }
 const DAILY_I18N={
@@ -2120,6 +2120,10 @@ html[data-km-dark="true"] .vant-nav-hint{color:#d3bcef}
 .vant-mini-goals .vant-section-heading{margin-bottom:8px;gap:8px}.vant-mini-goals .vant-section-heading h2{font-size:17px;margin:0}.vant-mini-goals .vant-text-link{font-size:12px;padding:5px 0;min-height:32px}
 .vant-mini-goals .vant-goal-preview{padding:8px 0;margin:0}.vant-mini-goals .vant-goal-preview strong{font-size:14px}.vant-mini-goals .vant-goal-preview span{font-size:12px}.vant-mini-goals .vant-progress{height:5px;margin-top:7px}
 html[data-km-dark="true"] .vant-mini-status{color:#c9b8d8}html[data-km-dark="true"] .vant-mini-info summary,html[data-km-dark="true"] .vant-dashboard .vant-mini-link{color:#d7b4ff!important}
+
+
+.vant-fine-print,#km-main>footer{font-size:11px;line-height:1.5;font-weight:400;color:#81758e;margin:12px 2px;padding:0;border:0;border-radius:0;background:none;box-shadow:none}
+html[data-km-dark="true"] .vant-fine-print,html[data-km-dark="true"] #km-main>footer{color:#ab9eb9}
 
 /* Compact debt overview; details are opened on demand. */
 .vant-debt-overview{margin:16px 0;padding:0;border:0;background:none;box-shadow:none}
