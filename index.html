@@ -329,28 +329,43 @@ function sc(k){return (SAVE_CHECK_WORDS[lang]||SAVE_CHECK_WORDS.de)[k]}
 function savingMonthKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
 function savingHistory(g){if(!g.monthlyChecks||typeof g.monthlyChecks!=='object')g.monthlyChecks={};return g.monthlyChecks}
 function savingCurrentMonth(g){return savingMonthKey(new Date())}
+function savingIsMonthly(g){return g.mode==='monthly'}
+function savingIsActive(g){return savingIsMonthly(g)||num(g.saved)+savingConfirmed(g)<num(g.target)}
 function savingPlan(g){return num(g.monthlyPlan)||Math.ceil(savingsNeed(g)*100)/100}
 function savingConfirmed(g){return Object.values(savingHistory(g)).reduce((a,x)=>a+num(x),0)}
-function savingProjected(g){const start=new Date((g.started||today())+'T12:00:00'),now=new Date(),end=new Date(g.deadline+'T12:00:00');if(!Number.isFinite(end.getTime()))return 0;let count=0;for(let y=start.getFullYear(),m=start.getMonth(),i=0;i<240;i++,m++){const date=new Date(y,m,Math.min(28,Math.max(1,+g.day||1)));if(date>end||date>now)break;if(date>=start)count++}return Math.min(num(g.target),count*savingPlan(g))}
-function toggleSavingMonth(gid,checked){const g=savingsData().find(x=>x.id===gid);if(!g)return;const month=savingCurrentMonth(g),history=savingHistory(g);if(checked){if(!history[month])history[month]=Math.min(savingPlan(g),Math.max(0,num(g.target)-num(g.saved)))}else delete history[month];save();render()}
+function savingProjected(g){const start=new Date((g.started||today())+'T12:00:00'),now=new Date(),end=savingIsMonthly(g)?now:new Date(g.deadline+'T12:00:00');if(!Number.isFinite(end.getTime()))return 0;let count=0;for(let y=start.getFullYear(),m=start.getMonth(),i=0;i<240;i++,m++){const date=new Date(y,m,Math.min(28,Math.max(1,+g.day||1)));if(date>end||date>now)break;if(date>=start)count++}return savingIsMonthly(g)?count*savingPlan(g):Math.min(num(g.target),count*savingPlan(g))}
+function toggleSavingMonth(gid,checked){const g=savingsData().find(x=>x.id===gid);if(!g)return;const month=savingCurrentMonth(g),history=savingHistory(g);if(checked){if(!history[month])history[month]=savingIsMonthly(g)?savingPlan(g):Math.min(savingPlan(g),Math.max(0,num(g.target)-num(g.saved)-savingConfirmed(g)))}else delete history[month];save();render()}
 function savingsData(){if(!Array.isArray(state.savings))state.savings=[];return state.savings}
 function monthsUntil(iso){const now=new Date(),end=new Date(iso+'T12:00:00');if(!Number.isFinite(end.getTime())||end<=now)return 0;const a=now.getFullYear()*12+now.getMonth(),b=end.getFullYear()*12+end.getMonth();return Math.max(1,b-a+(end.getDate()>=now.getDate()?1:0))}
-function savingsNeed(g){return Math.max(0,num(g.target)-num(g.saved)-savingConfirmed(g))/Math.max(1,monthsUntil(g.deadline))}
+function savingsNeed(g){if(savingIsMonthly(g))return num(g.monthlyPlan);return Math.max(0,num(g.target)-num(g.saved)-savingConfirmed(g))/Math.max(1,monthsUntil(g.deadline))}
 function reminderDate(g){const now=new Date(),day=Math.min(28,Math.max(1,+g.day||1));let d=new Date(now.getFullYear(),now.getMonth(),day);if(d<new Date(now.getFullYear(),now.getMonth(),now.getDate())||g.ack===today().slice(0,7))d=new Date(now.getFullYear(),now.getMonth()+1,day);return d}
-function savings(){const t=sw,gs=savingsData(),budget=totals().left,needed=gs.filter(g=>num(g.saved)+savingConfirmed(g)<num(g.target)).reduce((a,g)=>a+savingsNeed(g),0),now=today(),locale=({de:'de-DE',el:'el-GR',en:'en-GB',tr:'tr-TR'}[lang]||'de-DE');const b=state.brake&&num(state.brake.balance)>0?brakePlan():null;
+const SAVING_MODE_TEXT={
+ de:{choose:'Wie möchtest du sparen?',targetMode:'Zielbetrag & Datum',monthlyMode:'Monatlich sparen',amount:'Sparbetrag pro Monat (€)',hint:'Lege deinen monatlichen Sparbetrag fest – ohne Zielbetrag und Enddatum.',monthly:'pro Monat geplant',saved:'Bisher gespart',open:'Ohne festes Enddatum',planned:'Monatlich eingeplant',targetHint:'Plane, wie viel du bis zu deinem Wunschdatum sparen möchtest.'},
+ en:{choose:'How would you like to save?',targetMode:'Amount & date',monthlyMode:'Save monthly',amount:'Savings per month (€)',hint:'Choose your monthly savings amount, without a target or end date.',monthly:'planned per month',saved:'Saved so far',open:'No fixed end date',planned:'Planned per month',targetHint:'Plan how much to save by your target date.'},
+ el:{choose:'Πώς θέλεις να αποταμιεύεις;',targetMode:'Ποσό & ημερομηνία',monthlyMode:'Κάθε μήνα',amount:'Ποσό ανά μήνα (€)',hint:'Όρισε μηνιαίο ποσό, χωρίς τελικό στόχο ή ημερομηνία λήξης.',monthly:'προγραμματισμένα ανά μήνα',saved:'Συνολική αποταμίευση',open:'Χωρίς ημερομηνία λήξης',planned:'Μηνιαίο πλάνο',targetHint:'Προγραμμάτισε πόσα θα αποταμιεύσεις μέχρι την ημερομηνία του στόχου σου.'},
+ tr:{choose:'Nasıl biriktirmek istersin?',targetMode:'Tutar ve tarih',monthlyMode:'Aylık birikim',amount:'Aylık birikim (€)',hint:'Hedef tutar veya bitiş tarihi olmadan aylık tutar belirle.',monthly:'aylık plan',saved:'Şimdiye kadar biriken',open:'Bitiş tarihi yok',planned:'Aylık planlanan',targetHint:'Hedef tarihine kadar ne kadar biriktireceğini planla.'}
+};
+function sm(key){return (SAVING_MODE_TEXT[lang]||SAVING_MODE_TEXT.de)[key]}
+function setSavingMode(mode){const monthly=mode==='monthly';$('sg-mode').value=monthly?'monthly':'target';$('sg-target-fields').hidden=monthly;$('sg-monthly-fields').hidden=!monthly;for(const key of ['sg-target','sg-date']){$(key).disabled=monthly;$(key).required=!monthly}$('sg-monthly').disabled=!monthly;$('sg-monthly').required=monthly;$('sg-mode-target').setAttribute('aria-pressed',String(!monthly));$('sg-mode-monthly').setAttribute('aria-pressed',String(monthly));$('sg-mode-hint').textContent=sm(monthly?'hint':'targetHint');}
+function monthlySavingCard(g,budget,locale){
+ const total=num(g.saved)+savingConfirmed(g),plan=savingsNeed(g),next=reminderDate(g),month=savingCurrentMonth(g),due=Number(today().slice(8,10))>=Math.min(28,+g.day||1)&&g.ack!==month;
+ return shell('🎯 '+esc(g.name),`<div class="saving-card"><span class="pill">${esc(sm('monthlyMode'))}</span><p class="saving-amount">${money(total)}</p><p class="muted">${esc(sm('saved'))}</p><p><strong>${money(plan)}</strong> ${esc(sm('monthly'))}</p><p class="muted">${esc(sm('open'))}</p><p class="${plan>Math.max(0,budget)?'bad':'good'}">${budget<=0?sw('unfunded'):plan>budget?sw('tight'):sw('possible')}</p><form class="saving-entry" onsubmit="addSaving(event,'${g.id}')"><label for="sg-add-${g.id}">${sw('add')}</label><div class="saving-entry-row"><input id="sg-add-${g.id}" type="number" inputmode="decimal" min=".01" step=".01" placeholder="0,00 €" required><button type="submit">${sw('record')}</button></div></form><details class="saving-details"><summary>${esc(sm('monthlyMode'))} &amp; ${sw('remind')}</summary><p class="muted">${sw('next')}: ${next.toLocaleDateString(locale)}</p><label style="display:flex;gap:10px;align-items:center"><input type="checkbox" style="width:20px;height:20px" ${savingHistory(g)[month]?'checked':''} onchange="toggleSavingMonth('${g.id}',this.checked)"><span>${sc('checked')} (${money(savingHistory(g)[month]||plan)})</span></label><p class="muted">${sc('checknote')}</p><p class="muted">${sc('history')}: ${Object.keys(savingHistory(g)).sort().join(', ')||sc('nohistory')}</p>${due?`<p class="notice">${sw('due')}</p><button class="secondary" onclick="ackSaving('${g.id}')">${sw('ack')}</button>`:''}<div class="actions"><button class="danger" onclick="deleteSaving('${g.id}')">${sw('remove')}</button></div></details></div>`);
+}
+function savings(){const t=sw,gs=savingsData(),budget=totals().left,needed=gs.filter(savingIsActive).reduce((a,g)=>a+savingsNeed(g),0),now=today(),locale=({de:'de-DE',el:'el-GR',en:'en-GB',tr:'tr-TR'}[lang]||'de-DE');const b=state.brake&&num(state.brake.balance)>0?brakePlan():null;
 const labels=({
- de:['Neues Sparziel','Monatsübersicht','Für deine Ziele nötig','Freies Monatsbudget','Startbetrag & Erinnerung','z. B. Urlaub','Plane, wie viel du bis zu deinem Wunschdatum sparen möchtest.'],
+ de:['Neues Sparziel','Monatsübersicht','Monatlich eingeplant','Freies Monatsbudget','Startbetrag & Erinnerung','z. B. Urlaub','Plane, wie viel du bis zu deinem Wunschdatum sparen möchtest.'],
  en:['New savings goal','Monthly overview','Needed for your goals','Available monthly budget','Starting amount & reminder','e.g. Holiday','Plan how much to save by your target date.'],
  el:['Νέος στόχος','Μηνιαία επισκόπηση','Ποσό για τους στόχους σου','Διαθέσιμο μηνιαίο ποσό','Αρχικό ποσό και υπενθύμιση','π.χ. Διακοπές','Προγραμμάτισε πόσα θα αποταμιεύσεις μέχρι την ημερομηνία του στόχου σου.'],
  tr:['Yeni birikim hedefi','Aylık özet','Hedeflerin için gereken','Aylık kullanılabilir bütçe','Başlangıç tutarı ve hatırlatma','Örn. Tatil','Hedef tarihine kadar ne kadar biriktireceğini planla.']
 })[lang]||["New savings goal","Monthly overview","Needed for your goals","Available monthly budget","Starting amount & reminder","e.g. Holiday","Plan how much to save by your target date."];
 let out=`<dialog id="vant-savings-sheet" aria-labelledby="vant-savings-title" closedby="none" oncancel="event.preventDefault()"><div class="vant-debt-sheet-content"><div class="vant-debt-grip" aria-hidden="true"></div><div class="vant-debt-sheet-heading"><h2 id="vant-savings-title">${labels[0]}</h2><button type="button" class="secondary" aria-label="${esc(vantReserveText().close)}" onclick="this.closest('dialog').close()">×</button></div><form class="saving-create" onsubmit="createSaving(event)">
-<p class="muted">${labels[6]}</p>
+<div class="vant-saving-modes" role="group" aria-label="${esc(sm('choose'))}"><button type="button" id="sg-mode-target" aria-pressed="true" onclick="setSavingMode('target')">${esc(sm('targetMode'))}</button><button type="button" id="sg-mode-monthly" aria-pressed="false" onclick="setSavingMode('monthly')">${esc(sm('monthlyMode'))}</button></div><input id="sg-mode" type="hidden" value="target"><p class="muted" id="sg-mode-hint">${labels[6]}</p>
 <div><label for="sg-name">${t('name')}</label><input id="sg-name" maxlength="70" placeholder="${labels[5]}" required></div>
-<div class="saving-create-grid">
+<div class="saving-create-grid" id="sg-target-fields">
 <div><label for="sg-target">${t('target')}</label><input id="sg-target" type="number" inputmode="decimal" placeholder="0,00" min="1" step=".01" required></div>
 <div><label for="sg-date">${t('deadline')}</label><input id="sg-date" type="date" min="${now}" required></div>
 </div>
+<div id="sg-monthly-fields" hidden><label for="sg-monthly">${esc(sm('amount'))}</label><input id="sg-monthly" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="0,00" disabled></div>
 <details class="saving-details"><summary>${labels[4]}</summary>
 <div class="saving-create-grid">
 <div><label for="sg-saved">${t('saved')}</label><input id="sg-saved" type="number" inputmode="decimal" min="0" step=".01" value="0" oninvalid="this.closest('details').open=true"></div>
@@ -360,7 +375,7 @@ let out=`<dialog id="vant-savings-sheet" aria-labelledby="vant-savings-title" cl
 <button class="saving-create-submit" type="submit">${t('create')}</button></form></div></dialog>`;
 out+=shell(labels[1],`<div class="saving-create-grid saving-summary"><div class="stat"><span>${labels[2]}</span><b>${money(needed)}</b></div><div class="stat"><span>${labels[3]}</span><b>${money(budget)}</b></div></div><p class="${needed>Math.max(0,budget)?'bad':'good'}"><b>${needed>Math.max(0,budget)?'⚠️ '+t('sumwarn'):'✓ '+t('sumok')}</b></p>${b&&b.available<0?`<p class="bad">⚠️ ${t('warning')}</p>`:''}`);
 if(!gs.length)return out+shell(t('title'),`<p>${t('empty')}</p><p class="muted">${t('note')}</p>`);
-for(const g of gs){const actual=num(g.saved)+savingConfirmed(g),remaining=Math.max(0,num(g.target)-actual),need=savingsNeed(g),pct=Math.min(100,Math.round(100*actual/Math.max(1,num(g.target)))),next=reminderDate(g),isDue=now.slice(8,10)>=String(Math.min(28,+g.day||1)).padStart(2,'0')&&g.ack!==now.slice(0,7)&&remaining>0;
+for(const g of gs){if(savingIsMonthly(g)){out+=monthlySavingCard(g,budget,locale);continue}const actual=num(g.saved)+savingConfirmed(g),remaining=Math.max(0,num(g.target)-actual),need=savingsNeed(g),pct=Math.min(100,Math.round(100*actual/Math.max(1,num(g.target)))),next=reminderDate(g),isDue=now.slice(8,10)>=String(Math.min(28,+g.day||1)).padStart(2,'0')&&g.ack!==now.slice(0,7)&&remaining>0;
 const status=remaining===0?t('done'):budget<=0?t('unfunded'):need>budget?t('tight'):t('possible');
 const goalDate=new Date(g.deadline+'T12:00:00');
 const detailsLabel=({de:'Sparplan & Erinnerungen',en:'Savings plan & reminders',el:'Πλάνο και υπενθυμίσεις',tr:'Birikim planı ve hatırlatmalar'})[lang]||'Savings plan & reminders';
@@ -374,8 +389,15 @@ out+=shell('🎯 '+esc(g.name),`<div class="saving-card">
 return out+shell('ℹ️ '+t('manual'),`<p class="muted">${t('note')}</p>`)
 }
 function openSavingsSheet(){const sheet=$('vant-savings-sheet');if(sheet)sheet.showModal();}
-function createSaving(e){e.preventDefault();const target=num($('sg-target').value),saved=num($('sg-saved').value),deadline=$('sg-date').value;if(monthsUntil(deadline)<=0){alert(sw('past'));return}savingsData().push({id:id(),name:$('sg-name').value.trim(),target,saved:Math.min(target,saved),deadline,day:Math.max(1,Math.min(28,+$('sg-day').value)),started:today(),monthlyPlan:Math.ceil(Math.max(0,target-Math.min(target,saved))/Math.max(1,monthsUntil(deadline))*100)/100,monthlyChecks:{},ack:''});save();render()}
-function addSaving(e,gid){e.preventDefault();const g=savingsData().find(x=>x.id===gid);if(!g)return;g.saved=Math.min(Math.max(0,num(g.target)-savingConfirmed(g)),num(g.saved)+num($('sg-add-'+gid).value));save();render();alert(g.saved+savingConfirmed(g)>=g.target?sw('done'):sw('savedMsg'))}
+function createSaving(e){
+ e.preventDefault();const monthly=$('sg-mode').value==='monthly',name=$('sg-name').value.trim(),target=num($('sg-target').value),saved=num($('sg-saved').value),deadline=monthly?'':$('sg-date').value,amount=Number($('sg-monthly').value);
+ if(!name)return;
+ if(monthly&&(!Number.isFinite(amount)||amount<=0))return;
+ if(!monthly&&(target<1||monthsUntil(deadline)<=0)){alert(sw('past'));return}
+ const starting=monthly?saved:Math.min(target,saved);
+ savingsData().push({id:id(),name,mode:monthly?'monthly':'target',target:monthly?null:target,saved:starting,deadline:monthly?null:deadline,day:Math.max(1,Math.min(28,+$('sg-day').value)),started:today(),monthlyPlan:monthly?Math.round(amount*100)/100:Math.ceil(Math.max(0,target-starting)/Math.max(1,monthsUntil(deadline))*100)/100,monthlyChecks:{},ack:''});save();render();
+}
+function addSaving(e,gid){e.preventDefault();const g=savingsData().find(x=>x.id===gid);if(!g)return;const added=num($('sg-add-'+gid).value);g.saved=savingIsMonthly(g)?num(g.saved)+added:Math.min(Math.max(0,num(g.target)-savingConfirmed(g)),num(g.saved)+added);save();render();alert(!savingIsMonthly(g)&&g.saved+savingConfirmed(g)>=g.target?sw('done'):sw('savedMsg'))}
 function deleteSaving(gid){if(!confirm(sw('confirm')))return;state.savings=savingsData().filter(x=>x.id!==gid);save();render()}
 function ackSaving(gid){const g=savingsData().find(x=>x.id===gid);if(g){g.ack=today().slice(0,7);save();render()}}
 
@@ -457,8 +479,8 @@ function dashboard(){
  const donut=categories.length?`conic-gradient(${stops})`:'conic-gradient(#eae1f6 0% 100%)';
 
  const categoryRows=categories.length?categories.map(([name,amount],i)=>`<div class="vant-category-row"><span class="vant-category-dot" style="background:${palette[i%palette.length]}"></span><span>${esc(name)}</span><strong>${money(amount)}</strong></div>`).join(''):'<p class="muted">Noch keine Ausgaben erfasst.</p>';
- const goals=savingsData(), activeGoals=goals.filter(g=>num(g.saved)+savingConfirmed(g)<num(g.target));
- const goalPreview=activeGoals.slice(0,2).map(g=>{const actual=num(g.saved)+savingConfirmed(g),pct=Math.min(100,Math.round(actual/Math.max(1,num(g.target))*100));return `<div class="vant-goal-preview"><div><strong>🎯 ${esc(g.name)}</strong><span>${money(actual)} / ${money(g.target)}</span></div><div class="vant-progress"><span style="width:${pct}%"></span></div></div>`}).join('');
+ const goals=savingsData(), activeGoals=goals.filter(savingIsActive);
+ const goalPreview=activeGoals.slice(0,2).map(g=>{const actual=num(g.saved)+savingConfirmed(g),pct=Math.min(100,Math.round(actual/Math.max(1,num(g.target))*100));return `<div class="vant-goal-preview"><div><strong>🎯 ${esc(g.name)}</strong><span>${savingIsMonthly(g)?money(actual)+' · '+esc(sm('saved')):money(actual)+' / '+money(g.target)}</span></div><div class="vant-progress" ${savingIsMonthly(g)?'hidden':''}><span style="width:${pct}%"></span></div></div>`}).join('');
  return `<div class="vant-dashboard">
  <div class="vant-welcome"><div><span class="vant-eyebrow">DEIN FINANZÜBERBLICK</span><h2>Dein Geld. Dein Überblick. 💜</h2><p>Alles Wichtige auf einen Blick.</p></div><span class="vant-welcome-mark">V<span>.</span></span></div>
 
@@ -969,7 +991,7 @@ function upcomingNotices(){
  function addRecurring(day,kind){if(!day)return;for(let offset=0;offset<=1;offset++){const y=now.getFullYear(),m=now.getMonth()+offset,dt=new Date(y,m,Math.min(+day,new Date(y,m+1,0).getDate()),12);const delta=daysTo(dt);if(delta>=0&&delta<=p.advance){out.push({kind,days:delta});break}}}
  if(p.bills)for(const e of state.entries||[])if(e.type==='expense'&&e.cycle==='monthly')addRecurring(e.day,'bill');
  if(p.debts)for(const d of state.debts||[])addRecurring(d.day,'debt');
- if(p.savings)for(const g of state.savings||[]){if(num(g.saved)+savingConfirmed(g)>=num(g.target))continue;const dt=reminderDate(g),delta=daysTo(dt);if(delta>=0&&delta<=p.advance)out.push({kind:'saving',days:delta})}
+ if(p.savings)for(const g of state.savings||[]){if(!savingIsActive(g))continue;const dt=reminderDate(g),delta=daysTo(dt);if(delta>=0&&delta<=p.advance)out.push({kind:'saving',days:delta})}
  if(p.brake&&budgetLevel()==='red')out.push({kind:'brake',days:0});
  return out.sort((a,b)=>a.days-b.days);
 }
@@ -2077,6 +2099,12 @@ html[data-km-dark="true"] .vant-nav-hint{color:#d3bcef}
 #vant-debt-add{display:grid;place-items:center;width:44px;height:44px;min-width:44px;min-height:44px;padding:0;flex:0 0 44px;line-height:1}
 #vant-debt-add svg,.vant-centered-plus svg{display:block;width:24px;height:24px;margin:0;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
 .vant-quick-actions .vant-centered-plus{display:grid;place-items:center;line-height:1;padding:0}
+
+
+.vant-saving-modes{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border:1px solid #9675b44d;border-radius:14px;background:#ffffff08}
+.vant-saving-modes button{min-height:44px;margin:0;padding:8px 6px;font-size:13px;border-radius:10px;background:transparent;color:#d1bedf}
+.vant-saving-modes button[aria-pressed=true]{background:#7650b5;color:white}
+#sg-target-fields[hidden],#sg-monthly-fields[hidden]{display:none!important}
 
 /* Compact debt overview; details are opened on demand. */
 .vant-debt-overview{margin:16px 0;padding:0;border:0;background:none;box-shadow:none}
