@@ -1130,7 +1130,7 @@ function kmProfilePage(){
  const avatar=`<div class="vant-avatar-preview" id="vant-avatar-preview">${meta.vant_avatar_path?'👤':photo?`<img src="${photo}" alt="Profilbild">`:'👤'}</div>`;
  // Signed URLs werden nach dem Rendern für private Bilder geladen.
  setTimeout(vantLoadProfileAvatar,0);
- if(!vantProfileEditing)return shell('👤 '+kmT('profile'),`<div class="vant-profile-editor">${avatar}<div class="vant-profile-display-name">${name?esc(name):'Noch kein Benutzername'}</div><label>${kmT('email')}</label><div class="km-profile-email">${esc(window.kmAccountEmail||'–')}</div><div class="actions"><button type="button" onclick="vantOpenProfileEditor()">✏️ Profil bearbeiten</button></div></div>`);
+ if(!vantProfileEditing)return `<section class="vant-glass-profile" aria-label="${esc(kmT('profile'))}"><div class="vant-profile-wave" aria-hidden="true"></div><div class="vant-glass-identity">${avatar}<h2>${name?esc(name):tr('Noch kein Benutzername')}</h2><p class="vant-glass-email">${esc(window.kmAccountEmail||'–')}</p></div><button type="button" class="vant-glass-edit" onclick="vantOpenProfileEditor()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m16 3 5 5-12 12-6 1 1-6zM13 6l5 5"/></svg><span>${tr('Profil bearbeiten')}</span></button></section>`;
  return shell('✏️ Profil bearbeiten',`<div class="vant-profile-editor">${avatar}
  <label for="vant-avatar-file">Profilbild auswählen</label><input type="file" id="vant-avatar-file" accept="image/*" onchange="vantPreviewAvatar(event)">
  <p class="muted">Dein Bild wird verkleinert und sicher in Supabase Storage gespeichert.</p>
@@ -2419,5 +2419,22 @@ html:not([data-km-dark="true"]) #nav.vant-bottom-nav .vant-home-tab .vant-tab-ic
 html:not([data-km-dark="true"]) .vant-fine-print,html:not([data-km-dark="true"]) #km-main>footer{color:#786a84}
 html:not([data-km-dark="true"]) .vant-discover-icon,html:not([data-km-dark="true"]) .vant-discover-chevron,html:not([data-km-dark="true"]) .vant-text-link,html:not([data-km-dark="true"]) .vant-discover-brand,html:not([data-km-dark="true"]) .vant-mini-info summary{color:#7953a4!important}
 html:not([data-km-dark="true"]) .vant-settings-logout{background:#f9e9ef!important;color:#9d3155!important;border-color:#eac5d3!important}
+</style><style id="vant-glass-profile-v1">
+/* Glass profile: decorative waves are separate from account content. */
+.vant-glass-profile{position:relative;isolation:isolate;overflow:hidden;width:100%;max-width:560px;margin:24px auto 20px;padding:28px 22px 0;border:1px solid #d5b5ff70;border-radius:28px;background:radial-gradient(ellipse at 95% 100%,#b889ef35,transparent 45%),linear-gradient(145deg,#80629a30,#31233f70);color:#f9f2ff;box-shadow:inset 0 1px 1px #ffffff50,inset 0 -1px 2px #e4baff30,0 14px 36px #09041120;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.vant-profile-wave{position:absolute;z-index:-1;inset:0 0 auto;height:125px;background:radial-gradient(ellipse at 70% 5%,#dfb9ff75,transparent 68%),linear-gradient(120deg,#c39aeb45,#77459a66);border-bottom:1px solid #e9c9ff70;border-radius:0 0 48% 35%}
+.vant-profile-wave::after{content:'';position:absolute;width:120%;height:95px;left:-15%;top:45px;border-bottom:1px solid #deb9ff70;border-radius:50%;transform:rotate(-9deg);background:linear-gradient(180deg,transparent,#c994f51c);pointer-events:none}
+.vant-glass-identity{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;padding:12px 0 24px}
+.vant-glass-profile .vant-avatar-preview{width:100px;height:100px;min-width:100px;margin:0 0 19px;border-radius:50%;border:3px solid #ead9ffbc;background:linear-gradient(145deg,#d3b9ec,#866a9f);box-shadow:0 3px 16px #18082730;display:grid;place-items:center;overflow:hidden;font-size:44px}
+.vant-glass-profile .vant-avatar-preview img{width:100%;height:100%;object-fit:cover;display:block}
+.vant-glass-identity h2{font-size:25px;line-height:1.2;font-weight:700;margin:0 0 8px;color:inherit;max-width:100%;overflow-wrap:anywhere;letter-spacing:-.5px}
+.vant-glass-email{font-size:14px;line-height:1.5;color:#cdb9df;margin:0;overflow-wrap:anywhere;max-width:100%}
+.vant-glass-edit{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;min-height:62px;margin:0;padding:17px 6px;background:transparent!important;color:inherit!important;border:0;border-top:1px solid #d8b9ee40;border-radius:0;box-shadow:none;font-size:16px}
+.vant-glass-edit svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.vant-glass-edit:focus-visible{outline:2px solid #d5b4ff;outline-offset:-4px;border-radius:12px}
+html:not([data-km-dark="true"]) .vant-glass-profile{background:radial-gradient(ellipse at 95% 100%,#dfc6f44d,transparent 45%),linear-gradient(145deg,#ffffffc9,#f4eafa);color:#30233e;border-color:#c9b3de;box-shadow:inset 0 1px 1px white,0 8px 25px #67498012}
+html:not([data-km-dark="true"]) .vant-profile-wave{background:radial-gradient(ellipse at 70% 5%,#fff9,transparent 68%),linear-gradient(120deg,#e5d2f4,#cdb2e5)}
+html:not([data-km-dark="true"]) .vant-glass-email{color:#71617f}
+html:not([data-km-dark="true"]) .vant-glass-edit{border-top-color:#cdb7df70}
 </style></body>
 </html>
