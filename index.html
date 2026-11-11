@@ -261,7 +261,7 @@ function render(){
  let debtAdd=document.getElementById('vant-debt-add');
  if(!debtAdd){
   debtAdd=document.createElement('button');debtAdd.id='vant-debt-add';debtAdd.type='button';
-  debtAdd.textContent='+';debtAdd.setAttribute('aria-label','Schuld hinzufügen');
+  debtAdd.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14"/></svg>';debtAdd.setAttribute('aria-label','Schuld hinzufügen');
   debtAdd.onclick=openDebtSheet;
   const menu=document.querySelector('#vant-subheader .vant-submenu-button');
   if(menu)menu.before(debtAdd);
@@ -462,7 +462,7 @@ function dashboard(){
  return `<div class="vant-dashboard">
  <div class="vant-welcome"><div><span class="vant-eyebrow">DEIN FINANZÜBERBLICK</span><h2>Dein Geld. Dein Überblick. 💜</h2><p>Alles Wichtige auf einen Blick.</p></div><span class="vant-welcome-mark">V<span>.</span></span></div>
 
- <div class="vant-quick-actions"><button type="button" onclick="vantOpenIncome()"><span>＋</span>Einnahmen</button><button type="button" onclick="vantOpenFixedExpense()"><span>−</span>Feste Ausgaben</button><button type="button" onclick="kmOpenQuick()"><span>🛒</span>Einkäufe & Alltag</button><button type="button" onclick="vantOpenReceipt()"><span>▤</span>Kassenbon</button><button type="button" onclick="setTab('calendar')"><span>▦</span>Kalender</button><button type="button" onclick="setTab('savings')"><span>◎</span>Sparziele</button></div>
+ <div class="vant-quick-actions"><button type="button" onclick="vantOpenIncome()"><span class="vant-centered-plus"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14"/></svg></span>Einnahmen</button><button type="button" onclick="vantOpenFixedExpense()"><span>−</span>Feste Ausgaben</button><button type="button" onclick="kmOpenQuick()"><span>🛒</span>Einkäufe & Alltag</button><button type="button" onclick="vantOpenReceipt()"><span>▤</span>Kassenbon</button><button type="button" onclick="setTab('calendar')"><span>▦</span>Kalender</button><button type="button" onclick="setTab('savings')"><span>◎</span>Sparziele</button></div>
  <div class="vant-summary"><div class="vant-summary-tile"><span>↗ Einnahmen / Monat</span><strong class="good">${money(t.inc)}</strong></div><div class="vant-summary-tile"><span>↘ Ausgaben + Raten</span><strong class="bad">${money(t.out+t.debt)}</strong></div></div>
  ${vantAnalysisBudget()}
  ${upcomingPayments()}
@@ -2071,6 +2071,12 @@ html[data-km-dark="true"] .vant-nav-hint{color:#d3bcef}
 #vant-savings-sheet label{font-size:13px}
 #vant-savings-sheet .saving-details summary{font-size:14px}
 @media(max-width:360px){#vant-savings-sheet .saving-create-grid{grid-template-columns:minmax(0,1fr)}}
+
+
+/* Geometrically centered plus icons, independent of font baselines. */
+#vant-debt-add{display:grid;place-items:center;width:44px;height:44px;min-width:44px;min-height:44px;padding:0;flex:0 0 44px;line-height:1}
+#vant-debt-add svg,.vant-centered-plus svg{display:block;width:24px;height:24px;margin:0;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.vant-quick-actions .vant-centered-plus{display:grid;place-items:center;line-height:1;padding:0}
 
 /* Compact debt overview; details are opened on demand. */
 .vant-debt-overview{margin:16px 0;padding:0;border:0;background:none;box-shadow:none}
