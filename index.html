@@ -204,6 +204,35 @@ function vantGoBack(){
  tab=vantPageStack.length?vantPageStack.pop():'dashboard';
  render();window.scrollTo({top:0,behavior:'smooth'});
 }
+
+// Edge swipe follows the same in-app history as the Back button.
+function vantBackSwipeMatches(start,end,elapsed){const dx=end.clientX-start.x,dy=end.clientY-start.y;return elapsed<=1000&&dx>=85&&Math.abs(dy)<=55&&dx>Math.abs(dy)*2.5;}
+(function installVantBackSwipe(){
+ let gesture=null;
+ const blocked=()=>document.querySelector('dialog[open],.km-modal:not([hidden]),#vant-admin-overlay:not([hidden])');
+ document.addEventListener('touchstart',event=>{
+  gesture=null;
+  if(event.touches.length!==1||tab==='dashboard'||blocked())return;
+  const main=document.getElementById('km-main'),target=event.target;
+  if(!main||main.hidden||getComputedStyle(main).display==='none'||!main.contains(target))return;
+  if(target.closest('input,textarea,select,button,a,[contenteditable="true"],#nav'))return;
+  const touch=event.touches[0];if(touch.clientX>32)return;
+  gesture={x:touch.clientX,y:touch.clientY,time:Date.now(),page:tab};
+ },{passive:true});
+ document.addEventListener('touchmove',event=>{
+  if(!gesture)return;
+  if(event.touches.length!==1){gesture=null;return;}
+  const touch=event.touches[0],dx=touch.clientX-gesture.x,dy=touch.clientY-gesture.y;
+  if(Math.abs(dy)>55||dx< -12)gesture=null;
+ },{passive:true});
+ document.addEventListener('touchend',event=>{
+  const start=gesture;gesture=null;
+  if(!start||start.page!==tab||blocked()||event.touches.length||event.changedTouches.length!==1)return;
+  if(vantBackSwipeMatches(start,event.changedTouches[0],Date.now()-start.time))vantGoBack();
+ },{passive:true});
+ document.addEventListener('touchcancel',()=>{gesture=null;},{passive:true});
+})();
+
 function renderBottomNavigation(){
  const nav=document.getElementById('nav');
  const labels=({
