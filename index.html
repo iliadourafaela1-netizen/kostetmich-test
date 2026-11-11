@@ -238,7 +238,7 @@ function renderBottomNavigation(){
  const hint=document.getElementById('vant-nav-hint');if(hint)hint.hidden=true;
 }
 function render(){
- for(const sheetId of ['vant-debt-sheet','vant-sim-sheet','vant-debt-detail','vant-reserve-sheet']){
+ for(const sheetId of ['vant-debt-sheet','vant-sim-sheet','vant-debt-detail','vant-reserve-sheet','vant-savings-sheet']){
   const sheet=document.getElementById(sheetId);if(sheet?.open)sheet.close();
  }
  const menuPages=['km-menu','km-profile','km-preferences','km-legal','settings','notifications'];
@@ -266,7 +266,9 @@ function render(){
   const menu=document.querySelector('#vant-subheader .vant-submenu-button');
   if(menu)menu.before(debtAdd);
  }
- debtAdd.hidden=tab!=='debts';
+ debtAdd.hidden=tab!=='debts'&&tab!=='savings';
+ debtAdd.onclick=tab==='savings'?openSavingsSheet:openDebtSheet;
+ debtAdd.setAttribute('aria-label',tab==='savings'?({de:'Sparziel hinzufügen',en:'Add savings goal',el:'Προσθήκη στόχου',tr:'Birikim hedefi ekle'}[lang]||'Add savings goal'):tr('Schuld hinzufügen'));
  if(tab==='km-menu'){
   vantPlaceAdminControls();
   if(typeof checkAdminPushButton==='function')checkAdminPushButton().catch(console.error);
@@ -342,7 +344,7 @@ const labels=({
  el:['Νέος στόχος','Μηνιαία επισκόπηση','Ποσό για τους στόχους σου','Διαθέσιμο μηνιαίο ποσό','Αρχικό ποσό και υπενθύμιση','π.χ. Διακοπές','Προγραμμάτισε πόσα θα αποταμιεύσεις μέχρι την ημερομηνία του στόχου σου.'],
  tr:['Yeni birikim hedefi','Aylık özet','Hedeflerin için gereken','Aylık kullanılabilir bütçe','Başlangıç tutarı ve hatırlatma','Örn. Tatil','Hedef tarihine kadar ne kadar biriktireceğini planla.']
 })[lang]||["New savings goal","Monthly overview","Needed for your goals","Available monthly budget","Starting amount & reminder","e.g. Holiday","Plan how much to save by your target date."];
-let out=shell('＋ '+labels[0],`<form class="saving-create" onsubmit="createSaving(event)">
+let out=`<dialog id="vant-savings-sheet" aria-labelledby="vant-savings-title" closedby="none" oncancel="event.preventDefault()"><div class="vant-debt-sheet-content"><div class="vant-debt-grip" aria-hidden="true"></div><div class="vant-debt-sheet-heading"><h2 id="vant-savings-title">${labels[0]}</h2><button type="button" class="secondary" aria-label="${esc(vantReserveText().close)}" onclick="this.closest('dialog').close()">×</button></div><form class="saving-create" onsubmit="createSaving(event)">
 <p class="muted">${labels[6]}</p>
 <div><label for="sg-name">${t('name')}</label><input id="sg-name" maxlength="70" placeholder="${labels[5]}" required></div>
 <div class="saving-create-grid">
@@ -355,7 +357,7 @@ let out=shell('＋ '+labels[0],`<form class="saving-create" onsubmit="createSavi
 <div><label for="sg-day">${t('remind')}</label><input id="sg-day" type="number" inputmode="numeric" min="1" max="28" value="1" oninvalid="this.closest('details').open=true"></div>
 </div>
 </details>
-<button class="saving-create-submit" type="submit">${t('create')}</button></form>`);
+<button class="saving-create-submit" type="submit">${t('create')}</button></form></div></dialog>`;
 out+=shell(labels[1],`<div class="saving-create-grid saving-summary"><div class="stat"><span>${labels[2]}</span><b>${money(needed)}</b></div><div class="stat"><span>${labels[3]}</span><b>${money(budget)}</b></div></div><p class="${needed>Math.max(0,budget)?'bad':'good'}"><b>${needed>Math.max(0,budget)?'⚠️ '+t('sumwarn'):'✓ '+t('sumok')}</b></p>${b&&b.available<0?`<p class="bad">⚠️ ${t('warning')}</p>`:''}`);
 if(!gs.length)return out+shell(t('title'),`<p>${t('empty')}</p><p class="muted">${t('note')}</p>`);
 for(const g of gs){const actual=num(g.saved)+savingConfirmed(g),remaining=Math.max(0,num(g.target)-actual),need=savingsNeed(g),pct=Math.min(100,Math.round(100*actual/Math.max(1,num(g.target)))),next=reminderDate(g),isDue=now.slice(8,10)>=String(Math.min(28,+g.day||1)).padStart(2,'0')&&g.ack!==now.slice(0,7)&&remaining>0;
@@ -371,6 +373,7 @@ out+=shell('🎯 '+esc(g.name),`<div class="saving-card">
 <details class="saving-details"><summary>${detailsLabel}</summary><p class="muted">${t('days')}: ${esc(g.deadline)} · ${t('next')}: ${next.toLocaleDateString(locale)}</p><p class="muted">${sc('expected')}: <b>${money(savingProjected(g))}</b> · ${sc('behind')}: <b>${money(Math.max(0,savingProjected(g)-actual))}</b></p><label style="display:flex;gap:10px;align-items:center;padding:12px;background:#f3effc;border-radius:10px"><input type="checkbox" style="width:20px;height:20px" ${savingHistory(g)[savingCurrentMonth(g)]?'checked':''} onchange="toggleSavingMonth('${g.id}',this.checked)"><span>${sc('checked')} (${money(savingHistory(g)[savingCurrentMonth(g)]||savingPlan(g))})</span></label><p class="muted">${sc('checknote')}</p><p class="muted">${sc('history')}: ${Object.keys(savingHistory(g)).sort().join(', ')||sc('nohistory')}</p>${isDue?`<p class="notice">🔔 <b>${t('notice')}</b>: ${t('due')}</p><button class="secondary" onclick="ackSaving('${g.id}')">${t('ack')}</button>`:g.ack===now.slice(0,7)?`<p class="muted">✓ ${t('already')}</p>`:''}<div class="actions"><button class="danger" onclick="deleteSaving('${g.id}')">${t('remove')}</button></div></details></div>`)}
 return out+shell('ℹ️ '+t('manual'),`<p class="muted">${t('note')}</p>`)
 }
+function openSavingsSheet(){const sheet=$('vant-savings-sheet');if(sheet)sheet.showModal();}
 function createSaving(e){e.preventDefault();const target=num($('sg-target').value),saved=num($('sg-saved').value),deadline=$('sg-date').value;if(monthsUntil(deadline)<=0){alert(sw('past'));return}savingsData().push({id:id(),name:$('sg-name').value.trim(),target,saved:Math.min(target,saved),deadline,day:Math.max(1,Math.min(28,+$('sg-day').value)),started:today(),monthlyPlan:Math.ceil(Math.max(0,target-Math.min(target,saved))/Math.max(1,monthsUntil(deadline))*100)/100,monthlyChecks:{},ack:''});save();render()}
 function addSaving(e,gid){e.preventDefault();const g=savingsData().find(x=>x.id===gid);if(!g)return;g.saved=Math.min(Math.max(0,num(g.target)-savingConfirmed(g)),num(g.saved)+num($('sg-add-'+gid).value));save();render();alert(g.saved+savingConfirmed(g)>=g.target?sw('done'):sw('savedMsg'))}
 function deleteSaving(gid){if(!confirm(sw('confirm')))return;state.savings=savingsData().filter(x=>x.id!==gid);save();render()}
@@ -2025,8 +2028,8 @@ html[data-km-dark="true"] .vant-nav-hint{color:#d3bcef}
 
 #vant-debt-add{background:linear-gradient(135deg,#8b46e9,#6223c8);color:#fff;font-size:24px;line-height:1;min-width:44px;min-height:44px}
 #vant-debt-add[hidden]{display:none}
-#vant-debt-sheet,#vant-sim-sheet{position:fixed;inset:auto 0 0;margin:0 auto;width:min(100%,520px);max-width:100%;max-height:85dvh;padding:0;box-sizing:border-box;border:1px solid #8860ba;border-bottom:0;border-radius:24px 24px 0 0;background:#211431;color:#f8efff;overflow-y:auto;overscroll-behavior:contain}
-#vant-debt-sheet::backdrop,#vant-sim-sheet::backdrop{background:#080511aa}
+#vant-debt-sheet,#vant-sim-sheet,#vant-savings-sheet{position:fixed;inset:auto 0 0;margin:0 auto;width:min(100%,520px);max-width:100%;max-height:85dvh;padding:0;box-sizing:border-box;border:1px solid #8860ba;border-bottom:0;border-radius:24px 24px 0 0;background:#211431;color:#f8efff;overflow-y:auto;overscroll-behavior:contain}
+#vant-debt-sheet::backdrop,#vant-sim-sheet::backdrop,#vant-savings-sheet::backdrop{background:#080511aa}
 .vant-debt-sheet-content{padding:10px 20px max(20px,env(safe-area-inset-bottom))}
 .vant-debt-grip{width:40px;height:4px;border-radius:4px;background:#bca9cc;margin:0 auto 12px}
 .vant-debt-sheet-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px}
@@ -2057,6 +2060,17 @@ html[data-km-dark="true"] .vant-nav-hint{color:#d3bcef}
 #vant-reserve-sheet label{font-size:14px;margin-top:20px}
 #vant-reserve-sheet .vant-reserve-hint{font-size:13px;line-height:1.5;color:#c5b4d3;margin:12px 0 18px}
 #vant-reserve-sheet .saving-create-submit{margin-top:8px;width:100%}
+
+
+#vant-savings-sheet .vant-debt-sheet-heading h2{font-size:23px;line-height:1.2;margin:0}
+#vant-savings-sheet .saving-create{margin-top:15px}
+#vant-savings-sheet .saving-create>p{font-size:13px;line-height:1.5}
+#vant-savings-sheet .saving-create-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+#vant-savings-sheet input{min-width:0;max-width:100%;width:100%;box-sizing:border-box}
+#vant-savings-sheet input[type=date]{appearance:none;-webkit-appearance:none;min-inline-size:0;height:46px;padding:10px 8px;font-size:15px}
+#vant-savings-sheet label{font-size:13px}
+#vant-savings-sheet .saving-details summary{font-size:14px}
+@media(max-width:360px){#vant-savings-sheet .saving-create-grid{grid-template-columns:minmax(0,1fr)}}
 
 /* Compact debt overview; details are opened on demand. */
 .vant-debt-overview{margin:16px 0;padding:0;border:0;background:none;box-shadow:none}
