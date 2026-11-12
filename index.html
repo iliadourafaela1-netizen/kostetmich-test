@@ -2470,6 +2470,42 @@ html:not([data-km-dark="true"]) .vant-glass-edit{border-top-color:#cdb7df70}
 .vant-crop-slider{display:flex;align-items:center;gap:10px}.vant-crop-slider input{padding:0;accent-color:#bc91ed;min-width:0}.vant-crop-slider button{width:40px;height:40px;padding:0;flex:0 0 40px;font-size:22px;background:#ffffff12;color:inherit}
 .vant-crop-tools{display:flex;gap:10px;margin-top:12px}.vant-crop-tools button{flex:1;min-height:44px;padding:9px 5px;font-size:13px;background:#ffffff12;color:inherit}.vant-crop-tools .vant-crop-accept{background:#bc91ed;color:#20102f;font-weight:700}
 html:not([data-km-dark="true"]) #vant-avatar-crop{background:#fcfaff;color:#30233e}html:not([data-km-dark="true"]) #vant-avatar-crop p{color:#71617f}html:not([data-km-dark="true"]) #vant-avatar-crop button:not(.vant-crop-accept){background:#eee4f7}
+<script>
+  const localNotifications = window.Capacitor?.Plugins?.LocalNotifications;
+
+  if (window.Capacitor?.isNativePlatform() && localNotifications) {
+    const button = document.createElement('button');
+    button.textContent = 'Mitteilung testen';
+    button.style.cssText =
+      'position:fixed;right:16px;bottom:110px;z-index:99999;padding:12px;background:#6336b0;color:white;border:0;border-radius:12px;';
+
+    button.addEventListener('click', async () => {
+      try {
+        const { display } = await localNotifications.requestPermissions();
+
+        if (display !== 'granted') {
+          alert('Bitte erlaube Mitteilungen für VANT in den iPhone-Einstellungen.');
+          return;
+        }
+
+        await localNotifications.schedule({
+          notifications: [{
+            id: 900001,
+            title: 'VANT · Testmitteilung',
+            body: 'Deine lokale Mitteilung funktioniert.',
+            schedule: { at: new Date(Date.now() + 10000) }
+          }]
+        });
+
+        button.textContent = 'Geplant – iPhone jetzt sperren';
+      } catch (error) {
+        alert('Test fehlgeschlagen: ' + (error.message || error));
+      }
+    });
+
+    document.body.appendChild(button);
+  }
+</script>
 </style><style>.km-entry-right .vant-entry-edit{min-width:36px;min-height:36px;margin-top:6px;font-size:18px;line-height:1}</style></body>
 </html>
 <!-- VANT: Zahlungserinnerungen veröffentlichen -->
